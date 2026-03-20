@@ -1,0 +1,11 @@
+D:\c#\VinhKhanh\src\VinhKhanh.Shared\bin\Debug\net10.0\VinhKhanh.Shared.deps.json
+D:\c#\VinhKhanh\src\VinhKhanh.Shared\bin\Debug\net10.0\VinhKhanh.Shared.dll
+D:\c#\VinhKhanh\src\VinhKhanh.Shared\bin\Debug\net10.0\VinhKhanh.Shared.pdb
+D:\c#\VinhKhanh\src\VinhKhanh.Shared\obj\Debug\net10.0\VinhKhanh.Shared.GeneratedMSBuildEditorConfig.editorconfig
+D:\c#\VinhKhanh\src\VinhKhanh.Shared\obj\Debug\net10.0\VinhKhanh.Shared.AssemblyInfoInputs.cache
+D:\c#\VinhKhanh\src\VinhKhanh.Shared\obj\Debug\net10.0\VinhKhanh.Shared.AssemblyInfo.cs
+D:\c#\VinhKhanh\src\VinhKhanh.Shared\obj\Debug\net10.0\VinhKhanh.Shared.csproj.CoreCompileInputs.cache
+D:\c#\VinhKhanh\src\VinhKhanh.Shared\obj\Debug\net10.0\VinhKhanh.Shared.dll
+D:\c#\VinhKhanh\src\VinhKhanh.Shared\obj\Debug\net10.0\refint\VinhKhanh.Shared.dll
+D:\c#\VinhKhanh\src\VinhKhanh.Shared\obj\Debug\net10.0\VinhKhanh.Shared.pdb
+D:\c#\VinhKhanh\src\VinhKhanh.Shared\obj\Debug\net10.0\ref\VinhKhanh.Shared.dll
