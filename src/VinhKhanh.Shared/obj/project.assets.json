@@ -8,23 +8,23 @@
     "net10.0": []
   },
   "packageFolders": {
-    "C:\\Users\\Admin\\.nuget\\packages\\": {},
+    "C:\\Users\\nt\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\c#\\VinhKhanh\\src\\VinhKhanh.Shared\\VinhKhanh.Shared.csproj",
+      "projectUniqueName": "C:\\Users\\nt\\source\\repos\\dotnetsys\\src\\VinhKhanh.Shared\\VinhKhanh.Shared.csproj",
       "projectName": "VinhKhanh.Shared",
-      "projectPath": "D:\\c#\\VinhKhanh\\src\\VinhKhanh.Shared\\VinhKhanh.Shared.csproj",
-      "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "D:\\c#\\VinhKhanh\\src\\VinhKhanh.Shared\\obj\\",
+      "projectPath": "C:\\Users\\nt\\source\\repos\\dotnetsys\\src\\VinhKhanh.Shared\\VinhKhanh.Shared.csproj",
+      "packagesPath": "C:\\Users\\nt\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\nt\\source\\repos\\dotnetsys\\src\\VinhKhanh.Shared\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\nt\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
