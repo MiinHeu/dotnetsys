@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "D:\\c#\\VinhKhanh\\src\\VinhKhanh.Web\\VinhKhanh.Web.csproj": {}
+    "C:\\Users\\nt\\source\\repos\\dotnetsys\\src\\VinhKhanh.Web\\VinhKhanh.Web.csproj": {}
   },
   "projects": {
-    "D:\\c#\\VinhKhanh\\src\\VinhKhanh.Shared\\VinhKhanh.Shared.csproj": {
+    "C:\\Users\\nt\\source\\repos\\dotnetsys\\src\\VinhKhanh.Shared\\VinhKhanh.Shared.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\c#\\VinhKhanh\\src\\VinhKhanh.Shared\\VinhKhanh.Shared.csproj",
+        "projectUniqueName": "C:\\Users\\nt\\source\\repos\\dotnetsys\\src\\VinhKhanh.Shared\\VinhKhanh.Shared.csproj",
         "projectName": "VinhKhanh.Shared",
-        "projectPath": "D:\\c#\\VinhKhanh\\src\\VinhKhanh.Shared\\VinhKhanh.Shared.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "D:\\c#\\VinhKhanh\\src\\VinhKhanh.Shared\\obj\\",
+        "projectPath": "C:\\Users\\nt\\source\\repos\\dotnetsys\\src\\VinhKhanh.Shared\\VinhKhanh.Shared.csproj",
+        "packagesPath": "C:\\Users\\nt\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\nt\\source\\repos\\dotnetsys\\src\\VinhKhanh.Shared\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\nt\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -344,20 +344,20 @@
         }
       }
     },
-    "D:\\c#\\VinhKhanh\\src\\VinhKhanh.Web\\VinhKhanh.Web.csproj": {
+    "C:\\Users\\nt\\source\\repos\\dotnetsys\\src\\VinhKhanh.Web\\VinhKhanh.Web.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\c#\\VinhKhanh\\src\\VinhKhanh.Web\\VinhKhanh.Web.csproj",
+        "projectUniqueName": "C:\\Users\\nt\\source\\repos\\dotnetsys\\src\\VinhKhanh.Web\\VinhKhanh.Web.csproj",
         "projectName": "VinhKhanh.Web",
-        "projectPath": "D:\\c#\\VinhKhanh\\src\\VinhKhanh.Web\\VinhKhanh.Web.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "D:\\c#\\VinhKhanh\\src\\VinhKhanh.Web\\obj\\",
+        "projectPath": "C:\\Users\\nt\\source\\repos\\dotnetsys\\src\\VinhKhanh.Web\\VinhKhanh.Web.csproj",
+        "packagesPath": "C:\\Users\\nt\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\nt\\source\\repos\\dotnetsys\\src\\VinhKhanh.Web\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\nt\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -373,8 +373,8 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "D:\\c#\\VinhKhanh\\src\\VinhKhanh.Shared\\VinhKhanh.Shared.csproj": {
-                "projectPath": "D:\\c#\\VinhKhanh\\src\\VinhKhanh.Shared\\VinhKhanh.Shared.csproj"
+              "C:\\Users\\nt\\source\\repos\\dotnetsys\\src\\VinhKhanh.Shared\\VinhKhanh.Shared.csproj": {
+                "projectPath": "C:\\Users\\nt\\source\\repos\\dotnetsys\\src\\VinhKhanh.Shared\\VinhKhanh.Shared.csproj"
               }
             }
           }

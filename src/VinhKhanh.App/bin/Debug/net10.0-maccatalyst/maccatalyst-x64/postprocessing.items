@@ -10,7 +10,7 @@
       <dSYMInfoPlistRelativePath>VinhKhanh.App.app.dSYM\Contents\Info.plist</dSYMInfoPlistRelativePath>
       <SymbolFile></SymbolFile>
       <DSymName>VinhKhanh.App.app.dSYM</DSymName>
-      <SourceProjectPath>D:\c#\VinhKhanh\src\VinhKhanh.App</SourceProjectPath>
+      <SourceProjectPath>C:\Users\nt\source\repos\dotnetsys\src\VinhKhanh.App</SourceProjectPath>
       <IsXPCService></IsXPCService>
     </_PostProcessingItem>
   </ItemGroup>
