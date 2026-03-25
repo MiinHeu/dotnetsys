@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/VinhKhanh.API/VinhKhanh.API.csproj" />
+    <Project Path="src/VinhKhanh.App/VinhKhanh.App.csproj" />
+    <Project Path="src/VinhKhanh.Infrastructure/VinhKhanh.Infrastructure.csproj" />
+    <Project Path="src/VinhKhanh.Shared/VinhKhanh.Shared.csproj" />
+  </Folder>
+</Solution>
