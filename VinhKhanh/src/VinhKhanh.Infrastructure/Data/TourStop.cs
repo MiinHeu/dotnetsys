@@ -10,7 +10,10 @@ public class TourStop
 	// Used to keep an ordered route within the same tour.
 	public int StopOrder { get; set; }
 
-	public Tour? Tour { get; set; }
-	public Poi? Poi { get; set; }
+	public int StayMinutes { get; set; } = 10;
+	public string? Note { get; set; }
+
+	public Tour Tour { get; set; } = null!;
+	public Poi Poi { get; set; } = null!;
 }
 
