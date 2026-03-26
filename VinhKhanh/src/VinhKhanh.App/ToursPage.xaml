@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="VinhKhanh.App.ToursPage"
+             Title="Tour ẩm thực">
+    <Grid RowDefinitions="Auto,*" Padding="12">
+        <Button Text="Tải lại danh sách tour" Clicked="OnReload" />
+        <CollectionView x:Name="TourList" Grid.Row="1" SelectionMode="None">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <VerticalStackLayout Padding="0,10" Spacing="4">
+                        <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="16" />
+                        <Label Text="{Binding Description}" FontSize="13" TextColor="#555" />
+                        <Label FontSize="12" TextColor="#888"
+                               Text="{Binding EstimatedMinutes, StringFormat='Ước tính: {0} phút'}" />
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

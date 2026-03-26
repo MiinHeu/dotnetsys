@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
@@ -127,6 +128,13 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+}
+
+#root:has(.vk-admin) {
+  width: 100%;
+  max-width: none;
+  text-align: initial;
+  border: none;
 }
 
 body {

@@ -94,6 +94,9 @@ namespace VinhKhanh.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Username")
+                        .IsUnique();
+
                     b.ToTable("AppUsers", (string)null);
                 });
 
@@ -144,6 +147,9 @@ namespace VinhKhanh.Infrastructure.Migrations
                     b.Property<int>("Category")
                         .HasColumnType("integer");
 
+                    b.Property<int>("ContentVersion")
+                        .HasColumnType("integer");
+
                     b.Property<int>("CooldownSeconds")
                         .HasColumnType("integer");
 
@@ -183,6 +189,10 @@ namespace VinhKhanh.Infrastructure.Migrations
                     b.Property<int>("Priority")
                         .HasColumnType("integer");
 
+                    b.Property<string>("QrCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<double>("TriggerRadiusMeters")
                         .HasColumnType("double precision");
 
@@ -193,6 +203,12 @@ namespace VinhKhanh.Infrastructure.Migrations
 
                     b.HasIndex("Category");
 
+                    b.HasIndex("ContentVersion");
+
+                    b.HasIndex("QrCode")
+                        .IsUnique()
+                        .HasFilter("\"QrCode\" IS NOT NULL");
+
                     b.HasIndex("Latitude", "Longitude");
 
                     b.ToTable("Pois", (string)null);
@@ -202,6 +218,7 @@ namespace VinhKhanh.Infrastructure.Migrations
                         {
                             Id = 1,
                             Category = 0,
+                            ContentVersion = 1,
                             CooldownSeconds = 60,
                             CreatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Com tam dac trung Sai Gon 30 nam.",
@@ -212,6 +229,7 @@ namespace VinhKhanh.Infrastructure.Migrations
                             MapY = 40.0,
                             Name = "Quan Com Tam Ba Ghien",
                             Priority = 9,
+                            QrCode = "VK-POI-001",
                             TriggerRadiusMeters = 15.0,
                             UpdatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -219,6 +237,7 @@ namespace VinhKhanh.Infrastructure.Migrations
                         {
                             Id = 2,
                             Category = 1,
+                            ContentVersion = 1,
                             CooldownSeconds = 60,
                             CreatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Banh canh cua tuoi boc day, 40 nam.",
@@ -229,6 +248,7 @@ namespace VinhKhanh.Infrastructure.Migrations
                             MapY = 40.0,
                             Name = "Banh Canh Cua Ba Suong",
                             Priority = 8,
+                            QrCode = "VK-POI-002",
                             TriggerRadiusMeters = 15.0,
                             UpdatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -236,6 +256,7 @@ namespace VinhKhanh.Infrastructure.Migrations
                         {
                             Id = 3,
                             Category = 3,
+                            ContentVersion = 1,
                             CooldownSeconds = 120,
                             CreatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Khu vuc tap trung hang che.",
@@ -246,6 +267,7 @@ namespace VinhKhanh.Infrastructure.Migrations
                             MapY = 40.0,
                             Name = "Khu Che Cuoi Pho",
                             Priority = 5,
+                            QrCode = "VK-POI-003",
                             TriggerRadiusMeters = 20.0,
                             UpdatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
@@ -312,8 +334,8 @@ namespace VinhKhanh.Infrastructure.Migrations
 
                     b.Property<string>("TriggerType")
                         .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<DateTime>("VisitedAt")
                         .HasColumnType("timestamp with time zone");

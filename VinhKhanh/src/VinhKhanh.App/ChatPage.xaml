@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="VinhKhanh.App.ChatPage"
+             Title="Trợ lý AI">
+    <Grid RowDefinitions="Auto,*,Auto" Padding="12" RowSpacing="8">
+        <Picker x:Name="LangPicker" Title="Ngôn ngữ AI" />
+        <CollectionView x:Name="ChatList" Grid.Row="1" />
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <Entry x:Name="MsgEntry" Placeholder="Hỏi về món, khu phố..." />
+            <Button Grid.Column="1" Text="Gửi" Clicked="OnSend" />
+        </Grid>
+    </Grid>
+</ContentPage>

@@ -61,6 +61,10 @@
 		<MauiXaml Update="App.xaml" />
 		<MauiXaml Update="AppShell.xaml" />
 		<MauiXaml Update="MainPage.xaml" />
+		<MauiXaml Update="ToursPage.xaml" />
+		<MauiXaml Update="ChatPage.xaml" />
+		<MauiXaml Update="SettingsPage.xaml" />
+		<MauiXaml Update="QrScanPage.xaml" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -70,6 +74,7 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.41" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 		<PackageReference Include="Microsoft.Maui.Controls.Maps" Version="10.0.50" />
+		<PackageReference Include="Plugin.Maui.Audio" Version="4.0.0" />
 		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
 		<PackageReference Include="ZXing.Net.Maui.Controls" Version="0.7.4" />
 	</ItemGroup>

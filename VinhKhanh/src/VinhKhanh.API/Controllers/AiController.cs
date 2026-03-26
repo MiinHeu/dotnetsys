@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VinhKhanh.Infrastructure.Data;
@@ -9,7 +10,7 @@ namespace VinhKhanh.API.Controllers;
 [ApiController, Route("api/[controller]")]
 public class AiController(ApplicationDbContext db, IAiService ai) : ControllerBase
 {
-	[HttpPost("chat")]
+	[AllowAnonymous, HttpPost("chat")]
 	public async Task<IActionResult> Chat([FromBody] ChatRequest req)
 	{
 		// Build short context to keep prompt size manageable.
