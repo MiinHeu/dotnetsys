@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VinhKhanh.Infrastructure.Data;
@@ -8,7 +9,7 @@ namespace VinhKhanh.API.Controllers;
 [ApiController, Route("api/[controller]")]
 public class AnalyticsController(ApplicationDbContext db) : ControllerBase
 {
-	[HttpPost("log")]
+	[AllowAnonymous, HttpPost("log")]
 	public async Task<IActionResult> LogVisit([FromBody] VisitLogDto dto)
 	{
 		db.PoiVisitLogs.Add(new PoiVisitLog
@@ -25,7 +26,7 @@ public class AnalyticsController(ApplicationDbContext db) : ControllerBase
 		return Ok();
 	}
 
-	[HttpGet("top")]
+	[Authorize(Roles = "Admin"), HttpGet("top")]
 	public async Task<IActionResult> GetTop([FromQuery] int days = 7)
 	{
 		var since = DateTime.UtcNow.AddDays(-days);
@@ -46,7 +47,7 @@ public class AnalyticsController(ApplicationDbContext db) : ControllerBase
 		return Ok(top);
 	}
 
-	[HttpGet("heatmap")]
+	[Authorize(Roles = "Admin"), HttpGet("heatmap")]
 	public async Task<IActionResult> GetHeatmap([FromQuery] int hours = 24)
 	{
 		var since = DateTime.UtcNow.AddHours(-hours);

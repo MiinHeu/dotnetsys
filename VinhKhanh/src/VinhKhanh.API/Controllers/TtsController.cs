@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace VinhKhanh.API.Controllers;
 
 [ApiController, Route("api/[controller]")]
-[Authorize]
+[Authorize(Roles = "Admin")]
 public class TtsController(ITtsService tts) : ControllerBase
 {
 	[HttpPost("synthesize")]

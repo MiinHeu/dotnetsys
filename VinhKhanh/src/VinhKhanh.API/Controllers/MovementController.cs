@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VinhKhanh.Infrastructure.Data;
@@ -8,7 +9,7 @@ namespace VinhKhanh.API.Controllers;
 [ApiController, Route("api/[controller]")]
 public class MovementController(ApplicationDbContext db) : ControllerBase
 {
-	[HttpPost("batch")]
+	[AllowAnonymous, HttpPost("batch")]
 	public async Task<IActionResult> BatchLog([FromBody] MovementBatchDto dto)
 	{
 		if (dto.Points.Count == 0) return Ok();
@@ -26,7 +27,7 @@ public class MovementController(ApplicationDbContext db) : ControllerBase
 		return Ok(new { saved = dto.Points.Count });
 	}
 
-	[HttpGet("heatmap")]
+	[Authorize(Roles = "Admin"), HttpGet("heatmap")]
 	public async Task<IActionResult> GetHeatmap([FromQuery] int hours = 24)
 	{
 		var since = DateTime.UtcNow.AddHours(-hours);
@@ -37,7 +38,7 @@ public class MovementController(ApplicationDbContext db) : ControllerBase
 			.ToListAsync());
 	}
 
-	[HttpGet("session/{sessionId}")]
+	[Authorize(Roles = "Admin"), HttpGet("session/{sessionId}")]
 	public async Task<IActionResult> GetSession(string sessionId)
 	{
 		return Ok(await db.MovementLogs

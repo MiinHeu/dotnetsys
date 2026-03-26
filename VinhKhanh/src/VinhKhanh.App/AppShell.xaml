@@ -4,11 +4,13 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:VinhKhanh.App"
-    Title="VinhKhanh.App">
+    Title="Phố ẩm thực Vĩnh Khánh">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
-
+    <TabBar>
+        <ShellContent Title="Bản đồ" ContentTemplate="{DataTemplate local:MainPage}" Route="MainPage" />
+        <ShellContent Title="Tour" ContentTemplate="{DataTemplate local:ToursPage}" Route="Tours" />
+        <ShellContent Title="AI" ContentTemplate="{DataTemplate local:ChatPage}" Route="Chat" />
+        <ShellContent Title="QR" ContentTemplate="{DataTemplate local:QrScanPage}" Route="Qr" />
+        <ShellContent Title="Cài đặt" ContentTemplate="{DataTemplate local:SettingsPage}" Route="Settings" />
+    </TabBar>
 </Shell>
