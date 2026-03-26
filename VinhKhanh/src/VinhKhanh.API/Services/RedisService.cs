@@ -1,7 +1,9 @@
-using StackExchange.Redis;
+// using StackExchange.Redis;
 
 namespace VinhKhanh.API.Services;
 
+// Commented out for testing - requires Redis package
+/*
 public sealed class RedisService(IConnectionMultiplexer redis) : IRedisService
 {
 	private readonly IDatabase _db = redis.GetDatabase();
@@ -24,3 +26,4 @@ public sealed class RedisService(IConnectionMultiplexer redis) : IRedisService
 	public Task PublishAsync(string channel, string message, CancellationToken ct = default)
 		=> _sub.PublishAsync(RedisChannel.Literal(channel), message);
 }
+*/

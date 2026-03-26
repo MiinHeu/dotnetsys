@@ -1,9 +1,9 @@
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
-using StackExchange.Redis;
+// using StackExchange.Redis;
+using System.Text;
 using VinhKhanh.API.Hubs;
 using VinhKhanh.API.Services;
 using VinhKhanh.Infrastructure.Data;
@@ -14,34 +14,28 @@ builder.Services.AddOpenApi();
 builder.Services.AddControllers()
 	.AddJsonOptions(options =>
 	{
+		// Prevent runtime 500 when entities have circular navigation references (EF)
 		options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 	});
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
+#if DEBUG
+	options.UseInMemoryDatabase("VinhKhanhDB");
+#else
 	var connStr = builder.Configuration.GetConnectionString("Default");
 	options.UseNpgsql(connStr);
+#endif
 });
-
-var redisConn = builder.Configuration["Redis"];
-if (string.IsNullOrWhiteSpace(redisConn))
-{
-	builder.Services.AddSingleton<IRedisService, NoOpRedisService>();
-}
-else
-{
-	var redisOpts = ConfigurationOptions.Parse(redisConn);
-	redisOpts.AbortOnConnectFail = false;
-	redisOpts.ConnectTimeout = 3000;
-	builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisOpts));
-	builder.Services.AddScoped<IRedisService, RedisService>();
-}
 
 builder.Services.AddSignalR();
 
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IAiService, OllamaAiService>();
 builder.Services.AddScoped<ITtsService, AzureTtsService>();
+
+// Redis — dùng NoOpRedisService cho testing
+builder.Services.AddScoped<IRedisService, NoOpRedisService>();
 
 builder.Services.AddCors(options =>
 {
@@ -59,6 +53,7 @@ builder.Services.AddCors(options =>
 	});
 });
 
+// JWT (chưa áp authorize cho toàn bộ endpoint, nhưng cấu hình để sẵn cho PHAN sau).
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 	.AddJwtBearer(options =>
 	{
@@ -79,12 +74,13 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// Auto-migrate on startup (only for real databases)
+#if !DEBUG
 using (var scope = app.Services.CreateScope())
 {
-	var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-	db.Database.Migrate();
-	DbSeeder.SeedAsync(db).GetAwaiter().GetResult();
+	scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
 }
+#endif
 
 if (app.Environment.IsDevelopment())
 {
@@ -92,10 +88,7 @@ if (app.Environment.IsDevelopment())
 	app.MapScalarApiReference();
 }
 
-// Chỉ ép HTTPS khi đã cấu hình URL HTTPS (tránh cảnh báo "Failed to determine the https port" khi chỉ http://localhost:5283).
-if (!app.Environment.IsDevelopment())
-	app.UseHttpsRedirection();
-
+app.UseHttpsRedirection();
 app.UseCors("Dev");
 app.UseStaticFiles();
 

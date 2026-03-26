@@ -17,6 +17,8 @@ const empty: Poi = {
   priority: 5,
   cooldownSeconds: 60,
   qrCode: null,
+  imageUrl: null,
+  audioViUrl: null,
   category: 0,
   isActive: true,
 }
@@ -31,7 +33,7 @@ export function PoiEditor() {
 
   const poiQ = useQuery({
     queryKey: ['poi', id],
-    enabled: !isNew && !!id,
+    enabled: !isNew && id !== 'new' && !!id,
     queryFn: async () => (await api.get<Poi>(`/api/poi/${id}`)).data,
   })
 
@@ -41,20 +43,30 @@ export function PoiEditor() {
 
   const save = useMutation({
     mutationFn: async () => {
-      if (isNew) {
-        if (role !== 'Admin') throw new Error('Chỉ Admin tạo POI mới')
-        await api.post('/api/poi', form)
-      } else {
-        await api.put(`/api/poi/${id}`, form)
+      try {
+        if (isNew) {
+          await api.post('/api/poi', form)
+        } else {
+          if (!id) throw new Error('ID POI không hợp lệ')
+          await api.put(`/api/poi/${id}`, form)
+        }
+      } catch (err) {
+        console.error('POI save error:', err)
+        throw err
       }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pois'] })
       navigate('/pois')
     },
+    onError: (err) => {
+      console.error('Mutation error:', err)
+    },
   })
 
   if (!isNew && poiQ.isLoading) return <p>Đang tải…</p>
+
+  const isFormValid = form.name.trim().length > 0
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
@@ -201,14 +213,25 @@ export function PoiEditor() {
         )}
       </div>
       {save.error && (
-        <p className="text-sm text-red-600">{(save.error as Error).message}</p>
+        <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/20">
+          <strong>Lỗi:</strong> {(save.error as Error).message}
+        </div>
+      )}
+      {!isFormValid && (
+        <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-700 dark:border-yellow-700 dark:bg-yellow-900/20">
+          ⚠️ Vui lòng điền <strong>Tên</strong> POI
+        </div>
+      )}
+      {save.isPending && (
+        <p className="text-sm text-blue-600">Đang lưu...</p>
       )}
       <div className="flex gap-2">
         <button
           type="button"
-          className="rounded-lg bg-orange-600 px-4 py-2 text-white"
+          className="rounded-lg bg-orange-600 px-4 py-2 text-white disabled:opacity-50"
           onClick={() => save.mutate()}
-          disabled={save.isPending}
+          disabled={save.isPending || (!isNew && !id) || !isFormValid}
+          title={!isFormValid ? 'Điền Tên POI trước' : ''}
         >
           Lưu
         </button>

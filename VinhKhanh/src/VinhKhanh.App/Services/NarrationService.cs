@@ -1,10 +1,11 @@
 using System.Diagnostics;
 using Plugin.Maui.Audio;
 using VinhKhanh.App.Models;
+using VinhKhanh.Infrastructure.Data;
 
 namespace VinhKhanh.App.Services;
 
-public sealed class NarrationService(IAudioManager audioManager)
+public sealed class NarrationService(IAudioManager audioManager) : INarrationService
 {
 	private IAudioPlayer? _player;
 	private MemoryStream? _playbackStream;
@@ -29,6 +30,31 @@ public sealed class NarrationService(IAudioManager audioManager)
 		}
 		return Task.CompletedTask;
 	}
+
+	public Task EnqueueAsync(Poi poi, string language)
+	{
+		// Convert Poi to PoiSnapshot and use existing PlayPoiAsync method
+		var poiSnapshot = new PoiSnapshot
+		{
+			Id = poi.Id,
+			Name = poi.Name,
+			Description = poi.Description,
+			Latitude = poi.Latitude,
+			Longitude = poi.Longitude,
+			MapX = poi.MapX,
+			MapY = poi.MapY,
+			TriggerRadiusMeters = poi.TriggerRadiusMeters,
+			CooldownSeconds = poi.CooldownSeconds,
+			Priority = poi.Priority,
+			ImageUrl = poi.ImageUrl,
+			AudioViUrl = poi.AudioViUrl
+		};
+		
+		var apiRoot = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, ApiClientService.GetDefaultApiBase()).TrimEnd('/');
+		return PlayPoiAsync(poiSnapshot, language, apiRoot);
+	}
+
+	public Task StopCurrentAsync() => StopAsync();
 
 	/// <summary>Phat thuyet minh; tra ve thoi luong nghe uoc tinh (giay) cho analytics.</summary>
 	public async Task<int> PlayPoiAsync(PoiSnapshot poi, string lang, string apiRootTrimmed, CancellationToken ct = default)

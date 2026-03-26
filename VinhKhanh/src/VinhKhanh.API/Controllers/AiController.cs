@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VinhKhanh.Infrastructure.Data;
@@ -8,9 +7,9 @@ using VinhKhanh.Shared.DTOs;
 namespace VinhKhanh.API.Controllers;
 
 [ApiController, Route("api/[controller]")]
-public class AiController(ApplicationDbContext db, IAiService ai) : ControllerBase
+public class AiController(ApplicationDbContext db, IAiService ai, ITtsService tts) : ControllerBase
 {
-	[AllowAnonymous, HttpPost("chat")]
+	[HttpPost("chat")]
 	public async Task<IActionResult> Chat([FromBody] ChatRequest req)
 	{
 		// Build short context to keep prompt size manageable.
@@ -51,6 +50,13 @@ Danh sach quan:
 
 		var reply = await ai.ChatAsync(system, req.Message, req.History);
 		return Ok(new { reply });
+	}
+
+	[HttpPost("tts")]
+	public async Task<IActionResult> Synthesize([FromBody] TtsRequest req)
+	{
+		var audioBytes = await tts.SynthesizeAsync(req.Text, req.Lang, req.Voice);
+		return File(audioBytes, "audio/wav");
 	}
 }
 

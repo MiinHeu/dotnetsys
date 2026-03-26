@@ -39,13 +39,10 @@ public class ApplicationDbContext : DbContext
 			entity.HasKey(x => x.Id);
 			entity.Property(x => x.Name).HasMaxLength(250).IsRequired();
 			entity.Property(x => x.Description).IsRequired();
-			entity.Property(x => x.QrCode).HasMaxLength(64);
-			entity.HasIndex(x => x.ContentVersion);
 
 			entity.HasQueryFilter(p => p.IsActive);
 			entity.HasIndex(p => new { p.Latitude, p.Longitude });
 			entity.HasIndex(p => p.Category);
-			entity.HasIndex(p => p.QrCode).IsUnique().HasFilter("\"QrCode\" IS NOT NULL");
 		});
 
 		modelBuilder.Entity<PoiTranslation>(entity =>
@@ -73,7 +70,7 @@ public class ApplicationDbContext : DbContext
 
 			entity.Property(x => x.SessionId).IsRequired();
 			entity.Property(x => x.LanguageCode).HasMaxLength(10).IsRequired();
-			entity.Property(x => x.TriggerType).HasMaxLength(32).IsRequired();
+			entity.Property(x => x.TriggerType).HasMaxLength(10).IsRequired();
 			entity.HasIndex(v => v.VisitedAt);
 
 			// Match Poi query filter.
@@ -91,7 +88,6 @@ public class ApplicationDbContext : DbContext
 			entity.Property(x => x.Username).IsRequired();
 			entity.Property(x => x.PasswordHash).IsRequired();
 			entity.Property(x => x.Role).IsRequired();
-			entity.HasIndex(x => x.Username).IsUnique();
 		});
 
 		modelBuilder.Entity<Tour>(entity =>
@@ -171,8 +167,6 @@ public class ApplicationDbContext : DbContext
 				Category = PoiCategory.ComTam,
 				ImageUrl = null,
 				AudioViUrl = null,
-				QrCode = "VK-POI-001",
-				ContentVersion = 1,
 				IsActive = true,
 				CreatedAt = seedTime,
 				UpdatedAt = seedTime
@@ -193,8 +187,6 @@ public class ApplicationDbContext : DbContext
 				Category = PoiCategory.BanhCanh,
 				ImageUrl = null,
 				AudioViUrl = null,
-				QrCode = "VK-POI-002",
-				ContentVersion = 1,
 				IsActive = true,
 				CreatedAt = seedTime,
 				UpdatedAt = seedTime
@@ -215,8 +207,6 @@ public class ApplicationDbContext : DbContext
 				Category = PoiCategory.CheTrangMiem,
 				ImageUrl = null,
 				AudioViUrl = null,
-				QrCode = "VK-POI-003",
-				ContentVersion = 1,
 				IsActive = true,
 				CreatedAt = seedTime,
 				UpdatedAt = seedTime
@@ -241,6 +231,20 @@ public class ApplicationDbContext : DbContext
 			new TourStop { Id = 1, TourId = 1, PoiId = 1, StopOrder = 1, StayMinutes = 20, Note = null },
 			new TourStop { Id = 2, TourId = 1, PoiId = 2, StopOrder = 2, StayMinutes = 20, Note = null },
 			new TourStop { Id = 3, TourId = 1, PoiId = 3, StopOrder = 3, StayMinutes = 20, Note = null }
+		);
+
+		// Seed default admin user (password: Admin@2026)
+		modelBuilder.Entity<AppUser>().HasData(
+			new AppUser
+			{
+				Id = 1,
+				Username = "admin",
+				PasswordHash = "$2a$11$PBSPXvfmAZ.W8yyJfGlYOOqiMEgPBBCJOmYDGrqp8qJW3nDEFU.hm", // BCrypt hash of "Admin@2026"
+				Role = "Admin",
+				IsActive = true,
+				OwnedPoiId = null,
+				CreatedAt = seedTime
+			}
 		);
 	}
 }

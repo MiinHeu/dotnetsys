@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -11,11 +10,10 @@ namespace VinhKhanh.API.Controllers;
 [ApiController, Route("api/[controller]")]
 public class TourController(ApplicationDbContext db, IHubContext<VinhKhanhHub> hub) : ControllerBase
 {
-	[AllowAnonymous, HttpGet]
+	[HttpGet]
 	public async Task<IActionResult> GetAll([FromQuery] string lang = "vi")
 	{
 		var tours = await db.Tours
-			.Where(t => t.IsActive)
 			.Include(t => t.Translations.Where(tr => tr.LanguageCode == lang))
 			.Include(t => t.Stops.OrderBy(s => s.StopOrder))
 				.ThenInclude(s => s.Poi)
@@ -26,7 +24,7 @@ public class TourController(ApplicationDbContext db, IHubContext<VinhKhanhHub> h
 		return Ok(tours);
 	}
 
-	[AllowAnonymous, HttpGet("{id:int}")]
+	[HttpGet("{id:int}")]
 	public async Task<IActionResult> GetById(int id, [FromQuery] string lang = "vi")
 	{
 		var tour = await db.Tours
@@ -37,11 +35,10 @@ public class TourController(ApplicationDbContext db, IHubContext<VinhKhanhHub> h
 			.AsNoTracking()
 			.FirstOrDefaultAsync(t => t.Id == id);
 
-		if (tour == null || !tour.IsActive) return NotFound();
-		return Ok(tour);
+		return tour == null ? NotFound() : Ok(tour);
 	}
 
-	[Authorize(Roles = "Admin"), HttpPost]
+	[HttpPost]
 	public async Task<IActionResult> Create([FromBody] TourCreateDto dto)
 	{
 		var tour = new Tour
@@ -72,7 +69,7 @@ public class TourController(ApplicationDbContext db, IHubContext<VinhKhanhHub> h
 		return CreatedAtAction(nameof(GetById), new { id = tour.Id }, tour);
 	}
 
-	[Authorize(Roles = "Admin"), HttpPut("{id:int}")]
+	[HttpPut("{id:int}")]
 	public async Task<IActionResult> Update(int id, [FromBody] TourCreateDto dto)
 	{
 		var tour = await db.Tours
@@ -104,18 +101,6 @@ public class TourController(ApplicationDbContext db, IHubContext<VinhKhanhHub> h
 
 		await hub.Clients.All.SendAsync("TourUpdated", tour);
 		return Ok(tour);
-	}
-
-	[Authorize(Roles = "Admin"), HttpDelete("{id:int}")]
-	public async Task<IActionResult> Delete(int id)
-	{
-		var tour = await db.Tours.FindAsync(id);
-		if (tour == null) return NotFound();
-
-		tour.IsActive = false;
-		tour.UpdatedAt = DateTime.UtcNow;
-		await db.SaveChangesAsync();
-		return NoContent();
 	}
 }
 

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VinhKhanh.Infrastructure.Data;
@@ -9,7 +8,7 @@ namespace VinhKhanh.API.Controllers;
 [ApiController, Route("api/[controller]")]
 public class HistoryController(ApplicationDbContext db) : ControllerBase
 {
-	[AllowAnonymous, HttpPost("log")]
+	[HttpPost("log")]
 	public async Task<IActionResult> Log([FromBody] AppHistoryLogDto dto)
 	{
 		db.AppHistoryLogs.Add(new AppHistoryLog
@@ -27,7 +26,7 @@ public class HistoryController(ApplicationDbContext db) : ControllerBase
 		return Ok();
 	}
 
-	[Authorize(Roles = "Admin"), HttpGet]
+	[HttpGet]
 	public async Task<IActionResult> GetHistory(
 		[FromQuery] int page = 1,
 		[FromQuery] int size = 50,

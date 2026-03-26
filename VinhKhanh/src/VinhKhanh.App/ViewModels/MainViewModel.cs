@@ -2,24 +2,25 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Maui.Devices.Sensors;
 using VinhKhanh.App.Models;
 using VinhKhanh.App.Services;
+using VinhKhanh.Infrastructure.Data;
 using VinhKhanh.Shared.DTOs;
 
 namespace VinhKhanh.App.ViewModels;
 
-public partial class MainViewModel : ObservableObject
+public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdatedMessage>
 {
 	private readonly ApiClientService _api;
 	private readonly LocalPoiCacheService _cache;
 	private readonly SessionService _session;
 	private readonly GeofenceCooldownStore _cooldowns;
-	private readonly NarrationService _narration;
+	private readonly INarrationService _narration;
+	private readonly IGpsService _gps;
+	private readonly IGeofenceService _geofence;
 
-	private CancellationTokenSource? _trackCts;
-	private int _debounceCandidateId;
-	private int _debounceHits;
 	private readonly List<MovementPointDto> _movementBuffer = [];
 	private DateTime _lastMovementFlush = DateTime.UtcNow;
 
@@ -28,14 +29,19 @@ public partial class MainViewModel : ObservableObject
 		LocalPoiCacheService cache,
 		SessionService session,
 		GeofenceCooldownStore cooldowns,
-		NarrationService narration)
+		INarrationService narration,
+		IGpsService gps,
+		IGeofenceService geofence)
 	{
 		_api = api;
 		_cache = cache;
 		_session = session;
 		_cooldowns = cooldowns;
 		_narration = narration;
+		_gps = gps;
+		_geofence = geofence;
 		SelectedLanguage = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "vi");
+		WeakReferenceMessenger.Default.Register(this);
 	}
 
 	public ObservableCollection<PoiSnapshot> Pois { get; } = new();
@@ -96,103 +102,59 @@ public partial class MainViewModel : ObservableObject
 	{
 		if (IsTracking)
 		{
-			_trackCts?.Cancel();
-			_trackCts?.Dispose();
-			_trackCts = null;
+			await _gps.StopTrackingAsync();
 			IsTracking = false;
 			StatusMessage = "Da tat theo doi.";
 			await FlushMovementAsync();
 			return;
 		}
 
-		var status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
-		if (status != PermissionStatus.Granted)
-		{
-			StatusMessage = "Can quyen vi tri.";
-			return;
-		}
-
-		_ = await Permissions.RequestAsync<Permissions.LocationAlways>();
-
 		IsTracking = true;
-		StatusMessage = "Dang theo doi GPS...";
-		_trackCts = new CancellationTokenSource();
-		_ = RunTrackingLoopAsync(_trackCts.Token);
+		StatusMessage = "Dang theo doi GPS qua Dịch vụ nền...";
+		await _gps.StartTrackingAsync();
 	}
 
-	private async Task RunTrackingLoopAsync(CancellationToken ct)
+	public async void Receive(LocationUpdatedMessage message)
 	{
-		var mult = 1.0;
-		var mstr = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.GpsRadiusMultiplier, "1");
-		_ = double.TryParse(mstr, out mult);
-		if (mult <= 0) mult = 1;
+		var loc = message.Location;
+		UserLatitude = loc.Latitude;
+		UserLongitude = loc.Longitude;
 
-		var request = new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(8));
+		_movementBuffer.Add(new MovementPointDto(loc.Latitude, loc.Longitude,
+			(float)(loc.Accuracy ?? 25), DateTime.UtcNow));
+		await MaybeFlushMovementAsync();
 
-		while (!ct.IsCancellationRequested)
+		// Chuyển PoisSnapshot -> Poi domain model
+		var domainPois = Pois.Select(p => new Poi
 		{
-			try
-			{
-				var loc = await Geolocation.Default.GetLocationAsync(request, ct);
-				if (loc != null)
-				{
-					UserLatitude = loc.Latitude;
-					UserLongitude = loc.Longitude;
-					_movementBuffer.Add(new MovementPointDto(loc.Latitude, loc.Longitude,
-						(float)(loc.Accuracy ?? 25), DateTime.UtcNow));
-					await MaybeFlushMovementAsync();
+			Id = p.Id,
+			Name = p.Name,
+			Description = p.Description,
+			Latitude = p.Latitude,
+			Longitude = p.Longitude,
+			TriggerRadiusMeters = p.TriggerRadiusMeters,
+			Priority = p.Priority,
+			CooldownSeconds = p.CooldownSeconds
+		}).ToList();
 
-					var best = GeofenceEvaluator.PickBestInside(loc.Latitude, loc.Longitude, Pois.ToList(), mult);
-					await ProcessGeofenceAsync(best, ct);
-				}
-			}
-			catch (OperationCanceledException) { break; }
-			catch (Exception ex)
-			{
-				Debug.WriteLine(ex);
-				StatusMessage = "GPS tam loi — thu lai...";
-			}
-
-			try { await Task.Delay(4500, ct); }
-			catch (OperationCanceledException) { break; }
-		}
-	}
-
-	private async Task ProcessGeofenceAsync(PoiSnapshot? inside, CancellationToken ct)
-	{
-		if (inside == null)
+		var triggered = await _geofence.CheckTriggeredAsync(loc, domainPois);
+		var best = triggered.FirstOrDefault();
+		
+		if (best != null && !_narration.IsPlaying)
 		{
-			_debounceHits = 0;
-			_debounceCandidateId = 0;
-			NearestLabel = "";
-			return;
+			NearestLabel = best.Name;
+			StatusMessage = $"Thuyet minh: {NearestLabel}";
+			
+			// Dùng INarrationService để phát audio
+			await _narration.EnqueueAsync(best, SelectedLanguage);
+
+			await _api.PostAnalyticsVisitAsync(new VisitLogDto(best.Id, _session.SessionId, SelectedLanguage, "GPS", 1));
+			await _api.PostHistoryLogAsync(new AppHistoryLogDto(_session.SessionId, "GPS_TRIGGER", PoiId: best.Id, LanguageCode: SelectedLanguage));
 		}
-
-		NearestLabel = inside.ResolveName(SelectedLanguage);
-
-		if (inside.Id != _debounceCandidateId)
+		else if (best != null)
 		{
-			_debounceCandidateId = inside.Id;
-			_debounceHits = 1;
-			return;
+			NearestLabel = best.Name;
 		}
-
-		_debounceHits++;
-		if (_debounceHits < 2) return;
-		if (!_cooldowns.CanTrigger(inside.Id, inside.CooldownSeconds)) return;
-
-		_cooldowns.MarkTriggered(inside.Id);
-		StatusMessage = $"Thuyet minh: {NearestLabel}";
-
-		var apiRoot = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, ApiClientService.GetDefaultApiBase()).TrimEnd('/');
-
-		var heard = await _narration.PlayPoiAsync(inside, SelectedLanguage, apiRoot, ct);
-
-		await _api.PostAnalyticsVisitAsync(new VisitLogDto(inside.Id, _session.SessionId, SelectedLanguage, "GPS", heard));
-		await _api.PostHistoryLogAsync(new AppHistoryLogDto(_session.SessionId, "GPS_TRIGGER",
-			PoiId: inside.Id, LanguageCode: SelectedLanguage));
-
-		_debounceHits = 0;
 	}
 
 	private async Task MaybeFlushMovementAsync()
