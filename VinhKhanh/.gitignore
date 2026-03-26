@@ -5,22 +5,16 @@ obj/
 **/appsettings.Secrets.json
 node_modules/
 
-# .NET
 .dotnet/
 .dotnet-cli/
-
-# nuget
 .nuget/
 packages/
 
-# build
 dist/
 build/
 
-# Rider
 .idea/
 
-# OS
 .DS_Store
 Thumbs.db
 
