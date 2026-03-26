@@ -11,7 +11,7 @@ namespace VinhKhanh.API.Controllers;
 public class TtsController(ITtsService tts) : ControllerBase
 {
 	[HttpPost("synthesize")]
-	public async Task<IActionResult> Synthesize([FromBody] TtsSynthesizeDto dto)
+	public async Task<IActionResult> Synthesize([FromBody] TtsRequest dto)
 	{
 		if (string.IsNullOrWhiteSpace(dto.Text))
 			return BadRequest("Text khong duoc trong");

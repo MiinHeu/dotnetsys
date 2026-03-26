@@ -4,6 +4,5 @@
     <Project Path="src/VinhKhanh.App/VinhKhanh.App.csproj" />
     <Project Path="src/VinhKhanh.Infrastructure/VinhKhanh.Infrastructure.csproj" />
     <Project Path="src/VinhKhanh.Shared/VinhKhanh.Shared.csproj" />
-    
   </Folder>
 </Solution>

@@ -81,6 +81,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\VinhKhanh.Shared\VinhKhanh.Shared.csproj" />
+	  <ProjectReference Include="..\VinhKhanh.Infrastructure\VinhKhanh.Infrastructure.csproj" />
 	</ItemGroup>
 
 </Project>

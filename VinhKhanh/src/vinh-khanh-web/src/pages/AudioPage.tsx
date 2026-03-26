@@ -1,6 +1,5 @@
-import axios from 'axios'
 import { useState } from 'react'
-import { useAuthStore } from '@/store/authStore'
+import { api } from '@/lib/api'
 
 export function AudioPage() {
   const [lang, setLang] = useState('vi')
@@ -16,10 +15,7 @@ export function AudioPage() {
       const fd = new FormData()
       fd.append('file', file)
       fd.append('lang', lang)
-      const token = useAuthStore.getState().token
-      const { data } = await axios.post('/api/audio/upload', fd, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const { data } = await api.post('/api/audio/upload', fd)
       setMsg(`Đã upload: ${data.url ?? data.filename ?? 'OK'}`)
     } catch {
       setMsg('Upload thất bại (cần quyền Admin/Owner).')

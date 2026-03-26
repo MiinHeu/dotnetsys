@@ -37,6 +37,9 @@ public class ChatMessage
 	public bool IsUser { get; set; }
 }
 
-public record TtsSynthesizeDto(string Text, string Lang = "vi", string? Voice = null);
+public record PoiTranslationDto(
+	string LanguageCode,
+	string Name,
+	string Description,
+	string? AudioUrl = null);
 
-public record PoiTranslationDto(string LanguageCode, string Name, string Description, string? AudioUrl = null);

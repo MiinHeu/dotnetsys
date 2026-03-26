@@ -32,12 +32,6 @@ public class Poi : IComparable<Poi>
 	public string? ImageUrl { get; set; }
 	public string? AudioViUrl { get; set; }
 
-	/// <summary>Mã QR / bus stop (vd: BUS-VK-01). Duy nhất khi có giá trị — dùng quét không cần GPS.</summary>
-	public string? QrCode { get; set; }
-
-	/// <summary>Tăng khi nội dung POI đổi — app đồng bộ delta.</summary>
-	public int ContentVersion { get; set; } = 1;
-
 	public PoiCategory Category { get; set; } = PoiCategory.ComTam;
 	public bool IsActive { get; set; } = true;
 

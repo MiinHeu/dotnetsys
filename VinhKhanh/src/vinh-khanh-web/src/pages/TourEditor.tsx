@@ -104,12 +104,12 @@ export function TourEditor() {
         />
       </label>
 
-      <div className="space-y-2">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Điểm dừng</span>
+          <span className="text-sm font-medium">Lộ trình điểm dừng</span>
           <button
             type="button"
-            className="text-sm text-orange-700"
+            className="text-sm font-medium text-orange-600 hover:text-orange-700"
             onClick={() =>
               setStops((s) => [
                 ...s,
@@ -117,54 +117,62 @@ export function TourEditor() {
               ])
             }
           >
-            + Thêm
+            + Thêm điểm
           </button>
         </div>
-        {stops.map((row, i) => (
-          <div key={i} className="flex flex-wrap gap-2 rounded border border-stone-200 p-2 dark:border-stone-700">
-            <select
-              className="rounded border px-1 dark:border-stone-600 dark:bg-stone-800"
-              value={row.poiId}
-              onChange={(e) => {
-                const v = Number(e.target.value)
-                setStops((prev) => prev.map((x, j) => (j === i ? { ...x, poiId: v } : x)))
-              }}
-            >
-              {poisQ.data?.map((p) => (
-                <option key={p.id} value={p.id}>
-                  #{p.id} {p.name}
-                </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              title="Thứ tự"
-              className="w-16 rounded border px-1 dark:border-stone-600 dark:bg-stone-800"
-              value={row.stopOrder}
-              onChange={(e) => {
-                const v = Number(e.target.value)
-                setStops((prev) => prev.map((x, j) => (j === i ? { ...x, stopOrder: v } : x)))
-              }}
-            />
-            <input
-              type="number"
-              title="Phút dừng"
-              className="w-20 rounded border px-1 dark:border-stone-600 dark:bg-stone-800"
-              value={row.stayMinutes}
-              onChange={(e) => {
-                const v = Number(e.target.value)
-                setStops((prev) => prev.map((x, j) => (j === i ? { ...x, stayMinutes: v } : x)))
-              }}
-            />
-            <button
-              type="button"
-              className="text-red-600"
-              onClick={() => setStops((prev) => prev.filter((_, j) => j !== i))}
-            >
-              ×
-            </button>
-          </div>
-        ))}
+        <div className="space-y-2">
+          {stops.map((row, i) => (
+            <div key={i} className="flex flex-wrap items-center gap-2 rounded border border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800/50">
+              <span className="text-sm font-medium text-stone-500 w-6">#{row.stopOrder}</span>
+              <select
+                className="flex-1 min-w-[150px] rounded border px-2 py-1.5 text-sm dark:border-stone-600 dark:bg-stone-800"
+                value={row.poiId}
+                onChange={(e) => {
+                  const v = Number(e.target.value)
+                  setStops((prev) => prev.map((x, j) => (j === i ? { ...x, poiId: v } : x)))
+                }}
+              >
+                {poisQ.data?.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  placeholder="Thứ tự"
+                  title="Thứ tự"
+                  className="w-16 rounded border px-2 py-1.5 text-sm dark:border-stone-600 dark:bg-stone-800"
+                  value={row.stopOrder}
+                  onChange={(e) => {
+                    const v = Number(e.target.value)
+                    setStops((prev) => prev.map((x, j) => (j === i ? { ...x, stopOrder: v } : x)))
+                  }}
+                />
+                <input
+                  type="number"
+                  placeholder="Min"
+                  title="Phút dừng"
+                  className="w-16 rounded border px-2 py-1.5 text-sm dark:border-stone-600 dark:bg-stone-800"
+                  value={row.stayMinutes}
+                  onChange={(e) => {
+                    const v = Number(e.target.value)
+                    setStops((prev) => prev.map((x, j) => (j === i ? { ...x, stayMinutes: v } : x)))
+                  }}
+                />
+                <button
+                  type="button"
+                  className="ml-1 rounded px-2 py-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+                  title="Xóa điểm này"
+                  onClick={() => setStops((prev) => prev.filter((_, j) => j !== i))}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="flex gap-2">
