@@ -3,3 +3,21 @@ bin/
 obj/
 *.user
 *.tmp
+
+# .NET / NuGet caches (không commit lên Git)
+.dotnet/
+.dotnet-cli/
+.nuget/
+packages/
+
+# Node
+node_modules/
+
+# Web build outputs
+dist/
+build/
+
+# IDE / OS
+.idea/
+.DS_Store
+Thumbs.db
