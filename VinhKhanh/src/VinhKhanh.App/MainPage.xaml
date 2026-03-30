@@ -5,18 +5,49 @@
              x:Class="VinhKhanh.App.MainPage"
              Title="Bản đồ Vĩnh Khánh">
 
-    <Grid RowDefinitions="Auto,Auto,*" Padding="12" RowSpacing="10">
-        <HorizontalStackLayout Spacing="8">
-            <Picker x:Name="LangPicker" Title="Ngôn ngữ" WidthRequest="120" SelectedIndexChanged="OnLangChanged" />
-            <Button Text="Đồng bộ POI" Clicked="OnSyncClicked" />
-            <Button x:Name="TrackBtn" Text="Bật GPS" Clicked="OnTrackClicked" />
-        </HorizontalStackLayout>
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="14" RowSpacing="12">
+        <Border StrokeThickness="0"
+                Background="{AppThemeBinding Light=#FFF7ED, Dark=#2B1D14}"
+                StrokeShape="RoundRectangle 14">
+            <HorizontalStackLayout Spacing="8" Padding="10">
+                <Picker x:Name="LangPicker"
+                        Title="Ngôn ngữ"
+                        WidthRequest="130"
+                        SelectedIndexChanged="OnLangChanged" />
+                <Button Text="Đồng bộ POI" Clicked="OnSyncClicked" />
+                <Button x:Name="TrackBtn" Text="Bật GPS" Clicked="OnTrackClicked" />
+            </HorizontalStackLayout>
+        </Border>
 
-        <VerticalStackLayout Grid.Row="1" Spacing="4">
-            <Label x:Name="StatusLabel" FontSize="13" TextColor="#444" />
-            <Label x:Name="NearestLabel" FontSize="15" FontAttributes="Bold" TextColor="#c2410c" />
-        </VerticalStackLayout>
+        <Border Grid.Row="1"
+                StrokeThickness="0"
+                Background="{AppThemeBinding Light=#FFFFFF, Dark=#20150F}"
+                StrokeShape="RoundRectangle 14">
+            <VerticalStackLayout Padding="12" Spacing="4">
+                <Label Text="Trạng thái hệ thống" FontSize="12" TextColor="{StaticResource Gray500}" />
+                <Label x:Name="StatusLabel" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Gray900}" />
+                <Label x:Name="NearestLabel" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Primary}" />
+            </VerticalStackLayout>
+        </Border>
 
-        <maps:Map x:Name="StreetMap" Grid.Row="2" IsShowingUser="True" MapType="Street" />
+        <Border Grid.Row="2"
+                x:Name="PoiDetailCard"
+                IsVisible="False"
+                StrokeThickness="0"
+                Background="{AppThemeBinding Light=#FFF7ED, Dark=#2B1D14}"
+                StrokeShape="RoundRectangle 14">
+            <VerticalStackLayout Padding="12" Spacing="4">
+                <Label Text="Điểm gần nhất" FontSize="12" TextColor="{StaticResource Gray500}" />
+                <Label x:Name="PoiTitleLabel" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Gray900}" />
+                <Label x:Name="PoiDescLabel" FontSize="13" LineBreakMode="TailTruncation" MaxLines="2" TextColor="{StaticResource Gray600}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <Border Grid.Row="3"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 14"
+                Background="{AppThemeBinding Light=#FFFFFF, Dark=#17100D}">
+            <maps:Map x:Name="StreetMap" IsShowingUser="True" MapType="Street" />
+        </Border>
     </Grid>
 </ContentPage>

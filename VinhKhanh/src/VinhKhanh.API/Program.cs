@@ -80,6 +80,12 @@ using (var scope = app.Services.CreateScope())
 {
 	scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
 }
+#else
+// InMemoryDatabase ignores HasData() — seed at runtime instead.
+using (var scope = app.Services.CreateScope())
+{
+	scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().SeedDemoData();
+}
 #endif
 
 if (app.Environment.IsDevelopment())

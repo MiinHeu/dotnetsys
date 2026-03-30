@@ -60,37 +60,55 @@ public sealed class ApiClientService
 		return await res.Content.ReadFromJsonAsync<PoiSnapshot>(JsonOpts, ct);
 	}
 
-	public async Task PostMovementBatchAsync(MovementBatchDto dto, CancellationToken ct = default)
+	public async Task<bool> TryPostMovementBatchAsync(MovementBatchDto dto, CancellationToken ct = default)
 	{
 		try
 		{
 			using var http = CreateClient();
-			await http.PostAsJsonAsync("api/movement/batch", dto, ct);
+			var res = await http.PostAsJsonAsync("api/movement/batch", dto, ct);
+			return res.IsSuccessStatusCode;
 		}
 		catch
 		{
-			/* offline */
+			return false;
 		}
+	}
+
+	public async Task<bool> TryPostHistoryLogAsync(AppHistoryLogDto dto, CancellationToken ct = default)
+	{
+		try
+		{
+			using var http = CreateClient();
+			var res = await http.PostAsJsonAsync("api/history/log", dto, ct);
+			return res.IsSuccessStatusCode;
+		}
+		catch { return false; }
+	}
+
+	public async Task<bool> TryPostAnalyticsVisitAsync(VisitLogDto dto, CancellationToken ct = default)
+	{
+		try
+		{
+			using var http = CreateClient();
+			var res = await http.PostAsJsonAsync("api/analytics/log", dto, ct);
+			return res.IsSuccessStatusCode;
+		}
+		catch { return false; }
+	}
+
+	public async Task PostMovementBatchAsync(MovementBatchDto dto, CancellationToken ct = default)
+	{
+		_ = await TryPostMovementBatchAsync(dto, ct);
 	}
 
 	public async Task PostHistoryLogAsync(AppHistoryLogDto dto, CancellationToken ct = default)
 	{
-		try
-		{
-			using var http = CreateClient();
-			await http.PostAsJsonAsync("api/history/log", dto, ct);
-		}
-		catch { /* offline */ }
+		_ = await TryPostHistoryLogAsync(dto, ct);
 	}
 
 	public async Task PostAnalyticsVisitAsync(VisitLogDto dto, CancellationToken ct = default)
 	{
-		try
-		{
-			using var http = CreateClient();
-			await http.PostAsJsonAsync("api/analytics/log", dto, ct);
-		}
-		catch { /* offline */ }
+		_ = await TryPostAnalyticsVisitAsync(dto, ct);
 	}
 
 	public string ApiRoot => Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, GetDefaultApiBase()).TrimEnd('/');

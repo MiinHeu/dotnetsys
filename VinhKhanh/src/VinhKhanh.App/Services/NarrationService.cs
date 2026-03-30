@@ -10,6 +10,11 @@ public sealed class NarrationService(IAudioManager audioManager) : INarrationSer
 	private IAudioPlayer? _player;
 	private MemoryStream? _playbackStream;
 	private readonly SemaphoreSlim _gate = new(1, 1);
+	private readonly Queue<(Poi poi, string language)> _queue = [];
+	private readonly HashSet<string> _queuedKeys = [];
+	private readonly Dictionary<string, DateTime> _recentlyPlayed = [];
+	private bool _isProcessing;
+	private static readonly TimeSpan DuplicateWindow = TimeSpan.FromSeconds(25);
 
 	public bool IsPlaying => _player?.IsPlaying ?? false;
 
@@ -33,28 +38,56 @@ public sealed class NarrationService(IAudioManager audioManager) : INarrationSer
 
 	public Task EnqueueAsync(Poi poi, string language)
 	{
-		// Convert Poi to PoiSnapshot and use existing PlayPoiAsync method
-		var poiSnapshot = new PoiSnapshot
-		{
-			Id = poi.Id,
-			Name = poi.Name,
-			Description = poi.Description,
-			Latitude = poi.Latitude,
-			Longitude = poi.Longitude,
-			MapX = poi.MapX,
-			MapY = poi.MapY,
-			TriggerRadiusMeters = poi.TriggerRadiusMeters,
-			CooldownSeconds = poi.CooldownSeconds,
-			Priority = poi.Priority,
-			ImageUrl = poi.ImageUrl,
-			AudioViUrl = poi.AudioViUrl
-		};
-		
-		var apiRoot = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, ApiClientService.GetDefaultApiBase()).TrimEnd('/');
-		return PlayPoiAsync(poiSnapshot, language, apiRoot);
+		var key = BuildKey(poi.Id, language);
+		if (_queuedKeys.Contains(key)) return Task.CompletedTask;
+		if (_recentlyPlayed.TryGetValue(key, out var playedAt) &&
+		    DateTime.UtcNow - playedAt < DuplicateWindow) return Task.CompletedTask;
+
+		_queue.Enqueue((poi, language));
+		_queuedKeys.Add(key);
+		if (_isProcessing) return Task.CompletedTask;
+		_ = ProcessQueueAsync();
+		return Task.CompletedTask;
 	}
 
 	public Task StopCurrentAsync() => StopAsync();
+
+	private async Task ProcessQueueAsync()
+	{
+		_isProcessing = true;
+		try
+		{
+			while (_queue.Count > 0)
+			{
+				var (poi, language) = _queue.Dequeue();
+				_queuedKeys.Remove(BuildKey(poi.Id, language));
+
+				var poiSnapshot = new PoiSnapshot
+				{
+					Id = poi.Id,
+					Name = poi.Name,
+					Description = poi.Description,
+					Latitude = poi.Latitude,
+					Longitude = poi.Longitude,
+					MapX = poi.MapX,
+					MapY = poi.MapY,
+					TriggerRadiusMeters = poi.TriggerRadiusMeters,
+					CooldownSeconds = poi.CooldownSeconds,
+					Priority = poi.Priority,
+					ImageUrl = poi.ImageUrl,
+					AudioViUrl = poi.AudioViUrl
+				};
+
+				var apiRoot = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, ApiClientService.GetDefaultApiBase()).TrimEnd('/');
+				await PlayPoiAsync(poiSnapshot, language, apiRoot);
+				_recentlyPlayed[BuildKey(poi.Id, language)] = DateTime.UtcNow;
+			}
+		}
+		finally
+		{
+			_isProcessing = false;
+		}
+	}
 
 	/// <summary>Phat thuyet minh; tra ve thoi luong nghe uoc tinh (giay) cho analytics.</summary>
 	public async Task<int> PlayPoiAsync(PoiSnapshot poi, string lang, string apiRootTrimmed, CancellationToken ct = default)
@@ -127,4 +160,7 @@ public sealed class NarrationService(IAudioManager audioManager) : INarrationSer
 		return locales.FirstOrDefault(l => l.Language.StartsWith(lang, StringComparison.OrdinalIgnoreCase))
 		       ?? locales.FirstOrDefault(l => l.Language.StartsWith("vi", StringComparison.OrdinalIgnoreCase));
 	}
+
+	private static string BuildKey(int poiId, string lang)
+		=> $"{poiId}:{lang.Trim().ToLowerInvariant()}";
 }

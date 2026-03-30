@@ -9,6 +9,7 @@ namespace VinhKhanh.App;
 public partial class MainPage : ContentPage
 {
 	private readonly MainViewModel _vm;
+	private int _selectedPoiId;
 
 	public MainPage()
 	{
@@ -27,6 +28,8 @@ public partial class MainPage : ContentPage
 				NearestLabel.Text = string.IsNullOrEmpty(_vm.NearestLabel)
 					? ""
 					: $"Gần nhất: {_vm.NearestLabel}";
+			if (e.PropertyName == nameof(MainViewModel.NearestPoiId))
+				Dispatcher.Dispatch(UpdatePins);
 			if (e.PropertyName is nameof(MainViewModel.UserLatitude) or nameof(MainViewModel.UserLongitude))
 				Dispatcher.Dispatch(UpdateMapUser);
 			if (e.PropertyName == nameof(MainViewModel.IsTracking))
@@ -40,9 +43,17 @@ public partial class MainPage : ContentPage
 
 		Loaded += async (_, _) =>
 		{
-			UpdateMapUser();
-			await _vm.SyncPoisCommand.ExecuteAsync(null);
-			UpdatePins();
+			try
+			{
+				UpdateMapUser();
+				await _vm.SyncPoisCommand.ExecuteAsync(null);
+				UpdatePins();
+			}
+			catch (Exception ex)
+			{
+				StatusLabel.Text = "Lỗi khởi tạo bản đồ. Kiểm tra Google Maps API Key.";
+				System.Diagnostics.Debug.WriteLine($"MainPage Loaded error: {ex}");
+			}
 		};
 	}
 
@@ -72,13 +83,33 @@ public partial class MainPage : ContentPage
 		StreetMap.Pins.Clear();
 		foreach (var p in _vm.Pois)
 		{
-			StreetMap.Pins.Add(new Pin
+			var isNearest = _vm.NearestPoiId == p.Id && _vm.NearestPoiId > 0;
+			var pin = new Pin
 			{
-				Label = p.ResolveName(_vm.SelectedLanguage),
+				Label = isNearest ? $"★ {p.ResolveName(_vm.SelectedLanguage)}" : p.ResolveName(_vm.SelectedLanguage),
 				Address = p.ResolveDescription(_vm.SelectedLanguage),
 				Location = new Location(p.Latitude, p.Longitude),
 				Type = PinType.Place
-			});
+			};
+			pin.MarkerClicked += (_, __) =>
+			{
+				_selectedPoiId = p.Id;
+				PoiTitleLabel.Text = p.ResolveName(_vm.SelectedLanguage);
+				PoiDescLabel.Text = p.ResolveDescription(_vm.SelectedLanguage);
+				PoiDetailCard.IsVisible = true;
+			};
+			StreetMap.Pins.Add(pin);
+		}
+
+		if (_selectedPoiId == 0 && _vm.NearestPoiId > 0)
+		{
+			var nearest = _vm.Pois.FirstOrDefault(x => x.Id == _vm.NearestPoiId);
+			if (nearest != null)
+			{
+				PoiTitleLabel.Text = nearest.ResolveName(_vm.SelectedLanguage);
+				PoiDescLabel.Text = nearest.ResolveDescription(_vm.SelectedLanguage);
+				PoiDetailCard.IsVisible = true;
+			}
 		}
 	}
 }

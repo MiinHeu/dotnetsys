@@ -2,7 +2,6 @@ import { Fragment, useMemo, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet'
 import { api, type Poi } from '@/lib/api'
-import 'leaflet/dist/leaflet.css'
 import * as L from 'leaflet'
 
 // Suppress Leaflet error handling in React 18 StrictMode
@@ -38,9 +37,22 @@ export function AdminMap() {
 
   // Clean up Leaflet instance on unmount
   useEffect(() => {
+    // Work around Vite path issues on Windows paths containing '#'
+    // by loading Leaflet CSS from CDN instead of local asset rewrite.
+    const stylesheetId = 'leaflet-cdn-style'
+    if (!document.getElementById(stylesheetId)) {
+      const link = document.createElement('link')
+      link.id = stylesheetId
+      link.rel = 'stylesheet'
+      link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'
+      document.head.appendChild(link)
+    }
+
     return () => {
       if (containerRef.current) {
-        const mapContainer = containerRef.current.querySelector('.leaflet-container')
+        const mapContainer = containerRef.current.querySelector('.leaflet-container') as
+          | (Element & { _leaflet_map?: L.Map })
+          | null
         if (mapContainer?._leaflet_map) {
           try {
             mapContainer._leaflet_map.remove()

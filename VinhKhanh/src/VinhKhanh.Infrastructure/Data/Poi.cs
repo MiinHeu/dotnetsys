@@ -31,6 +31,8 @@ public class Poi : IComparable<Poi>
 
 	public string? ImageUrl { get; set; }
 	public string? AudioViUrl { get; set; }
+	public string? QrCode { get; set; }
+	public int ContentVersion { get; set; } = 1;
 
 	public PoiCategory Category { get; set; } = PoiCategory.ComTam;
 	public bool IsActive { get; set; } = true;

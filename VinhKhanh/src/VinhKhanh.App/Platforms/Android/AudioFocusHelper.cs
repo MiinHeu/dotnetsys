@@ -36,7 +36,7 @@ public class AudioFocusHelper : Java.Lang.Object, AudioManager.IOnAudioFocusChan
 		{
 #pragma warning disable CS0618
 			var result = _audioManager.RequestAudioFocus(
-				this, Stream.Music, AudioFocus.GainTransientMayDuck);
+				this, global::Android.Media.Stream.Music, AudioFocus.GainTransientMayDuck);
 			return result == AudioFocusRequest.Granted;
 #pragma warning restore CS0618
 		}
