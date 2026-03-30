@@ -4,7 +4,10 @@
 		android:allowBackup="true"
 		android:icon="@mipmap/appicon"
 		android:roundIcon="@mipmap/appicon_round"
-		android:supportsRtl="true">
+		android:supportsRtl="true"
+		android:usesCleartextTraffic="true">
+		<!-- Google Maps API Key — thay YOUR_GOOGLE_MAPS_API_KEY bằng key thật từ Google Cloud Console -->
+		<meta-data android:name="com.google.android.geo.API_KEY" android:value="YOUR_GOOGLE_MAPS_API_KEY" />
 		<!-- GPS Foreground Service — Android 8+ yêu cầu để GPS hoạt động nền -->
 		<service
 			android:name=".GpsForegroundService"

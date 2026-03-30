@@ -20,9 +20,11 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 	private readonly INarrationService _narration;
 	private readonly IGpsService _gps;
 	private readonly IGeofenceService _geofence;
+	private readonly IOutboxService _outbox;
 
 	private readonly List<MovementPointDto> _movementBuffer = [];
 	private DateTime _lastMovementFlush = DateTime.UtcNow;
+	private DateTime _lastOutboxFlush = DateTime.MinValue;
 
 	public MainViewModel(
 		ApiClientService api,
@@ -31,7 +33,8 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		GeofenceCooldownStore cooldowns,
 		INarrationService narration,
 		IGpsService gps,
-		IGeofenceService geofence)
+		IGeofenceService geofence,
+		IOutboxService outbox)
 	{
 		_api = api;
 		_cache = cache;
@@ -40,6 +43,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		_narration = narration;
 		_gps = gps;
 		_geofence = geofence;
+		_outbox = outbox;
 		SelectedLanguage = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "vi");
 		WeakReferenceMessenger.Default.Register(this);
 	}
@@ -52,6 +56,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 	[ObservableProperty] private bool _isTracking;
 	[ObservableProperty] private double _userLatitude = 10.7535;
 	[ObservableProperty] private double _userLongitude = 106.6783;
+	[ObservableProperty] private int _nearestPoiId;
 
 	partial void OnSelectedLanguageChanged(string value)
 		=> Microsoft.Maui.Storage.Preferences.Set(AppPreferences.UiLanguage, value);
@@ -80,6 +85,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 
 			await _api.PostHistoryLogAsync(new AppHistoryLogDto(_session.SessionId, "SYNC_POI",
 				LanguageCode: SelectedLanguage, Payload: $"count={Pois.Count}"));
+			await FlushOutboxIfNeededAsync(force: true);
 		}
 		catch (Exception ex)
 		{
@@ -106,12 +112,14 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 			IsTracking = false;
 			StatusMessage = "Da tat theo doi.";
 			await FlushMovementAsync();
+			await FlushOutboxIfNeededAsync(force: true);
 			return;
 		}
 
 		IsTracking = true;
 		StatusMessage = "Dang theo doi GPS qua Dịch vụ nền...";
 		await _gps.StartTrackingAsync();
+		await FlushOutboxIfNeededAsync(force: true);
 	}
 
 	public async void Receive(LocationUpdatedMessage message)
@@ -123,6 +131,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		_movementBuffer.Add(new MovementPointDto(loc.Latitude, loc.Longitude,
 			(float)(loc.Accuracy ?? 25), DateTime.UtcNow));
 		await MaybeFlushMovementAsync();
+		await FlushOutboxIfNeededAsync();
 
 		// Chuyển PoisSnapshot -> Poi domain model
 		var domainPois = Pois.Select(p => new Poi
@@ -142,18 +151,29 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		
 		if (best != null && !_narration.IsPlaying)
 		{
+			NearestPoiId = best.Id;
 			NearestLabel = best.Name;
 			StatusMessage = $"Thuyet minh: {NearestLabel}";
 			
 			// Dùng INarrationService để phát audio
 			await _narration.EnqueueAsync(best, SelectedLanguage);
 
-			await _api.PostAnalyticsVisitAsync(new VisitLogDto(best.Id, _session.SessionId, SelectedLanguage, "GPS", 1));
-			await _api.PostHistoryLogAsync(new AppHistoryLogDto(_session.SessionId, "GPS_TRIGGER", PoiId: best.Id, LanguageCode: SelectedLanguage));
+			var visit = new VisitLogDto(best.Id, _session.SessionId, SelectedLanguage, "GPS", 1);
+			if (!await _api.TryPostAnalyticsVisitAsync(visit))
+				await _outbox.EnqueueVisitAsync(visit);
+
+			var history = new AppHistoryLogDto(_session.SessionId, "GPS_TRIGGER", PoiId: best.Id, LanguageCode: SelectedLanguage);
+			if (!await _api.TryPostHistoryLogAsync(history))
+				await _outbox.EnqueueHistoryAsync(history);
 		}
 		else if (best != null)
 		{
+			NearestPoiId = best.Id;
 			NearestLabel = best.Name;
+		}
+		else
+		{
+			NearestPoiId = 0;
 		}
 	}
 
@@ -169,7 +189,15 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		var batch = new MovementBatchDto(_session.SessionId, _movementBuffer.ToList());
 		_movementBuffer.Clear();
 		_lastMovementFlush = DateTime.UtcNow;
-		await _api.PostMovementBatchAsync(batch);
+		if (!await _api.TryPostMovementBatchAsync(batch))
+			await _outbox.EnqueueMovementBatchAsync(batch);
+	}
+
+	private async Task FlushOutboxIfNeededAsync(bool force = false)
+	{
+		if (!force && (DateTime.UtcNow - _lastOutboxFlush).TotalSeconds < 20) return;
+		_lastOutboxFlush = DateTime.UtcNow;
+		await _outbox.FlushAsync(_api);
 	}
 
 	public string ApiRootForAudio =>

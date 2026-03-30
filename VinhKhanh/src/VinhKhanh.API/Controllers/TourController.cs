@@ -14,6 +14,7 @@ public class TourController(ApplicationDbContext db, IHubContext<VinhKhanhHub> h
 	public async Task<IActionResult> GetAll([FromQuery] string lang = "vi")
 	{
 		var tours = await db.Tours
+			.Where(t => t.IsActive)
 			.Include(t => t.Translations.Where(tr => tr.LanguageCode == lang))
 			.Include(t => t.Stops.OrderBy(s => s.StopOrder))
 				.ThenInclude(s => s.Poi)
@@ -28,6 +29,7 @@ public class TourController(ApplicationDbContext db, IHubContext<VinhKhanhHub> h
 	public async Task<IActionResult> GetById(int id, [FromQuery] string lang = "vi")
 	{
 		var tour = await db.Tours
+			.Where(t => t.IsActive)
 			.Include(t => t.Translations.Where(tr => tr.LanguageCode == lang))
 			.Include(t => t.Stops.OrderBy(s => s.StopOrder))
 				.ThenInclude(s => s.Poi)
@@ -101,6 +103,19 @@ public class TourController(ApplicationDbContext db, IHubContext<VinhKhanhHub> h
 
 		await hub.Clients.All.SendAsync("TourUpdated", tour);
 		return Ok(tour);
+	}
+
+	[HttpDelete("{id:int}")]
+	public async Task<IActionResult> Deactivate(int id)
+	{
+		var tour = await db.Tours.FirstOrDefaultAsync(t => t.Id == id);
+		if (tour == null) return NotFound();
+
+		tour.IsActive = false;
+		tour.UpdatedAt = DateTime.UtcNow;
+		await db.SaveChangesAsync();
+		await hub.Clients.All.SendAsync("TourUpdated", tour);
+		return NoContent();
 	}
 }
 

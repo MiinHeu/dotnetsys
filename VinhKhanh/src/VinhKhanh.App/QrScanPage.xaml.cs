@@ -11,6 +11,7 @@ public partial class QrScanPage : ContentPage
 	private readonly ApiClientService _api;
 	private readonly NarrationService _narration;
 	private readonly SessionService _session;
+	private readonly IOutboxService _outbox;
 	private DateTime _lastHandled = DateTime.MinValue;
 
 	public QrScanPage()
@@ -19,6 +20,7 @@ public partial class QrScanPage : ContentPage
 		_api = MauiProgram.Services.GetRequiredService<ApiClientService>();
 		_narration = MauiProgram.Services.GetRequiredService<NarrationService>();
 		_session = MauiProgram.Services.GetRequiredService<SessionService>();
+		_outbox = MauiProgram.Services.GetRequiredService<IOutboxService>();
 		Scanner.Options = new BarcodeReaderOptions
 		{
 			Formats = BarcodeFormats.TwoDimensional | BarcodeFormats.OneDimensional,
@@ -63,9 +65,14 @@ public partial class QrScanPage : ContentPage
 			}
 
 			var heard = await _narration.PlayPoiAsync(poi, lang, apiRoot);
-			await _api.PostAnalyticsVisitAsync(new VisitLogDto(poi.Id, _session.SessionId, lang, "QR", heard));
-			await _api.PostHistoryLogAsync(new AppHistoryLogDto(_session.SessionId, "QR_SCAN",
-				PoiId: poi.Id, LanguageCode: lang));
+			var visit = new VisitLogDto(poi.Id, _session.SessionId, lang, "QR", heard);
+			if (!await _api.TryPostAnalyticsVisitAsync(visit))
+				await _outbox.EnqueueVisitAsync(visit);
+
+			var history = new AppHistoryLogDto(_session.SessionId, "QR_SCAN",
+				PoiId: poi.Id, LanguageCode: lang);
+			if (!await _api.TryPostHistoryLogAsync(history))
+				await _outbox.EnqueueHistoryAsync(history);
 
 			Dispatcher.Dispatch(() => StatusLabel.Text = $"Đã phát: {poi.ResolveName(lang)}");
 		}

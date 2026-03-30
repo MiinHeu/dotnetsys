@@ -32,6 +32,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ILocalDbService, LocalDbService>(); // FIX #1: LocalTour
 		builder.Services.AddSingleton<SessionService>();
 		builder.Services.AddSingleton<GeofenceCooldownStore>();
+		builder.Services.AddSingleton<IOutboxService, OutboxService>();
 
 		// GPS & Geofence — FIX #4, #5
 		builder.Services.AddSingleton<IGpsService, GpsService>();

@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import { MapPin, Route, Users, TrendingUp } from 'lucide-react'
+import { MapPin, Route, Users, TrendingUp, Plus, BarChart3, UserCog } from 'lucide-react'
+import { useNavigate } from 'react-router'
 
 export function Dashboard() {
+  const navigate = useNavigate()
   const pois = useQuery({
     queryKey: ['pois', 'vi'],
     queryFn: async () => (await api.get('/api/poi?lang=vi')).data as unknown[],
@@ -12,104 +14,119 @@ export function Dashboard() {
     queryFn: async () => (await api.get('/api/tour?lang=vi')).data as unknown[],
   })
 
+  const cards = [
+    {
+      label: 'Quán Ăn',
+      value: pois.isLoading ? '…' : pois.data?.length ?? 0,
+      sub: 'Đang hoạt động',
+      desc: 'Các quán ăn đã được đăng ký trên hệ thống',
+      icon: MapPin,
+      gradient: 'linear-gradient(135deg, #6B4226, #8B5E3C)',
+      shadow: 'rgba(107,66,38,0.35)',
+      emoji: '🍜',
+    },
+    {
+      label: 'Lộ Trình',
+      value: tours.isLoading ? '…' : tours.data?.length ?? 0,
+      sub: 'Đang mở',
+      desc: 'Lộ trình khám phá ẩm thực cho du khách',
+      icon: Route,
+      gradient: 'linear-gradient(135deg, #D4722E, #E8914D)',
+      shadow: 'rgba(212,114,46,0.3)',
+      emoji: '🗺️',
+    },
+    {
+      label: 'Khách Tham Quan',
+      value: '1,234',
+      sub: 'Tổng lượt',
+      desc: 'Lượt du khách sử dụng ứng dụng',
+      icon: Users,
+      gradient: 'linear-gradient(135deg, #D4A847, #E8C96A)',
+      shadow: 'rgba(212,168,71,0.3)',
+      emoji: '👥',
+    },
+    {
+      label: 'Lượt Nghe',
+      value: '8.5K',
+      sub: 'Trong 30 ngày',
+      desc: 'Lượt thuyết minh tự động đã phát',
+      icon: TrendingUp,
+      gradient: 'linear-gradient(135deg, #C97878, #D4918F)',
+      shadow: 'rgba(201,120,120,0.3)',
+      emoji: '🎧',
+    },
+  ]
+
+  const actions = [
+    { label: 'Thêm Quán Ăn', icon: Plus, emoji: '🍲', path: '/pois/new', gradient: 'linear-gradient(135deg, #6B4226, #8B5E3C)' },
+    { label: 'Tạo Lộ Trình', icon: Route, emoji: '🗺️', path: '/tours/new', gradient: 'linear-gradient(135deg, #D4722E, #E8914D)' },
+    { label: 'Quản Lý Ngôn Ngữ', icon: UserCog, emoji: '🌏', path: '/translations', gradient: 'linear-gradient(135deg, #D4A847, #C9A038)' },
+    { label: 'Xem Thống Kê', icon: BarChart3, emoji: '📊', path: '/analytics', gradient: 'linear-gradient(135deg, #C97878, #B86868)' },
+  ]
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{ fontFamily: "'Nunito', sans-serif" }}>
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-orange-100 dark:border-gray-700">
+      <div className="rounded-2xl p-6" style={{ background: '#FFFFFF', border: '1px solid #E8D5BD', boxShadow: '0 1px 3px rgba(107,66,38,0.06)' }}>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-              <TrendingUp className="h-8 w-8 mr-3 text-orange-500" />
-              Tổng Quan
+            <h2 className="flex items-center" style={{ fontSize: '26px', fontWeight: 800, color: '#6B4226', margin: 0, letterSpacing: '-0.5px' }}>
+              <span className="mr-3 text-3xl">📋</span>
+              Tổng Quan Hệ Thống
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">Tổng quan hệ thống quản lý</p>
+            <p style={{ color: '#8B7B6B', fontSize: '15px', margin: '6px 0 0 0' }}>Quản lý nội dung phố ẩm thực Vĩnh Khánh</p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Cập nhật lần cuối</p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">{new Date().toLocaleDateString('vi-VN')}</p>
+            <p style={{ color: '#A89888', fontSize: '13px' }}>Cập nhật lần cuối</p>
+            <p style={{ color: '#6B4226', fontSize: '18px', fontWeight: 700 }}>{new Date().toLocaleDateString('vi-VN')}</p>
           </div>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-orange-100 text-sm font-medium">Điểm Thú Vị</p>
-              <p className="text-3xl font-bold">{pois.isLoading ? '…' : pois.data?.length ?? 0}</p>
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map(({ label, value, sub, desc, icon: Icon, gradient, shadow, emoji }) => (
+          <div
+            key={label}
+            className="rounded-2xl p-6 text-white transition-all duration-300"
+            style={{ background: gradient, boxShadow: `0 4px 16px ${shadow}` }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 8px 24px ${shadow}` }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = `0 4px 16px ${shadow}` }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: 600 }}>{label}</p>
+                <p style={{ fontSize: '32px', fontWeight: 800, margin: '4px 0 0 0', lineHeight: '1' }}>{value}</p>
+              </div>
+              <span className="text-3xl" style={{ opacity: 0.6 }}>{emoji}</span>
             </div>
-            <MapPin className="h-8 w-8 text-orange-200" />
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            <p className="font-medium">POI đang hoạt động</p>
-            <p className="text-xs">Bao gồm các điểm ẩm thực đã được kích hoạt</p>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-amber-100 text-sm font-medium">Tour Du Lịch</p>
-              <p className="text-3xl font-bold">{tours.isLoading ? '…' : tours.data?.length ?? 0}</p>
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '10px', marginTop: '4px' }}>
+              <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: 700 }}>{sub}</p>
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '2px' }}>{desc}</p>
             </div>
-            <Route className="h-8 w-8 text-amber-200" />
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            <p className="font-medium">Tour đang mở</p>
-            <p className="text-xs">Các tour du lịch đang được kích hoạt</p>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-green-400 to-green-600 rounded-xl shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-green-100 text-sm font-medium">Người Dùng</p>
-              <p className="text-3xl font-bold">1,234</p>
-            </div>
-            <Users className="h-8 w-8 text-green-200" />
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            <p className="font-medium">Tổng người dùng</p>
-            <p className="text-xs">Số lượng người dùng đang hoạt động</p>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl shadow-lg p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100 text-sm font-medium">Lượt Truy Cập</p>
-              <p className="text-3xl font-bold">8.5K</p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-blue-200" />
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            <p className="font-medium">Thống kê truy cập</p>
-            <p className="text-xs">Số lượt truy cập trong 30 ngày</p>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-orange-100 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Thao Tác Nhanh</h3>
+      <div className="rounded-2xl p-6" style={{ background: '#FFFFFF', border: '1px solid #E8D5BD', boxShadow: '0 1px 3px rgba(107,66,38,0.06)' }}>
+        <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#6B4226', margin: '0 0 16px 0' }}>
+          ⚡ Thao Tác Nhanh
+        </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <button className="flex items-center justify-center px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200">
-            <MapPin className="h-5 w-5 mr-2" />
-            Thêm POI
-          </button>
-          <button className="flex items-center justify-center px-4 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-200">
-            <Route className="h-5 w-5 mr-2" />
-            Tạo Tour
-          </button>
-          <button className="flex items-center justify-center px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200">
-            <Users className="h-5 w-5 mr-2" />
-            Quản Lý User
-          </button>
-          <button className="flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200">
-            <TrendingUp className="h-5 w-5 mr-2" />
-            Xem Analytics
-          </button>
+          {actions.map(({ label, emoji, path, gradient }) => (
+            <button
+              key={label}
+              className="flex items-center justify-center px-4 py-3.5 rounded-xl text-white transition-all duration-200"
+              style={{ background: gradient, fontWeight: 700, fontFamily: "'Nunito', sans-serif", fontSize: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)' }}
+              onClick={() => navigate(path)}
+            >
+              <span className="mr-2">{emoji}</span>
+              {label}
+            </button>
+          ))}
         </div>
       </div>
     </div>

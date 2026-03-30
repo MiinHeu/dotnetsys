@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace VinhKhanh.Infrastructure.Data;
 
+// NOTE: HasData() only works with real database migrations (e.g. Npgsql).
+// For InMemoryDatabase (DEBUG mode), call SeedDemoData() at startup instead.
+
 public class ApplicationDbContext : DbContext
 {
 	public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
@@ -39,10 +42,13 @@ public class ApplicationDbContext : DbContext
 			entity.HasKey(x => x.Id);
 			entity.Property(x => x.Name).HasMaxLength(250).IsRequired();
 			entity.Property(x => x.Description).IsRequired();
+			entity.Property(x => x.QrCode).HasMaxLength(64);
 
 			entity.HasQueryFilter(p => p.IsActive);
 			entity.HasIndex(p => new { p.Latitude, p.Longitude });
 			entity.HasIndex(p => p.Category);
+			entity.HasIndex(p => p.ContentVersion);
+			entity.HasIndex(p => p.QrCode).IsUnique().HasFilter("\"QrCode\" IS NOT NULL");
 		});
 
 		modelBuilder.Entity<PoiTranslation>(entity =>
@@ -70,7 +76,7 @@ public class ApplicationDbContext : DbContext
 
 			entity.Property(x => x.SessionId).IsRequired();
 			entity.Property(x => x.LanguageCode).HasMaxLength(10).IsRequired();
-			entity.Property(x => x.TriggerType).HasMaxLength(10).IsRequired();
+			entity.Property(x => x.TriggerType).HasMaxLength(32).IsRequired();
 			entity.HasIndex(v => v.VisitedAt);
 
 			// Match Poi query filter.
@@ -88,6 +94,7 @@ public class ApplicationDbContext : DbContext
 			entity.Property(x => x.Username).IsRequired();
 			entity.Property(x => x.PasswordHash).IsRequired();
 			entity.Property(x => x.Role).IsRequired();
+			entity.HasIndex(x => x.Username).IsUnique();
 		});
 
 		modelBuilder.Entity<Tour>(entity =>
@@ -167,6 +174,8 @@ public class ApplicationDbContext : DbContext
 				Category = PoiCategory.ComTam,
 				ImageUrl = null,
 				AudioViUrl = null,
+				QrCode = "VK-POI-001",
+				ContentVersion = 1,
 				IsActive = true,
 				CreatedAt = seedTime,
 				UpdatedAt = seedTime
@@ -187,6 +196,8 @@ public class ApplicationDbContext : DbContext
 				Category = PoiCategory.BanhCanh,
 				ImageUrl = null,
 				AudioViUrl = null,
+				QrCode = "VK-POI-002",
+				ContentVersion = 1,
 				IsActive = true,
 				CreatedAt = seedTime,
 				UpdatedAt = seedTime
@@ -207,6 +218,8 @@ public class ApplicationDbContext : DbContext
 				Category = PoiCategory.CheTrangMiem,
 				ImageUrl = null,
 				AudioViUrl = null,
+				QrCode = "VK-POI-003",
+				ContentVersion = 1,
 				IsActive = true,
 				CreatedAt = seedTime,
 				UpdatedAt = seedTime
@@ -247,5 +260,102 @@ public class ApplicationDbContext : DbContext
 			}
 		);
 	}
-}
 
+	/// <summary>
+	/// Seed demo data at runtime. Required for InMemoryDatabase (HasData is ignored).
+	/// Safe to call multiple times — only inserts if tables are empty.
+	/// </summary>
+	public void SeedDemoData()
+	{
+		var seedTime = new DateTime(2026, 03, 25, 0, 0, 0, DateTimeKind.Utc);
+
+		if (!AppUsers.Any())
+		{
+			AppUsers.AddRange(
+				new AppUser
+				{
+					Id = 1,
+					Username = "admin",
+					PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@2026"),
+					Role = "Admin",
+					IsActive = true,
+					OwnedPoiId = null,
+					CreatedAt = seedTime
+				},
+				new AppUser
+				{
+					Id = 2,
+					Username = "owner1",
+					PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@2026"),
+					Role = "Owner",
+					IsActive = true,
+					OwnedPoiId = 1,
+					CreatedAt = seedTime
+				}
+			);
+			SaveChanges();
+		}
+
+		if (!Pois.IgnoreQueryFilters().Any())
+		{
+			Pois.AddRange(
+				new Poi
+				{
+					Id = 1, Name = "Quan Com Tam Ba Ghien",
+					Description = "Com tam dac trung Sai Gon 30 nam.",
+					Latitude = 10.7531, Longitude = 106.6780,
+					MapX = 15, MapY = 40, TriggerRadiusMeters = 15,
+					Priority = 9, CooldownSeconds = 60,
+					Category = PoiCategory.ComTam,
+					QrCode = "VK-POI-001", ContentVersion = 1,
+					IsActive = true, CreatedAt = seedTime, UpdatedAt = seedTime
+				},
+				new Poi
+				{
+					Id = 2, Name = "Banh Canh Cua Ba Suong",
+					Description = "Banh canh cua tuoi boc day, 40 nam.",
+					Latitude = 10.7533, Longitude = 106.6781,
+					MapX = 30, MapY = 40, TriggerRadiusMeters = 15,
+					Priority = 8, CooldownSeconds = 60,
+					Category = PoiCategory.BanhCanh,
+					QrCode = "VK-POI-002", ContentVersion = 1,
+					IsActive = true, CreatedAt = seedTime, UpdatedAt = seedTime
+				},
+				new Poi
+				{
+					Id = 3, Name = "Khu Che Cuoi Pho",
+					Description = "Khu vuc tap trung hang che.",
+					Latitude = 10.7540, Longitude = 106.6785,
+					MapX = 75, MapY = 40, TriggerRadiusMeters = 20,
+					Priority = 5, CooldownSeconds = 120,
+					Category = PoiCategory.CheTrangMiem,
+					QrCode = "VK-POI-003", ContentVersion = 1,
+					IsActive = true, CreatedAt = seedTime, UpdatedAt = seedTime
+				}
+			);
+			SaveChanges();
+		}
+
+		if (!Tours.Any())
+		{
+			Tours.Add(new Tour
+			{
+				Id = 1, Name = "Tour Am Thuc 1 Gio Vinh Khanh",
+				Description = "Com tam -> Banh canh -> Che",
+				EstimatedMinutes = 60, IsActive = true,
+				CreatedAt = seedTime, UpdatedAt = seedTime
+			});
+			SaveChanges();
+		}
+
+		if (!TourStops.IgnoreQueryFilters().Any())
+		{
+			TourStops.AddRange(
+				new TourStop { Id = 1, TourId = 1, PoiId = 1, StopOrder = 1, StayMinutes = 20 },
+				new TourStop { Id = 2, TourId = 1, PoiId = 2, StopOrder = 2, StayMinutes = 20 },
+				new TourStop { Id = 3, TourId = 1, PoiId = 3, StopOrder = 3, StayMinutes = 20 }
+			);
+			SaveChanges();
+		}
+	}
+}
