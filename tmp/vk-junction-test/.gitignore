@@ -1,0 +1,37 @@
+
+cat >> .gitignore << 'EOF' 
+
+# .NET
+bin/
+obj/
+
+# dotnet
+.dotnet/
+.dotnet-cli/
+
+# nuget
+.nuget/
+packages/
+
+# VS
+.vs/
+
+# node
+node_modules/
+
+# build
+dist/
+build/
+
+*.user
+**/appsettings.Secrets.json
+
+# Rider
+.idea/
+
+
+# OS
+.DS_Store
+Thumbs.db
+
+EOF 
