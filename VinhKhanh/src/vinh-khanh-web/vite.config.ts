@@ -18,11 +18,11 @@ export default defineConfig({
 		host: '127.0.0.1',
 		proxy: {
 			'/api': {
-				target: 'http://localhost:5283',
+				target: 'http://127.0.0.1:5283',
 				changeOrigin: true,
 			},
 			'/hubs': {
-				target: 'http://localhost:5283',
+				target: 'http://127.0.0.1:5283',
 				changeOrigin: true,
 				ws: true,
 			},

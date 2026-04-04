@@ -58,6 +58,7 @@ public class ApplicationDbContext : DbContext
 			entity.Property(x => x.LanguageCode).HasMaxLength(10).IsRequired();
 			entity.Property(x => x.Name).HasMaxLength(250).IsRequired();
 			entity.Property(x => x.Description).IsRequired();
+				entity.Property(x => x.OriginalDescription).IsRequired();
 
 			// Match Poi query filter so filtered-out Pois won't cause unexpected required-relationship behavior.
 			entity.HasQueryFilter(t => t.Poi.IsActive);

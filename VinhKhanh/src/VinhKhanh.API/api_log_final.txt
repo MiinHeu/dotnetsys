@@ -1,0 +1,707 @@
+Using launch settings from C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.API\Properties\launchSettings.json...
+Building...
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "AppUsers" AS "a")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "Pois" AS "p")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "Tours" AS "t")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "TourStops" AS "t")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."CreatedAt", "a"."IsActive", "a"."OwnedPoiId", "a"."PasswordHash", "a"."Role", "a"."Username"
+      FROM "AppUsers" AS "a"
+      WHERE "a"."Username" = 'admin'
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."CreatedAt", "a"."IsActive", "a"."OwnedPoiId", "a"."PasswordHash", "a"."Role", "a"."Username"
+      FROM "AppUsers" AS "a"
+      WHERE "a"."Username" = 'owner1'
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (Size = 60)], CommandType='Text', CommandTimeout='30']
+      UPDATE "AppUsers" SET "PasswordHash" = @p0
+      WHERE "Id" = @p1
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (Size = 60)], CommandType='Text', CommandTimeout='30']
+      UPDATE "AppUsers" SET "PasswordHash" = @p0
+      WHERE "Id" = @p1
+      RETURNING 1;
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5283
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.API
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@username='?' (Size = 5)], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."CreatedAt", "a"."IsActive", "a"."OwnedPoiId", "a"."PasswordHash", "a"."Role", "a"."Username"
+      FROM "AppUsers" AS "a"
+      WHERE "a"."Username" = @username AND "a"."IsActive"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@username='?' (Size = 5)], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."CreatedAt", "a"."IsActive", "a"."OwnedPoiId", "a"."PasswordHash", "a"."Role", "a"."Username"
+      FROM "AppUsers" AS "a"
+      WHERE "a"."Username" = @username AND "a"."IsActive"
+      LIMIT 1
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 10005.6109ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 10013.9629ms - 200
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 555.266ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 555.3931ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 2582.0567ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 2582.2412ms - 200
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@username='?' (Size = 5)], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."CreatedAt", "a"."IsActive", "a"."OwnedPoiId", "a"."PasswordHash", "a"."Role", "a"."Username"
+      FROM "AppUsers" AS "a"
+      WHERE "a"."Username" = @username AND "a"."IsActive"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@username='?' (Size = 5)], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."CreatedAt", "a"."IsActive", "a"."OwnedPoiId", "a"."PasswordHash", "a"."Role", "a"."Username"
+      FROM "AppUsers" AS "a"
+      WHERE "a"."Username" = @username AND "a"."IsActive"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 8585.4911ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 8585.9437ms - 200
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 788.2697ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 788.4546ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 2523.3368ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 2523.436ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 305.0108ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 305.0871ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 476.7977ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 476.8934ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 299.0458ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 299.2609ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 404.1082ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 404.314ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 292.9494ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 293.0859ms - 200
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 956.5716ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 956.6344ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 7440.3946ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 7440.5032ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 290.5578ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 290.6178ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 212.8062ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 213.1962ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 315.3137ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 315.4409ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 410.3002ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 410.4325ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 286.5328ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 286.6076ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 335.1694ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 335.2706ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 313.0268ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 313.1007ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 469.6852ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 469.7982ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 316.9717ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 317.0654ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 305.9374ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 306.0268ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 298.9182ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 299.0153ms - 200
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 2467.9845ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 2468.0835ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 1686.2722ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 1686.3509ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 463.5625ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 463.6528ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 419.438ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 419.513ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 391.0238ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 391.0963ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 359.3554ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 359.4246ms - 200
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 954.0344ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 954.1828ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 12180.9867ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 12181.1107ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 257.4981ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 257.5456ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 951.7759ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 951.8765ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 283.2445ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 283.2903ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 717.1499ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 717.2ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 284.6708ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 284.7281ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 561.5396ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 561.6064ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 287.6216ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 287.6757ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 761.7454ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 761.7939ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 310.0832ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 310.1207ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 310.9378ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 310.996ms - 200
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (6ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 11996.8535ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 11996.9816ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 1026.1624ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 1026.2433ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:11434/api/chat
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 1364.5602ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 1364.61ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST https://api.voicerss.org/
+info: System.Net.Http.HttpClient.Default.ClientHandler[101]
+      Received HTTP response headers after 292.4815ms - 200
+info: System.Net.Http.HttpClient.Default.LogicalHandler[101]
+      End processing HTTP request after 292.5224ms - 200

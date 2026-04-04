@@ -1,0 +1,179 @@
+Using launch settings from C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.API\Properties\launchSettings.json...
+Building...
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "AppUsers" AS "a")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "Pois" AS "p")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "Tours" AS "t")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "TourStops" AS "t")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."CreatedAt", "a"."IsActive", "a"."OwnedPoiId", "a"."PasswordHash", "a"."Role", "a"."Username"
+      FROM "AppUsers" AS "a"
+      WHERE "a"."Username" = 'admin'
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."CreatedAt", "a"."IsActive", "a"."OwnedPoiId", "a"."PasswordHash", "a"."Role", "a"."Username"
+      FROM "AppUsers" AS "a"
+      WHERE "a"."Username" = 'owner1'
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (Size = 60)], CommandType='Text', CommandTimeout='30']
+      UPDATE "AppUsers" SET "PasswordHash" = @p0
+      WHERE "Id" = @p1
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (Size = 60)], CommandType='Text', CommandTimeout='30']
+      UPDATE "AppUsers" SET "PasswordHash" = @p0
+      WHERE "Id" = @p1
+      RETURNING 1;
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5283
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.API
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://localhost:5000/translate
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://localhost:5000/translate
+info: System.Net.Http.HttpClient.Default.ClientHandler[104]
+      HTTP request failed after 4145.6815ms
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5000)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.<SendAsync>g__CreateHandlerAndSendAsync|115_0(HttpRequestMessage request, CancellationToken cancellationToken)
+         at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+info: System.Net.Http.HttpClient.Default.LogicalHandler[104]
+      HTTP request failed after 4154.3577ms
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5000)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.<SendAsync>g__CreateHandlerAndSendAsync|115_0(HttpRequestMessage request, CancellationToken cancellationToken)
+         at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+         at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+fail: VinhKhanh.API.Services.LibreTranslateService[0]
+      LibreTranslate call failed unexpectedly.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5000)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.<SendAsync>g__CreateHandlerAndSendAsync|115_0(HttpRequestMessage request, CancellationToken cancellationToken)
+         at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+         at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+         at VinhKhanh.API.Services.LibreTranslateService.TranslateAsync(String text, String fromLanguage, String toLanguage, CancellationToken ct) in C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.API\Services\LibreTranslateService.cs:line 43
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...

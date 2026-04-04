@@ -1,4 +1,5 @@
 using CommunityToolkit.Maui;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Plugin.Maui.Audio;
 using VinhKhanh.App.Services;
@@ -27,6 +28,7 @@ public static class MauiProgram
 
 		builder.AddAudio();
 
+
 		// ── Services ──────────────────────────────────────────────────────────
 		builder.Services.AddSingleton<ApiClientService>();
 		builder.Services.AddSingleton<LocalPoiCacheService>();       // cache cũ — giữ nguyên
@@ -43,6 +45,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<NarrationService>();           // concrete singleton
 		builder.Services.AddSingleton<INarrationService>(sp =>      // alias interface → same instance
 			sp.GetRequiredService<NarrationService>());
+
 
 		// Connectivity — FIX Gap 5: inject vào App.xaml.cs constructor
 		builder.Services.AddSingleton<ConnectivityService>();

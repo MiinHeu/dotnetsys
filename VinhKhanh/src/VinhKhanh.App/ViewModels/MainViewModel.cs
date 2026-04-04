@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -133,17 +133,31 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		await MaybeFlushMovementAsync();
 		await FlushOutboxIfNeededAsync();
 
-		var domainPois = Pois.Select(p => new Poi
-		{
-			Id = p.Id,
-			Name = p.Name,
-			Description = p.Description,
-			Latitude = p.Latitude,
-			Longitude = p.Longitude,
-			TriggerRadiusMeters = p.TriggerRadiusMeters,
-			Priority = p.Priority,
-			CooldownSeconds = p.CooldownSeconds
-		}).ToList();
+			var domainPois = Pois.Select(p => new Poi
+			{
+				Id = p.Id,
+				Name = p.Name,
+				Description = p.Description,
+				Latitude = p.Latitude,
+				Longitude = p.Longitude,
+				MapX = p.MapX,
+				MapY = p.MapY,
+				TriggerRadiusMeters = p.TriggerRadiusMeters,
+				CooldownSeconds = p.CooldownSeconds,
+				Priority = p.Priority,
+				ImageUrl = p.ImageUrl,
+				AudioViUrl = p.AudioViUrl,
+				Translations = p.Translations?.Select(t => new PoiTranslation
+				{
+					Id = t.Id,
+					PoiId = t.PoiId,
+					LanguageCode = t.LanguageCode,
+					Name = t.Name,
+					Description = t.Description,
+					AudioUrl = t.AudioUrl,
+					OriginalDescription = t.OriginalDescription
+				}).ToList()
+			}).ToList();
 
 		var triggered = await _geofence.CheckTriggeredAsync(loc, domainPois);
 		var best = triggered.FirstOrDefault();

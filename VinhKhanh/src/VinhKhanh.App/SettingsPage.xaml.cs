@@ -10,6 +10,7 @@ public partial class SettingsPage : ContentPage
 		ApiUrlEntry.Text = Microsoft.Maui.Storage.Preferences.Get(
 			AppPreferences.ApiBaseUrl, ApiClientService.GetDefaultApiBase());
 		RadiusMultEntry.Text = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.GpsRadiusMultiplier, "1");
+		MockGpsSwitch.IsToggled = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.MockGpsEnabled, false);
 	}
 
 	private async void OnSave(object? sender, EventArgs e)
@@ -22,6 +23,10 @@ public partial class SettingsPage : ContentPage
 		if (!string.IsNullOrEmpty(m))
 			Microsoft.Maui.Storage.Preferences.Set(AppPreferences.GpsRadiusMultiplier, m);
 
-		await DisplayAlertAsync("Đã lưu", "Khởi động lại theo dõi GPS nếu đang bật.", "OK");
+		Microsoft.Maui.Storage.Preferences.Set(AppPreferences.MockGpsEnabled, MockGpsSwitch.IsToggled);
+
+#pragma warning disable CS0618 // Type or member is obsolete
+		await DisplayAlert("Đã lưu", "Khởi động lại theo dõi GPS nếu đang bật.", "OK");
+#pragma warning restore CS0618 // Type or member is obsolete
 	}
 }

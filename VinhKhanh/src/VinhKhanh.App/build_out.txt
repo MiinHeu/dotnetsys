@@ -1,0 +1,14 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\SettingsPage.xaml(18,19): error MAUIG1001: An error occured while parsing Xaml: There are multiple root elements. [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\SettingsPage.xaml.cs(9,3): error CS0103: The name 'InitializeComponent' does not exist in the current context [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\SettingsPage.xaml.cs(10,3): error CS0103: The name 'ApiUrlEntry' does not exist in the current context [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\SettingsPage.xaml.cs(12,3): error CS0103: The name 'RadiusMultEntry' does not exist in the current context [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\SettingsPage.xaml.cs(17,13): error CS0103: The name 'ApiUrlEntry' does not exist in the current context [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\SettingsPage.xaml.cs(21,11): error CS0103: The name 'RadiusMultEntry' does not exist in the current context [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+
+Build FAILED.
+    17 Warning(s)
+    6 Error(s)
+
+Time Elapsed 00:00:01.96

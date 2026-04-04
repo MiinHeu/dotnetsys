@@ -98,6 +98,17 @@ namespace VinhKhanh.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("AppUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            PasswordHash = "$2a$11$PBSPXvfmAZ.W8yyJfGlYOOqiMEgPBBCJOmYDGrqp8qJW3nDEFU.hm",
+                            Role = "Admin",
+                            Username = "admin"
+                        });
                 });
 
             modelBuilder.Entity("VinhKhanh.Infrastructure.Data.MovementLog", b =>
@@ -297,6 +308,10 @@ namespace VinhKhanh.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("character varying(250)");
+
+                    b.Property<string>("OriginalDescription")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("PoiId")
                         .HasColumnType("integer");

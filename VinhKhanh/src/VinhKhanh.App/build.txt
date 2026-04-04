@@ -1,0 +1,55 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  VinhKhanh.Shared -> C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.Shared\bin\Debug\net10.0\VinhKhanh.Shared.dll
+  VinhKhanh.Infrastructure -> C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.Infrastructure\bin\Debug\net10.0\VinhKhanh.Infrastructure.dll
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\AppPreferences.cs(11,1): error CS1022: Type or namespace definition, or end-of-file expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(69,4): error CS1031: Type expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(69,4): error CS8124: Tuple must contain at least two elements. [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(69,4): error CS1026: ) expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(69,4): error CS1022: Type or namespace definition, or end-of-file expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(70,4): error CS1031: Type expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(70,4): error CS8124: Tuple must contain at least two elements. [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(70,4): error CS1026: ) expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(70,4): error CS1022: Type or namespace definition, or end-of-file expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(71,4): error CS1031: Type expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(71,4): error CS8124: Tuple must contain at least two elements. [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(71,4): error CS1026: ) expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(71,4): error CS1022: Type or namespace definition, or end-of-file expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(72,4): error CS1031: Type expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(72,4): error CS8124: Tuple must contain at least two elements. [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(72,4): error CS1026: ) expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(72,4): error CS1022: Type or namespace definition, or end-of-file expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(73,4): error CS1031: Type expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(73,4): error CS8124: Tuple must contain at least two elements. [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(73,4): error CS1026: ) expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(73,4): error CS1022: Type or namespace definition, or end-of-file expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(135,1): error CS1022: Type or namespace definition, or end-of-file expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+
+Build FAILED.
+
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\AppPreferences.cs(11,1): error CS1022: Type or namespace definition, or end-of-file expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(69,4): error CS1031: Type expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(69,4): error CS8124: Tuple must contain at least two elements. [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(69,4): error CS1026: ) expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(69,4): error CS1022: Type or namespace definition, or end-of-file expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(70,4): error CS1031: Type expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(70,4): error CS8124: Tuple must contain at least two elements. [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(70,4): error CS1026: ) expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(70,4): error CS1022: Type or namespace definition, or end-of-file expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(71,4): error CS1031: Type expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(71,4): error CS8124: Tuple must contain at least two elements. [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(71,4): error CS1026: ) expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(71,4): error CS1022: Type or namespace definition, or end-of-file expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(72,4): error CS1031: Type expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(72,4): error CS8124: Tuple must contain at least two elements. [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(72,4): error CS1026: ) expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(72,4): error CS1022: Type or namespace definition, or end-of-file expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(73,4): error CS1031: Type expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(73,4): error CS8124: Tuple must contain at least two elements. [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(73,4): error CS1026: ) expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(73,4): error CS1022: Type or namespace definition, or end-of-file expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs(135,1): error CS1022: Type or namespace definition, or end-of-file expected [C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\VinhKhanh.App.csproj::TargetFramework=net10.0-android]
+    0 Warning(s)
+    22 Error(s)
+
+Time Elapsed 00:00:01.81
