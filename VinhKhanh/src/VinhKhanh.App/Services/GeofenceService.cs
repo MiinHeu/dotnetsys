@@ -1,4 +1,4 @@
-﻿using Microsoft.Maui.Devices.Sensors;
+using Microsoft.Maui.Devices.Sensors;
 using VinhKhanh.Infrastructure.Data;
 using VinhKhanh.Shared;
 

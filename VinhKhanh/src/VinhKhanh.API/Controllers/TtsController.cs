@@ -29,7 +29,7 @@ public class TtsController(ITtsService tts) : ControllerBase
 			if (audioBytes.Length == 0)
 			{
 				return StatusCode(StatusCodes.Status503ServiceUnavailable,
-					new { message = "TTS backend chua san sang. Kiem tra AzureTTS config." });
+					new { message = "TTS backend chua san sang. Kiem tra cau hinh VoiceRss hoac AzureTTS." });
 			}
 
 			return File(audioBytes, "audio/mpeg", "speech.mp3");

@@ -29,7 +29,7 @@
                             FontAttributes="Bold"
                             SelectedIndexChanged="OnLangChanged" />
 
-                    <Button Text="Dong bo"
+                    <Button x:Name="SyncBtn" Text="Dong bo"
                             Clicked="OnSyncClicked"
                             BackgroundColor="#0F172A"
                             TextColor="#FFFFFF"

@@ -9,8 +9,24 @@ public class GpsService : IGpsService
 {
 	private CancellationTokenSource? _cts;
 
+	private static readonly (double lat, double lon)[] RouteWaypoints =
+	[
+		(10.7535, 106.6782),
+		(10.7533, 106.6781),
+		(10.7531, 106.6780),
+		(10.7529, 106.6779),
+		(10.7528, 106.6778),
+	];
+
 	public async Task StartTrackingAsync()
 	{
+		if (IsMockEnabled())
+		{
+			_cts = new CancellationTokenSource();
+			_ = RunRouteSimulationAsync(_cts.Token);
+			return;
+		}
+
 		if (DeviceInfo.Platform == DevicePlatform.Android)
 		{
 			var status = await Permissions.RequestAsync<Permissions.LocationAlways>();
@@ -34,9 +50,32 @@ public class GpsService : IGpsService
 		}
 	}
 
+	private async Task RunRouteSimulationAsync(CancellationToken ct)
+	{
+		System.Diagnostics.Debug.WriteLine("[GPS-MOCK] Route simulation bắt đầu.");
+		var i = 0;
+		while (!ct.IsCancellationRequested)
+		{
+			var (lat, lon) = RouteWaypoints[i];
+			Publish(lat, lon);
+			System.Diagnostics.Debug.WriteLine($"[GPS-MOCK] Step {i}/{RouteWaypoints.Length - 1} → ({lat:F6}, {lon:F6})");
+
+			i = (i + 1) % RouteWaypoints.Length;
+
+			try { await Task.Delay(1500, ct).ConfigureAwait(false); }
+			catch (OperationCanceledException) { break; }
+		}
+	}
+
+	private static void Publish(double lat, double lon)
+		=> WeakReferenceMessenger.Default.Send(new LocationUpdatedMessage(new Location(lat, lon)
+		{
+			Accuracy = 5,
+			Timestamp = DateTimeOffset.UtcNow
+		}));
+
 	private async Task StartIosLoopAsync(CancellationToken ct)
 	{
-		// iOS: Info.plist UIBackgroundModes: location cho phép loop này chạy nền
 		while (!ct.IsCancellationRequested)
 		{
 			try
@@ -60,9 +99,15 @@ public class GpsService : IGpsService
 		_cts = null;
 
 #if ANDROID
-		Platform.AppContext.StopService(new Android.Content.Intent(
-			Platform.AppContext, typeof(Platforms.Android.GpsForegroundService)));
+		if (!IsMockEnabled())
+		{
+			Platform.AppContext.StopService(new Android.Content.Intent(
+				Platform.AppContext, typeof(Platforms.Android.GpsForegroundService)));
+		}
 #endif
 		return Task.CompletedTask;
 	}
+
+	private static bool IsMockEnabled()
+		=> Microsoft.Maui.Storage.Preferences.Get(AppPreferences.MockGpsEnabled, false);
 }

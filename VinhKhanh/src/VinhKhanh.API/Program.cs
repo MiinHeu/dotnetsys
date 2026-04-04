@@ -41,6 +41,18 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddSignalR();
 
 builder.Services.AddHttpClient();
+if (!string.IsNullOrWhiteSpace(builder.Configuration["Ollama:BaseUrl"]))
+{
+	builder.Services.AddScoped<ITranslationService, OllamaTranslationService>();
+}
+else if (!string.IsNullOrWhiteSpace(builder.Configuration["LibreTranslate:BaseUrl"]))
+{
+	builder.Services.AddScoped<ITranslationService, LibreTranslateService>();
+}
+else
+{
+	builder.Services.AddScoped<ITranslationService, MicrosoftTranslatorService>();
+}
 if (!string.IsNullOrWhiteSpace(builder.Configuration["AzureOpenAI:Endpoint"])
     && !string.IsNullOrWhiteSpace(builder.Configuration["AzureOpenAI:Key"]))
 {
@@ -50,7 +62,14 @@ else
 {
 	builder.Services.AddScoped<IAiService, OllamaAiService>();
 }
-builder.Services.AddScoped<ITtsService, AzureTtsService>();
+if (!string.IsNullOrWhiteSpace(builder.Configuration["VoiceRss:ApiKey"]))
+{
+	builder.Services.AddScoped<ITtsService, VoiceRssTtsService>();
+}
+else
+{
+	builder.Services.AddScoped<ITtsService, AzureTtsService>();
+}
 
 // Redis — dùng NoOpRedisService cho testing
 builder.Services.AddScoped<IRedisService, NoOpRedisService>();

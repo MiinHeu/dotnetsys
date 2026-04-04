@@ -39,16 +39,26 @@ public sealed class PoiSnapshot
 	public string? ResolveAudioUrl(string lang)
 	{
 		var t = Translations?.FirstOrDefault(x => x.LanguageCode == lang);
-		if (!string.IsNullOrWhiteSpace(t?.AudioUrl)) return t.AudioUrl;
-		if (lang == "vi" && !string.IsNullOrWhiteSpace(AudioViUrl)) return AudioViUrl;
-		return Translations?.FirstOrDefault(x => x.LanguageCode == "en")?.AudioUrl;
+		var audioUrl = !string.IsNullOrWhiteSpace(t?.AudioUrl) ? t.AudioUrl
+			: (lang == "vi" && !string.IsNullOrWhiteSpace(AudioViUrl) ? AudioViUrl
+			: Translations?.FirstOrDefault(x => x.LanguageCode == "en")?.AudioUrl);
+
+		// Debug logging
+		System.Diagnostics.Debug.WriteLine($"[ResolveAudioUrl] Lang={lang}, FoundUrl={audioUrl ?? "(null)"}, " +
+			$"TranslationsCount={Translations?.Count ?? 0}, " +
+			$"HasEnAudio={Translations?.Any(x => x.LanguageCode == "en" && !string.IsNullOrEmpty(x.AudioUrl)) ?? false}");
+
+		return audioUrl;
 	}
 }
 
 public sealed class PoiTranslationSnapshot
 {
+	[JsonPropertyName("id")] public int Id { get; set; }
+	[JsonPropertyName("poiId")] public int PoiId { get; set; }
 	[JsonPropertyName("languageCode")] public string LanguageCode { get; set; } = "vi";
 	[JsonPropertyName("name")] public string Name { get; set; } = "";
 	[JsonPropertyName("description")] public string Description { get; set; } = "";
 	[JsonPropertyName("audioUrl")] public string? AudioUrl { get; set; }
+	[JsonPropertyName("originalDescription")] public string OriginalDescription { get; set; } = "";
 }

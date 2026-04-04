@@ -1,9 +1,8 @@
-﻿using System.Collections.Specialized;
+using System.Collections.Specialized;
 using Mapsui;
 using Mapsui.Projections;
 using Mapsui.Tiling;
 using Mapsui.UI.Maui;
-using Microsoft.Extensions.DependencyInjection;
 using VinhKhanh.App.Models;
 using VinhKhanh.App.Services;
 using VinhKhanh.App.ViewModels;
@@ -12,9 +11,12 @@ namespace VinhKhanh.App;
 
 public partial class MainPage : ContentPage
 {
+	private const double DefaultLatitude = 10.7535;
+	private const double DefaultLongitude = 106.6783;
 	private readonly MainViewModel _vm;
 	private readonly NarrationService _narration;
 	private PoiSnapshot? _selectedPoi;
+	private bool _centerOnNextLocation = true;
 
 	public MainPage()
 	{
@@ -31,34 +33,35 @@ public partial class MainPage : ContentPage
 		_vm.PropertyChanged += (_, e) =>
 		{
 			if (e.PropertyName == nameof(MainViewModel.StatusMessage))
-				StatusLabel.Text = _vm.StatusMessage;
+				Dispatcher.Dispatch(() => StatusLabel.Text = _vm.StatusMessage);
 			if (e.PropertyName == nameof(MainViewModel.NearestLabel))
-				NearestLabel.Text = string.IsNullOrWhiteSpace(_vm.NearestLabel)
-					? "Dang tim diem gan nhat..."
-					: $"Gan ban: {_vm.NearestLabel}";
+				Dispatcher.Dispatch(() => NearestLabel.Text = string.IsNullOrWhiteSpace(_vm.NearestLabel)
+					? "Đang tìm điểm gần nhất..."
+					: $"Gần nhất: {_vm.NearestLabel}");
 			if (e.PropertyName == nameof(MainViewModel.NearestPoiId))
 				Dispatcher.Dispatch(UpdatePins);
 			if (e.PropertyName is nameof(MainViewModel.UserLatitude) or nameof(MainViewModel.UserLongitude))
 				Dispatcher.Dispatch(UpdateMapUser);
 			if (e.PropertyName == nameof(MainViewModel.IsTracking))
-				TrackBtn.Text = _vm.IsTracking ? "Tat GPS" : "Bat GPS";
+				Dispatcher.Dispatch(() =>
+					TrackBtn.Text = _vm.IsTracking ? "Tắt GPS" : "Bật GPS");
 		};
 
 		_vm.Pois.CollectionChanged += OnPoisChanged;
 		StatusLabel.Text = _vm.StatusMessage;
-		NearestLabel.Text = "Dang tim diem gan nhat...";
+		NearestLabel.Text = "Đang tìm điểm gần nhất...";
 
 		Loaded += async (_, _) =>
 		{
 			try
 			{
-				UpdateMapUser();
+				CenterMap(DefaultLatitude, DefaultLongitude);
 				await _vm.SyncPoisCommand.ExecuteAsync(null);
 				UpdatePins();
 			}
 			catch (Exception ex)
 			{
-				StatusLabel.Text = "Loi tai ban do.";
+				StatusLabel.Text = "Lỗi tải bản đồ.";
 				System.Diagnostics.Debug.WriteLine($"MainPage Loaded error: {ex}");
 			}
 		};
@@ -95,14 +98,36 @@ public partial class MainPage : ContentPage
 		=> await _vm.SyncPoisCommand.ExecuteAsync(null);
 
 	private async void OnTrackClicked(object? sender, EventArgs e)
-		=> await _vm.ToggleTrackingCommand.ExecuteAsync(null);
+	{
+		if (!_vm.IsTracking)
+			_centerOnNextLocation = true;
+
+		await _vm.ToggleTrackingCommand.ExecuteAsync(null);
+	}
 
 	private void UpdateMapUser()
 	{
-		var sm = SphericalMercator.FromLonLat(_vm.UserLongitude, _vm.UserLatitude);
-		StreetMap.Map.Navigator.CenterOnAndZoomTo(new MPoint(sm.x, sm.y), 2);
+		if (!double.IsFinite(_vm.UserLatitude) || !double.IsFinite(_vm.UserLongitude))
+			return;
+
 		StreetMap.MyLocationLayer?.UpdateMyLocation(new Position(_vm.UserLatitude, _vm.UserLongitude), animated: true);
+
+		if (_centerOnNextLocation)
+		{
+			CenterMap(_vm.UserLatitude, _vm.UserLongitude);
+			_centerOnNextLocation = false;
+		}
+
 		StreetMap.RefreshGraphics();
+	}
+
+	private void CenterMap(double latitude, double longitude)
+	{
+		var sm = SphericalMercator.FromLonLat(longitude, latitude);
+		var currentResolution = StreetMap.Map.Navigator.Viewport.Resolution;
+		StreetMap.Map.Navigator.CenterOnAndZoomTo(
+			new MPoint(sm.x, sm.y),
+			currentResolution > 0 ? currentResolution : 2);
 	}
 
 	private void UpdatePins()
@@ -177,19 +202,21 @@ public partial class MainPage : ContentPage
 		var poi = _selectedPoi ?? _vm.Pois.FirstOrDefault(x => x.Id == _vm.NearestPoiId);
 		if (poi == null)
 		{
-			StatusLabel.Text = "Chua co POI de phat.";
+			StatusLabel.Text = "Chưa có POI để phát.";
+			System.Diagnostics.Debug.WriteLine("[MainPage] No POI selected for playback");
 			return;
 		}
 
 		try
 		{
-			StatusLabel.Text = $"Dang phat: {poi.ResolveName(_vm.SelectedLanguage)}";
+			StatusLabel.Text = $"Đang phát: {poi.ResolveName(_vm.SelectedLanguage)}";
 			var heardSeconds = await _narration.PlayPoiAsync(poi, _vm.SelectedLanguage, _vm.ApiRootForAudio);
-			StatusLabel.Text = $"Da phat xong ({heardSeconds}s): {poi.ResolveName(_vm.SelectedLanguage)}";
+			StatusLabel.Text = $"Đã phát xong ({heardSeconds}s): {poi.ResolveName(_vm.SelectedLanguage)}";
 		}
 		catch (Exception ex)
 		{
-			StatusLabel.Text = $"Loi phat audio: {ex.Message}";
+			StatusLabel.Text = $"Lỗi phát audio: {ex.Message}";
+			System.Diagnostics.Debug.WriteLine($"[MainPage] Playback error: {ex}");
 		}
 	}
 }

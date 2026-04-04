@@ -1,0 +1,92 @@
+Using launch settings from C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.API\Properties\launchSettings.json...
+Building...
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT COUNT(*) FROM "sqlite_master" WHERE "type" = 'table' AND "rootpage" IS NOT NULL;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "AppUsers" AS "a")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "Pois" AS "p")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "Tours" AS "t")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "TourStops" AS "t")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."CreatedAt", "a"."IsActive", "a"."OwnedPoiId", "a"."PasswordHash", "a"."Role", "a"."Username"
+      FROM "AppUsers" AS "a"
+      WHERE "a"."Username" = 'admin'
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."CreatedAt", "a"."IsActive", "a"."OwnedPoiId", "a"."PasswordHash", "a"."Role", "a"."Username"
+      FROM "AppUsers" AS "a"
+      WHERE "a"."Username" = 'owner1'
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (Size = 60)], CommandType='Text', CommandTimeout='30']
+      UPDATE "AppUsers" SET "PasswordHash" = @p0
+      WHERE "Id" = @p1
+      RETURNING 1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?' (Size = 60)], CommandType='Text', CommandTimeout='30']
+      UPDATE "AppUsers" SET "PasswordHash" = @p0
+      WHERE "Id" = @p1
+      RETURNING 1;
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5283
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.API
+warn: Microsoft.AspNetCore.Server.Kestrel[0]
+      Connection processing ended abnormally.
+      System.InvalidOperationException: Reading is already in progress.
+         at System.IO.Pipelines.ThrowHelper.ThrowInvalidOperationException_AlreadyReading()
+         at System.IO.Pipelines.Pipe.GetReadResult(ReadResult& result)
+         at System.IO.Pipelines.Pipe.ReadAsync(CancellationToken token)
+         at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.Http1Connection.BeginRead(ValueTask`1& awaitable)
+         at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpProtocol.ProcessRequests[TContext](IHttpApplication`1 application)
+         at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpProtocol.ProcessRequestsAsync[TContext](IHttpApplication`1 application)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@username='?' (Size = 5)], CommandType='Text', CommandTimeout='30']
+      SELECT "a"."Id", "a"."CreatedAt", "a"."IsActive", "a"."OwnedPoiId", "a"."PasswordHash", "a"."Role", "a"."Username"
+      FROM "AppUsers" AS "a"
+      WHERE "a"."Username" = @username AND "a"."IsActive"
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT "p3"."Id", "p3"."AudioViUrl", "p3"."Category", "p3"."ContentVersion", "p3"."CooldownSeconds", "p3"."CreatedAt", "p3"."Description", "p3"."ImageUrl", "p3"."IsActive", "p3"."Latitude", "p3"."Longitude", "p3"."MapX", "p3"."MapY", "p3"."Name", "p3"."OwnerInfo", "p3"."Priority", "p3"."QrCode", "p3"."TriggerRadiusMeters", "p3"."UpdatedAt", "s"."Id", "s"."AudioUrl", "s"."Description", "s"."LanguageCode", "s"."Name", "s"."PoiId", "s"."Id0"
+      FROM (
+          SELECT "p"."Id", "p"."AudioViUrl", "p"."Category", "p"."ContentVersion", "p"."CooldownSeconds", "p"."CreatedAt", "p"."Description", "p"."ImageUrl", "p"."IsActive", "p"."Latitude", "p"."Longitude", "p"."MapX", "p"."MapY", "p"."Name", "p"."OwnerInfo", "p"."Priority", "p"."QrCode", "p"."TriggerRadiusMeters", "p"."UpdatedAt"
+          FROM "Pois" AS "p"
+          WHERE "p"."IsActive" AND "p"."Id" = @id
+          LIMIT 1
+      ) AS "p3"
+      LEFT JOIN (
+          SELECT "p0"."Id", "p0"."AudioUrl", "p0"."Description", "p0"."LanguageCode", "p0"."Name", "p0"."PoiId", "p2"."Id" AS "Id0"
+          FROM "PoiTranslations" AS "p0"
+          INNER JOIN (
+              SELECT "p1"."Id", "p1"."IsActive"
+              FROM "Pois" AS "p1"
+              WHERE "p1"."IsActive"
+          ) AS "p2" ON "p0"."PoiId" = "p2"."Id"
+          WHERE "p2"."IsActive"
+      ) AS "s" ON "p3"."Id" = "s"."PoiId"
+      ORDER BY "p3"."Id", "s"."Id"
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...

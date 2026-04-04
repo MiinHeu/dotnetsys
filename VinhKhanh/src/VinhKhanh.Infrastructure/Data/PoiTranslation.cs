@@ -11,6 +11,10 @@ public class PoiTranslation
 	public string Description { get; set; } = string.Empty;
 	public string? AudioUrl { get; set; }
 
+	// Lưu nội dung description gốc (tiếng Việt) tại thời điểm dịch
+	// Để so sánh khi description gốc thay đổi
+	public string OriginalDescription { get; set; } = string.Empty;
+
 	public Poi Poi { get; set; } = null!;
 }
 
