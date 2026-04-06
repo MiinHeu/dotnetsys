@@ -7,7 +7,7 @@ public class AppUser
 	public string PasswordHash { get; set; } = string.Empty;
 	public string Role { get; set; } = "Owner"; // Admin, Owner
 	public bool IsActive { get; set; } = true;
-	public int? OwnedPoiId { get; set; }
+	public ICollection<Poi> OwnedPois { get; set; } = new List<Poi>();
 	public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
