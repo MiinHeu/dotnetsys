@@ -48,7 +48,13 @@ public class ApplicationDbContext : DbContext
 			entity.HasIndex(p => new { p.Latitude, p.Longitude });
 			entity.HasIndex(p => p.Category);
 			entity.HasIndex(p => p.ContentVersion);
+			entity.HasIndex(p => p.OwnerUserId);
 			entity.HasIndex(p => p.QrCode).IsUnique().HasFilter("\"QrCode\" IS NOT NULL");
+
+			entity.HasOne(p => p.Owner)
+				.WithMany(u => u.OwnedPois)
+				.HasForeignKey(p => p.OwnerUserId)
+				.OnDelete(DeleteBehavior.SetNull);
 		});
 
 		modelBuilder.Entity<PoiTranslation>(entity =>
@@ -256,7 +262,6 @@ public class ApplicationDbContext : DbContext
 				PasswordHash = "$2a$11$PBSPXvfmAZ.W8yyJfGlYOOqiMEgPBBCJOmYDGrqp8qJW3nDEFU.hm", // BCrypt hash of "Admin@2026"
 				Role = "Admin",
 				IsActive = true,
-				OwnedPoiId = null,
 				CreatedAt = seedTime
 			}
 		);
@@ -280,7 +285,6 @@ public class ApplicationDbContext : DbContext
 					PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@2026"),
 					Role = "Admin",
 					IsActive = true,
-					OwnedPoiId = null,
 					CreatedAt = seedTime
 				},
 				new AppUser
@@ -290,7 +294,6 @@ public class ApplicationDbContext : DbContext
 					PasswordHash = BCrypt.Net.BCrypt.HashPassword("Owner@2026"),
 					Role = "Owner",
 					IsActive = true,
-					OwnedPoiId = 1,
 					CreatedAt = seedTime
 				}
 			);

@@ -56,9 +56,6 @@ public class AuthController(ApplicationDbContext db, IConfiguration cfg) : Contr
 			new(ClaimTypes.Role, user.Role)
 		};
 
-		if (user.OwnedPoiId is { } oid)
-			claims.Add(new Claim("OwnedPoiId", oid.ToString()));
-
 		var token = new JwtSecurityToken(
 			issuer: issuer,
 			audience: audience,

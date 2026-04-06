@@ -34,12 +34,15 @@ public class Poi : IComparable<Poi>
 	public string? QrCode { get; set; }
 	public int ContentVersion { get; set; } = 1;
 
+	public int? OwnerUserId { get; set; }
+
 	public PoiCategory Category { get; set; } = PoiCategory.ComTam;
 	public bool IsActive { get; set; } = true;
 
 	public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 	public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+	public AppUser? Owner { get; set; }
 	public ICollection<PoiTranslation> Translations { get; set; } = new List<PoiTranslation>();
 	public ICollection<PoiVisitLog> VisitLogs { get; set; } = new List<PoiVisitLog>();
 	public ICollection<TourStop> TourStops { get; set; } = new List<TourStop>();

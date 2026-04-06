@@ -16,8 +16,22 @@ public sealed class NarrationService(IAudioManager audioManager, ILogger<Narrati
 	private readonly Queue<(Poi poi, string language)> _queue = [];
 	private readonly HashSet<string> _queuedKeys = [];
 	private readonly Dictionary<string, DateTime> _recentlyPlayed = [];
+	private CancellationTokenSource? _playCts;
+	private int _currentPriority;
 	private bool _isProcessing;
 	private static readonly TimeSpan DuplicateWindow = TimeSpan.FromSeconds(25);
+	private static readonly int MinListenSeconds = 5;
+
+	/// <summary>Ngắt thuyết minh hiện tại nếu POI mới có priority cao hơn hoặc đang yêu cầu dừng.</summary>
+	public void InterruptIfHigherPriority(int newPriority)
+	{
+		if (_currentPriority > 0 && newPriority > _currentPriority)
+		{
+			logger.LogInformation("Interrupting narration: new priority {New} > current {Current}", newPriority, _currentPriority);
+			_playCts?.Cancel();
+			StopAsync();
+		}
+	}
 
 	public bool IsPlaying => _player?.IsPlaying ?? false;
 

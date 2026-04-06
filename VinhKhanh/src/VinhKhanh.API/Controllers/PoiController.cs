@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using VinhKhanh.API.Auth;
 using VinhKhanh.API.Hubs;
 using VinhKhanh.API.Utilities;
 using VinhKhanh.Infrastructure.Data;
@@ -24,6 +25,26 @@ public class PoiController(
 	private static string NormalizeLang(string? lang)
 		=> string.IsNullOrWhiteSpace(lang) ? "vi" : lang.Trim().ToLowerInvariant();
 
+	private int? CurrentUserId
+	{
+		get
+		{
+			if (AuthClaims.TryGetUserId(HttpContext.User, out var id))
+				return id;
+			return null;
+		}
+	}
+
+	private bool IsOwnerRole => AuthClaims.IsOwner(HttpContext.User);
+
+	private bool CanAccessPoi(Poi poi)
+	{
+		if (AuthClaims.IsAdmin(HttpContext.User)) return true;
+		if (!IsOwnerRole) return true; // public read
+		var uid = CurrentUserId;
+		return uid == null || poi.OwnerUserId == null || poi.OwnerUserId == uid;
+	}
+
 	[HttpGet]
 	public async Task<IActionResult> GetAll([FromQuery] string lang = "vi", CancellationToken ct = default)
 	{
@@ -43,11 +64,15 @@ public class PoiController(
 	public async Task<IActionResult> GetById(int id, CancellationToken ct = default)
 	{
 		var poi = await db.Pois
+			.IgnoreQueryFilters()
 			.Include(p => p.Translations)
 			.AsNoTracking()
 			.FirstOrDefaultAsync(p => p.Id == id, ct);
 
-		return poi == null ? NotFound() : Ok(poi);
+		if (poi == null) return NotFound();
+		if (!CanAccessPoi(poi)) return Forbid();
+
+		return Ok(poi);
 	}
 
 	[HttpGet("qrcode/{code}")]
@@ -62,7 +87,10 @@ public class PoiController(
 			.AsNoTracking()
 			.FirstOrDefaultAsync(p => p.QrCode == key, ct);
 
-		return poi == null ? NotFound() : Ok(poi);
+		if (poi == null) return NotFound();
+		if (!CanAccessPoi(poi)) return Forbid();
+
+		return Ok(poi);
 	}
 
 	[HttpPost("nearby")]
@@ -98,6 +126,21 @@ public class PoiController(
 		if (!TryValidatePoi(poi, out var error))
 			return BadRequest(new { message = error });
 
+		// Owner: tự động gán OwnerUserId
+		if (IsOwnerRole)
+		{
+			poi.OwnerUserId = CurrentUserId;
+		}
+
+		// Check trùng vị trí (cùng lat/lon với POI đã có, bất kể owner nào)
+		var existingAtLocation = await db.Pois.IgnoreQueryFilters()
+			.AnyAsync(p => Math.Abs(p.Latitude - poi.Latitude) < 1e-9
+			            && Math.Abs(p.Longitude - poi.Longitude) < 1e-9, ct);
+		if (existingAtLocation)
+		{
+			return Conflict(new { message = "Vi tri nay da co POI khac." });
+		}
+
 		poi.QrCode = NormalizeQr(poi.QrCode);
 		if (!string.IsNullOrEmpty(poi.QrCode)
 		    && await db.Pois.IgnoreQueryFilters().AnyAsync(p => p.QrCode == poi.QrCode, ct))
@@ -126,10 +169,32 @@ public class PoiController(
 			return BadRequest(new { message = error });
 
 		var poi = await db.Pois
+			.IgnoreQueryFilters()
 			.Include(p => p.Translations)
 			.FirstOrDefaultAsync(p => p.Id == id, ct);
 		if (poi == null)
 			return NotFound();
+
+		// Owner chỉ được sửa POI của mình
+		if (IsOwnerRole && !AuthClaims.IsAdmin(HttpContext.User))
+		{
+			var uid = CurrentUserId;
+			if (uid == null || poi.OwnerUserId != uid)
+				return Forbid();
+		}
+
+		// Check trùng vị trí (trừ chính nó)
+		if (Math.Abs(updated.Latitude - poi.Latitude) > 1e-9 || Math.Abs(updated.Longitude - poi.Longitude) > 1e-9)
+		{
+			var existingAtLocation = await db.Pois.IgnoreQueryFilters()
+				.AnyAsync(p => p.Id != id
+				            && Math.Abs(p.Latitude - updated.Latitude) < 1e-9
+				            && Math.Abs(p.Longitude - updated.Longitude) < 1e-9, ct);
+			if (existingAtLocation)
+			{
+				return Conflict(new { message = "Vi tri nay da co POI khac." });
+			}
+		}
 
 		var newQr = NormalizeQr(updated.QrCode);
 		if (newQr != poi.QrCode
@@ -154,7 +219,8 @@ public class PoiController(
 			|| poi.Priority != updated.Priority
 			|| poi.CooldownSeconds != updated.CooldownSeconds
 			|| poi.Category != updated.Category
-			|| poi.IsActive != updated.IsActive;
+			|| poi.IsActive != updated.IsActive
+			|| poi.OwnerUserId != updated.OwnerUserId;
 
 		poi.Name = updated.Name;
 		poi.Description = updated.Description;
@@ -171,6 +237,7 @@ public class PoiController(
 		poi.AudioViUrl = updated.AudioViUrl;
 		poi.ImageUrl = updated.ImageUrl;
 		poi.QrCode = newQr;
+		poi.OwnerUserId = updated.OwnerUserId;
 		if (contentChanged) poi.ContentVersion++;
 
 		poi.UpdatedAt = DateTime.UtcNow;
@@ -191,6 +258,14 @@ public class PoiController(
 		var poi = await db.Pois.FirstOrDefaultAsync(p => p.Id == id, ct);
 		if (poi == null)
 			return NotFound();
+
+		// Owner chỉ được thêm translation cho POI của mình
+		if (IsOwnerRole && !AuthClaims.IsAdmin(HttpContext.User))
+		{
+			var uid = CurrentUserId;
+			if (uid == null || poi.OwnerUserId != uid)
+				return Forbid();
+		}
 
 		var existing = await db.PoiTranslations
 			.FirstOrDefaultAsync(t => t.PoiId == id && t.LanguageCode == lang, ct);
@@ -227,6 +302,14 @@ public class PoiController(
 		var poi = await db.Pois.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == id, ct);
 		if (poi == null)
 			return NotFound();
+
+		// Owner chỉ được vô hiệu hoá POI của mình
+		if (IsOwnerRole && !AuthClaims.IsAdmin(HttpContext.User))
+		{
+			var uid = CurrentUserId;
+			if (uid == null || poi.OwnerUserId != uid)
+				return Forbid();
+		}
 
 		if (!poi.IsActive)
 			return NoContent();

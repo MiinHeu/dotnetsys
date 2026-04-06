@@ -21,7 +21,6 @@ public static class DbSeeder
 				PasswordHash = adminHash,
 				Role = "Admin",
 				IsActive = true,
-				OwnedPoiId = null,
 				CreatedAt = DateTime.UtcNow
 			});
 			changed = true;
@@ -31,7 +30,6 @@ public static class DbSeeder
 			admin.PasswordHash = adminHash;
 			admin.Role = "Admin";
 			admin.IsActive = true;
-			admin.OwnedPoiId = null;
 			changed = true;
 		}
 
@@ -44,7 +42,6 @@ public static class DbSeeder
 				PasswordHash = ownerHash,
 				Role = "Owner",
 				IsActive = true,
-				OwnedPoiId = 1,
 				CreatedAt = DateTime.UtcNow
 			});
 			changed = true;
@@ -54,7 +51,6 @@ public static class DbSeeder
 			owner.PasswordHash = ownerHash;
 			owner.Role = "Owner";
 			owner.IsActive = true;
-			owner.OwnedPoiId = 1;
 			changed = true;
 		}
 
