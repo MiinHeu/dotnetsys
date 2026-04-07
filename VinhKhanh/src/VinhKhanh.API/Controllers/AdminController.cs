@@ -9,6 +9,24 @@ namespace VinhKhanh.API.Controllers;
 [ApiController, Route("api/[controller]")]
 public class AdminController(ApplicationDbContext db) : ControllerBase
 {
+	[Authorize]
+	[HttpGet("summary")]
+	public async Task<IActionResult> Summary(CancellationToken ct = default)
+	{
+		var totalPois = await db.Pois.AsNoTracking().CountAsync(ct);
+		var totalTours = await db.Tours.AsNoTracking().CountAsync(ct);
+		var totalUsers = await db.AppUsers.AsNoTracking().CountAsync(ct);
+		var totalVisits = await db.PoiVisitLogs.AsNoTracking().CountAsync(ct);
+
+		var ownerStats = await db.Pois.AsNoTracking()
+			.Where(p => p.OwnerUserId.HasValue)
+			.GroupBy(p => p.OwnerUserId)
+			.Select(g => new { OwnerId = g.Key.Value, PoiCount = g.Count() })
+			.ToListAsync(ct);
+
+		return Ok(new { totalPois, totalTours, totalUsers, totalVisits, ownerStats });
+	}
+
 	[Authorize(Roles = "Admin")]
 	[HttpPost("seed")]
 	public async Task<IActionResult> SeedDatabase(CancellationToken ct = default)

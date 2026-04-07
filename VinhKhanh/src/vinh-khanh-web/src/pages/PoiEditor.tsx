@@ -149,45 +149,6 @@ async function translateDescription(text: string, language: TtsLanguage): Promis
   return translated
 }
 
-async function speakPreview(text: string, lang: string): Promise<void> {
-  if (!('speechSynthesis' in window)) {
-    throw new Error('Trình duyệt này không hỗ trợ nghe thử giọng đọc.')
-  }
-
-  await new Promise<void>((resolve) => {
-    const voices = window.speechSynthesis.getVoices()
-    if (voices.length > 0) {
-      resolve()
-      return
-    }
-
-    const handle = () => {
-      window.speechSynthesis.removeEventListener('voiceschanged', handle)
-      resolve()
-    }
-
-    window.speechSynthesis.addEventListener('voiceschanged', handle, { once: true })
-    window.setTimeout(() => {
-      window.speechSynthesis.removeEventListener('voiceschanged', handle)
-      resolve()
-    }, 1200)
-  })
-
-  window.speechSynthesis.cancel()
-
-  await new Promise<void>((resolve, reject) => {
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = lang
-    const voice = window.speechSynthesis
-      .getVoices()
-      .find((item) => item.lang.toLowerCase().startsWith(lang.toLowerCase().slice(0, 2)))
-    if (voice) utterance.voice = voice
-    utterance.onend = () => resolve()
-    utterance.onerror = () => reject(new Error('Không nghe thử được nội dung này.'))
-    window.speechSynthesis.speak(utterance)
-  })
-}
-
 export function PoiEditor() {
   const { id } = useParams()
   const isNew = id === 'new'

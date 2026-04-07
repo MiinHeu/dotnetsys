@@ -24,6 +24,17 @@ export function Dashboard() {
         .data,
   })
 
+  const summary = useQuery({
+    queryKey: ['admin', 'summary'],
+    queryFn: async () =>
+      (await api.get<{ totalPois: number; totalTours: number; totalUsers: number; totalVisits: number; ownerStats?: { ownerId: number; poiCount: number }[] }>('/api/admin/summary')).data,
+  })
+
+  const ownersQ = useQuery({
+    queryKey: ['owners'],
+    queryFn: async () => (await api.get<{ id: number; username: string }[]>('/api/auth/owners')).data,
+  })
+
   const chartData =
     analyticsTop.data?.map((a) => {
       const matchedPoi = pois.data?.find((p) => p.id === a.poiId)
@@ -37,7 +48,7 @@ export function Dashboard() {
   const cards = [
     {
       label: 'Quán ăn',
-      value: pois.isLoading ? '...' : pois.data?.length ?? 0,
+      value: pois.isLoading ? '...' : (summary.isLoading ? pois.data?.length : summary.data?.totalPois ?? pois.data?.length) ?? 0,
       sub: 'Đang hoạt động',
       desc: 'Các quán ăn đã được đăng ký trên hệ thống',
       icon: UtensilsCrossed,
@@ -45,7 +56,7 @@ export function Dashboard() {
     },
     {
       label: 'Lộ trình',
-      value: tours.isLoading ? '...' : tours.data?.length ?? 0,
+      value: tours.isLoading ? '...' : (summary.isLoading ? tours.data?.length : summary.data?.totalTours ?? tours.data?.length) ?? 0,
       sub: 'Đang mở',
       desc: 'Lộ trình khám phá ẩm thực cho du khách',
       icon: Route,
@@ -53,15 +64,15 @@ export function Dashboard() {
     },
     {
       label: 'Khách tham quan',
-      value: '1,234',
-      sub: 'Tổng lượt',
+      value: summary.isLoading ? '...' : (summary.data?.totalUsers ?? '—'),
+      sub: 'Tổng lượt đăng ký',
       desc: 'Lượt du khách sử dụng ứng dụng',
       icon: Users,
       bg: 'bg-teal-600',
     },
     {
       label: 'Lượt nghe TTS',
-      value: analyticsTop.isLoading ? '...' : analyticsTop.data?.reduce((a, b) => a + b.count, 0) ?? 0,
+      value: analyticsTop.isLoading ? '...' : (summary.isLoading ? (analyticsTop.data?.reduce((a, b) => a + b.count, 0) ?? 0) : (summary.data?.totalVisits ?? analyticsTop.data?.reduce((a, b) => a + b.count, 0) ?? 0)),
       sub: 'Số lần phát',
       desc: 'Lượt thuyết minh tự động đã phát',
       icon: TrendingUp,
@@ -110,6 +121,30 @@ export function Dashboard() {
           </div>
         ))}
       </div>
+
+      {summary.data?.ownerStats && summary.data.ownerStats.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900">
+            <Users className="text-slate-400" /> Chủ quán & số POI
+          </h3>
+          <div className="flex flex-wrap gap-3">
+            {summary.data.ownerStats.map((o) => {
+              const owner = ownersQ.data?.find((x) => x.id === o.ownerId)
+              return (
+                <div key={o.ownerId} className="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-sm font-bold text-orange-700">
+                    {owner?.username?.[0]?.toUpperCase() ?? '?'}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">{owner?.username ?? `#${o.ownerId}`}</p>
+                    <p className="text-xs text-slate-500">{o.poiCount} quán</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-1">

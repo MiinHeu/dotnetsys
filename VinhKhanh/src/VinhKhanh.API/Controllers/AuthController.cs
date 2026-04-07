@@ -14,6 +14,52 @@ namespace VinhKhanh.API.Controllers;
 [ApiController, Route("api/[controller]")]
 public class AuthController(ApplicationDbContext db, IConfiguration cfg) : ControllerBase
 {
+	[Authorize, HttpGet("owners")]
+	public async Task<IActionResult> GetOwners(CancellationToken ct)
+	{
+		var owners = await db.AppUsers.AsNoTracking()
+			.Where(u => u.Role == "Owner" && u.IsActive)
+			.Select(u => new { u.Id, u.Username })
+			.ToListAsync(ct);
+		return Ok(owners);
+	}
+
+	[Authorize(Roles = "Admin"), HttpPost("register")]
+	public async Task<IActionResult> Register([FromBody] RegisterRequest req, CancellationToken ct)
+	{
+		if (string.IsNullOrWhiteSpace(req.Username) || string.IsNullOrWhiteSpace(req.Password))
+			return BadRequest(new { message = "Username va Password khong duoc de trong." });
+
+		if (req.Username.Trim().Length < 3 || req.Username.Trim().Length > 50)
+			return BadRequest(new { message = "Username phai tu 3-50 ky tu." });
+
+		if (req.Password.Length < 6)
+			return BadRequest(new { message = "Password phai co it nhat 6 ky tu." });
+
+		var role = (req.Role ?? "Owner").Trim();
+		if (role != "Owner" && role != "Admin")
+			return BadRequest(new { message = "Role phai la Owner hoac Admin." });
+
+		var username = req.Username.Trim();
+		var exists = await db.AppUsers.AnyAsync(u => u.Username == username, ct);
+		if (exists)
+			return Conflict(new { message = $"Username '{username}' da ton tai." });
+
+		var user = new AppUser
+		{
+			Username = username,
+			PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
+			Role = role,
+			IsActive = true,
+			CreatedAt = DateTime.UtcNow
+		};
+
+		db.AppUsers.Add(user);
+		await db.SaveChangesAsync(ct);
+
+		return Ok(new { message = "Da tao tai khoan", user.Id, user.Username, user.Role });
+	}
+
 	[AllowAnonymous, HttpPost("login")]
 	public async Task<IActionResult> Login([FromBody] LoginRequest req, CancellationToken ct)
 	{

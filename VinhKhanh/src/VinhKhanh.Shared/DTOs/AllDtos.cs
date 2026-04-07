@@ -31,6 +31,8 @@ public record LoginRequest(string Username, string Password);
 
 public record LoginResponse(string Token, string Role, DateTime Expires);
 
+public record RegisterRequest(string Username, string Password, string? Role = "Owner");
+
 public class ChatMessage
 {
 	public string Content { get; set; } = "";
