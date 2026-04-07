@@ -18,11 +18,21 @@ public sealed class OutboxService : IOutboxService
 	private SQLiteAsyncConnection? _db;
 	private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
 
+	// Max retries per item; discard stale items older than 7 days
+	private const int MaxRetries = 5;
+	private static readonly TimeSpan StaleThreshold = TimeSpan.FromDays(7);
+
 	private async Task<SQLiteAsyncConnection> GetDbAsync()
 	{
 		if (_db != null) return _db;
 		_db = new SQLiteAsyncConnection(_dbPath);
 		await _db.CreateTableAsync<OutboxItem>();
+		// Migration: add LastAttemptTicks column to upgraded databases
+		try
+		{
+			await _db.ExecuteAsync("ALTER TABLE outbox_items ADD COLUMN LastAttemptTicks INTEGER NOT NULL DEFAULT 0");
+		}
+		catch { /* column already exists */ }
 		return _db;
 	}
 
@@ -38,12 +48,25 @@ public sealed class OutboxService : IOutboxService
 	public async Task<int> FlushAsync(ApiClientService api, CancellationToken ct = default)
 	{
 		var db = await GetDbAsync();
-		var items = await db.Table<OutboxItem>().OrderBy(x => x.CreatedAtUtcTicks).Take(100).ToListAsync();
+		var now = DateTime.UtcNow;
+		var cutoff = (now - StaleThreshold).Ticks;
+		var items = await db.Table<OutboxItem>()
+			.Where(x => x.CreatedAtUtcTicks > cutoff)
+			.OrderBy(x => x.CreatedAtUtcTicks)
+			.Take(50)
+			.ToListAsync();
+
 		var sent = 0;
 
 		foreach (var item in items)
 		{
 			ct.ThrowIfCancellationRequested();
+
+			// Exponential backoff: skip if not enough time since last attempt
+			var backoff = SecondsToBackoff(item.RetryCount);
+			var readyAt = item.LastAttemptTicks + TimeSpan.FromSeconds(backoff).Ticks;
+			if (now.Ticks < readyAt) break; // oldest items first; if this one is on cooldown, stop
+
 			var ok = false;
 			try
 			{
@@ -76,7 +99,16 @@ public sealed class OutboxService : IOutboxService
 			else
 			{
 				item.RetryCount++;
-				await db.UpdateAsync(item);
+				item.LastAttemptTicks = now.Ticks;
+
+				if (item.RetryCount >= MaxRetries)
+				{
+					await db.DeleteAsync(item); // discard after max retries
+				}
+				else
+				{
+					await db.UpdateAsync(item);
+				}
 				break;
 			}
 		}
@@ -91,8 +123,22 @@ public sealed class OutboxService : IOutboxService
 		{
 			Kind = kind,
 			PayloadJson = payload,
-			CreatedAtUtcTicks = DateTime.UtcNow.Ticks
+			CreatedAtUtcTicks = DateTime.UtcNow.Ticks,
+			LastAttemptTicks = 0
 		});
+	}
+
+	private static double SecondsToBackoff(int retry)
+	{
+		// 10s, 30s, 60s, 300s, 900s
+		return retry switch
+		{
+			0 => 10,
+			1 => 30,
+			2 => 60,
+			3 => 300,
+			_ => 900,
+		};
 	}
 
 	[Table("outbox_items")]
@@ -103,5 +149,6 @@ public sealed class OutboxService : IOutboxService
 		public string PayloadJson { get; set; } = "";
 		public long CreatedAtUtcTicks { get; set; }
 		public int RetryCount { get; set; }
+		public long LastAttemptTicks { get; set; }
 	}
 }

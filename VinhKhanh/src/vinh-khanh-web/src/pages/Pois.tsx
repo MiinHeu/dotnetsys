@@ -1,17 +1,43 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router'
+import { useMemo, useState } from 'react'
 import { api, type Poi } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
+
 import { Plus, Search, MapPin } from 'lucide-react'
 
 export function Pois() {
   const role = useAuthStore((s) => s.role)
   const navigate = useNavigate()
+  const [search, setSearch] = useState('')
+  const [ownerFilter, setOwnerFilter] = useState<number | null>(null)
 
   const q = useQuery({
     queryKey: ['pois', 'vi'],
     queryFn: async () => (await api.get<Poi[]>('/api/poi?lang=vi')).data,
   })
+
+  const ownersQ = useQuery({
+    queryKey: ['owners'],
+    queryFn: async () => (await api.get<{ id: number; username: string }[]>('/api/auth/owners')).data,
+  })
+
+  const filtered = useMemo(() => {
+    let list = q.data ?? []
+    if (ownerFilter != null) {
+      list = list.filter((p) => p.ownerUserId === ownerFilter)
+    }
+    const term = search.toLowerCase().trim()
+    if (term) {
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(term) ||
+          (p.ownerInfo ?? '').toLowerCase().includes(term) ||
+          (p.description ?? '').toLowerCase().includes(term),
+      )
+    }
+    return list
+  }, [q.data, search, ownerFilter])
 
   return (
     <div className="space-y-6">
@@ -26,10 +52,24 @@ export function Pois() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm quán ăn..."
               className="w-full rounded-lg border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:border-orange-500 focus:ring-2 focus:ring-orange-500"
             />
           </div>
+          {role === 'Admin' && ownersQ.data && ownersQ.data.length > 0 && (
+            <select
+              value={ownerFilter?.toString() ?? ''}
+              onChange={(e) => setOwnerFilter(e.target.value ? Number(e.target.value) : null)}
+              className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
+            >
+              <option value="">Tất cả chủ quán</option>
+              {ownersQ.data.map((o) => (
+                <option key={o.id} value={o.id}>{o.username}</option>
+              ))}
+            </select>
+          )}
           {role === 'Admin' && (
             <button
               onClick={() => navigate('/pois/new')}
@@ -45,7 +85,7 @@ export function Pois() {
       {q.error && <div className="font-bold text-red-500">Lỗi tải dữ liệu. Vui lòng F5 lại trang.</div>}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {q.data?.map((p) => (
+        {filtered.map((p) => (
           <div
             key={p.id}
             onClick={() => navigate(`/pois/${p.id}`)}
@@ -57,7 +97,12 @@ export function Pois() {
               </div>
               <div>
                 <h3 className="line-clamp-1 text-lg font-bold text-slate-900">{p.name}</h3>
-                <p className="text-xs font-semibold uppercase text-slate-500">Mã POI: #{p.id}</p>
+                <p className="text-xs font-semibold uppercase text-slate-500">
+                  #{p.id}
+                  {p.ownerInfo && (
+                    <span className="ml-1 normal-case font-medium text-orange-600">· {p.ownerInfo}</span>
+                  )}
+                </p>
               </div>
             </div>
 

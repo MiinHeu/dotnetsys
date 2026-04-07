@@ -17,6 +17,7 @@ export type Poi = {
   name: string
   description: string
   ownerInfo?: string | null
+  ownerUserId?: number | null
   latitude: number
   longitude: number
   mapX: number
@@ -35,6 +36,7 @@ export type Poi = {
     name: string
     description: string
     audioUrl?: string | null
+    originalDescription?: string
   }>
 }
 
