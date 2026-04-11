@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using VinhKhanh.API.Auth;
 using VinhKhanh.API.Hubs;
-using VinhKhanh.API.Utilities;
+using VinhKhanh.Shared;
 using VinhKhanh.Infrastructure.Data;
 using VinhKhanh.Shared.DTOs;
 
@@ -93,6 +94,31 @@ public class PoiController(
 		return Ok(poi);
 	}
 
+	[HttpGet("{id:int}/qrcode")]
+	[AllowAnonymous]
+	public async Task<IActionResult> GenerateQrCode(int id, CancellationToken ct = default)
+	{
+		var poi = await db.Pois.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, ct);
+		if (poi == null) return NotFound(new { message = "POI khong ton tai." });
+
+		if (string.IsNullOrWhiteSpace(poi.QrCode))
+			return BadRequest(new { message = "POI nay chua duoc gan ma QR." });
+
+		try
+		{
+			using var qrGenerator = new QRCoder.QRCodeGenerator();
+			var qrCodeData = qrGenerator.CreateQrCode(poi.QrCode, QRCoder.QRCodeGenerator.ECCLevel.Q);
+			var qrCode = new QRCoder.PngByteQRCode(qrCodeData);
+			byte[] qrCodeImage = qrCode.GetGraphic(20);
+
+			return File(qrCodeImage, "image/png");
+		}
+		catch (Exception ex)
+		{
+			return StatusCode(500, new { message = "Loi tao QR code", detail = ex.Message });
+		}
+	}
+
 	[HttpPost("nearby")]
 	public async Task<IActionResult> FindNearby([FromBody] LocationQueryDto loc, CancellationToken ct = default)
 	{
@@ -120,6 +146,7 @@ public class PoiController(
 	}
 
 	[HttpPost]
+	[Authorize(Roles = "Admin,Owner")]
 	public async Task<IActionResult> Create([FromBody] Poi poi, CancellationToken ct = default)
 	{
 		TrimPoiFields(poi);
@@ -148,7 +175,7 @@ public class PoiController(
 			return Conflict(new { message = $"Ma QR '{poi.QrCode}' da ton tai." });
 		}
 
-		NormalizeTranslations(poi.Translations);
+		NormalizeTranslations(poi.Translations, poi.Description);
 		poi.CreatedAt = DateTime.UtcNow;
 		poi.UpdatedAt = DateTime.UtcNow;
 		poi.IsActive = true;
@@ -162,6 +189,7 @@ public class PoiController(
 	}
 
 	[HttpPut("{id:int}")]
+	[Authorize(Roles = "Admin,Owner")]
 	public async Task<IActionResult> Update(int id, [FromBody] Poi updated, CancellationToken ct = default)
 	{
 		TrimPoiFields(updated);
@@ -241,7 +269,7 @@ public class PoiController(
 		if (contentChanged) poi.ContentVersion++;
 
 		poi.UpdatedAt = DateTime.UtcNow;
-		NormalizeTranslations(poi.Translations);
+		NormalizeTranslations(poi.Translations, poi.Description);
 
 		await db.SaveChangesAsync(ct);
 		await hub.Clients.All.SendAsync("PoiUpdated", poi, ct);
@@ -249,6 +277,7 @@ public class PoiController(
 	}
 
 	[HttpPost("{id:int}/translation")]
+	[Authorize(Roles = "Admin,Owner")]
 	public async Task<IActionResult> AddTranslation(int id, [FromBody] PoiTranslationDto dto, CancellationToken ct = default)
 	{
 		var lang = NormalizeLang(dto.LanguageCode);
@@ -275,6 +304,8 @@ public class PoiController(
 			existing.Name = dto.Name.Trim();
 			existing.Description = dto.Description.Trim();
 			existing.AudioUrl = string.IsNullOrWhiteSpace(dto.AudioUrl) ? null : dto.AudioUrl.Trim();
+			if (string.IsNullOrWhiteSpace(existing.OriginalDescription))
+				existing.OriginalDescription = poi.Description;
 		}
 		else
 		{
@@ -284,7 +315,8 @@ public class PoiController(
 				LanguageCode = lang,
 				Name = dto.Name.Trim(),
 				Description = dto.Description.Trim(),
-				AudioUrl = string.IsNullOrWhiteSpace(dto.AudioUrl) ? null : dto.AudioUrl.Trim()
+				AudioUrl = string.IsNullOrWhiteSpace(dto.AudioUrl) ? null : dto.AudioUrl.Trim(),
+				OriginalDescription = poi.Description
 			});
 		}
 
@@ -297,6 +329,7 @@ public class PoiController(
 	}
 
 	[HttpDelete("{id:int}")]
+	[Authorize(Roles = "Admin,Owner")]
 	public async Task<IActionResult> Deactivate(int id, CancellationToken ct = default)
 	{
 		var poi = await db.Pois.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == id, ct);
@@ -383,7 +416,7 @@ public class PoiController(
 		poi.AudioViUrl = string.IsNullOrWhiteSpace(poi.AudioViUrl) ? null : poi.AudioViUrl.Trim();
 	}
 
-	private static void NormalizeTranslations(IEnumerable<PoiTranslation>? translations)
+	private static void NormalizeTranslations(IEnumerable<PoiTranslation>? translations, string baseDescription)
 	{
 		if (translations == null) return;
 		foreach (var t in translations)
@@ -392,6 +425,9 @@ public class PoiController(
 			t.Name = t.Name?.Trim() ?? string.Empty;
 			t.Description = t.Description?.Trim() ?? string.Empty;
 			t.AudioUrl = string.IsNullOrWhiteSpace(t.AudioUrl) ? null : t.AudioUrl.Trim();
+			// Required field used to detect stale translations when the base POI description changes.
+			if (string.IsNullOrWhiteSpace(t.OriginalDescription))
+				t.OriginalDescription = baseDescription;
 		}
 	}
 }

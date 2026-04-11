@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VinhKhanh.Infrastructure.Data;
 using VinhKhanh.Shared.DTOs;
@@ -8,6 +8,7 @@ namespace VinhKhanh.API.Controllers;
 [ApiController, Route("api/[controller]")]
 public class MovementController(ApplicationDbContext db) : ControllerBase
 {
+
 	[HttpPost("batch")]
 	public async Task<IActionResult> BatchLog([FromBody] MovementBatchDto dto, CancellationToken ct = default)
 	{

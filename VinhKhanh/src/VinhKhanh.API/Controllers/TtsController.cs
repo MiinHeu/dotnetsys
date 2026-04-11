@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VinhKhanh.API.Services;
 using VinhKhanh.Shared.DTOs;
 
-namespace VinhKhanh.API.Controllers;
+// File deprecated. Use AudioController (api/audio/generate-tts or api/audio/synthesize).
 
 [ApiController, Route("api/[controller]")]
 [Authorize(Roles = "Admin")]

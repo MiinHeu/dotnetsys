@@ -33,6 +33,7 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
 			{
 				["ConnectionStrings:Sqlite"] = $"Data Source={_dbPath}",
 				["Ollama:BaseUrl"] = "http://127.0.0.1:65530",
+				["Seed:ForceDefaultCredentials"] = "true",
 				["AzureOpenAI:Endpoint"] = "",
 				["AzureOpenAI:Key"] = "",
 				["AzureTTS:Key"] = "",

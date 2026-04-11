@@ -1,9 +1,10 @@
 import { Link, useNavigate, useLocation } from 'react-router'
 import { useAuthStore } from '@/store/authStore'
-import { LayoutGrid, MapPin, Globe, Route, Mic2, BarChart2, Activity, LogOut, Menu, X, Languages } from 'lucide-react'
+import { LayoutGrid, MapPin, Globe, Route, Mic2, BarChart2, Activity, LogOut, Menu, X, Languages, KeyRound, Users } from 'lucide-react'
 import { useState } from 'react'
 
-const nav = [
+// Admin sees all; Owner sees only their relevant items
+const adminNav = [
   { to: '/', label: 'Tổng Quan', icon: LayoutGrid },
   { to: '/pois', label: 'Quán Ăn', icon: MapPin },
   { to: '/map', label: 'Bản Đồ', icon: Globe },
@@ -12,6 +13,18 @@ const nav = [
   { to: '/audio', label: 'Giọng Đọc', icon: Mic2 },
   { to: '/analytics', label: 'Thống Kê', icon: BarChart2 },
   { to: '/history', label: 'Lịch Sử', icon: Activity },
+  { to: '/users', label: 'Tài Khoản', icon: Users },
+  { to: '/change-password', label: 'Đổi Mật Khẩu', icon: KeyRound },
+]
+
+const ownerNav = [
+  { to: '/', label: 'Tổng Quan', icon: LayoutGrid },
+  { to: '/pois', label: 'Quán Ăn Của Tôi', icon: MapPin },
+  { to: '/map', label: 'Bản Đồ', icon: Globe },
+  { to: '/tours', label: 'Lộ Trình', icon: Route },
+  { to: '/translations', label: 'Bản Dịch', icon: Languages },
+  { to: '/audio', label: 'Giọng Đọc', icon: Mic2 },
+  { to: '/change-password', label: 'Đổi Mật Khẩu', icon: KeyRound },
 ]
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -20,7 +33,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Đóng menu mobile mỗi khi chuyển trang
+  const isAdmin = role === 'Admin'
+  const nav = isAdmin ? adminNav : ownerNav
+  const accentColor = isAdmin ? 'orange' : 'emerald'
+
   const toggleMenu = () => setMobileMenuOpen(!mobileMenuOpen)
 
   return (
@@ -29,10 +45,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* SIDEBAR DÀNH CHO DESKTOP */}
       <aside className="hidden md:flex flex-col w-64 bg-slate-900 text-white min-h-screen sticky top-0">
         <div className="p-6 flex items-center gap-3 border-b border-slate-800">
-          <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center text-xl shadow-lg">
+          <div className={`w-10 h-10 ${isAdmin ? 'bg-orange-600' : 'bg-emerald-600'} rounded-lg flex items-center justify-center text-xl shadow-lg`}>
             🍲
           </div>
-          <h1 className="text-xl font-bold tracking-wider text-white">Vĩnh Khánh</h1>
+          <div>
+            <h1 className="text-xl font-bold tracking-wider text-white">Vĩnh Khánh</h1>
+            <p className={`text-xs ${isAdmin ? 'text-orange-400' : 'text-emerald-400'} font-medium`}>
+              {isAdmin ? 'Admin' : 'Chủ Quán'}
+            </p>
+          </div>
         </div>
 
         <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
@@ -44,7 +65,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 to={x.to}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-colors ${
                   isActive 
-                    ? 'bg-orange-600 text-white shadow-md' 
+                    ? `${isAdmin ? 'bg-orange-600' : 'bg-emerald-600'} text-white shadow-md` 
                     : 'text-slate-400 hover:text-white hover:bg-slate-800'
                 }`}
               >
@@ -60,11 +81,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div>
               <p className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Tài khoản</p>
               <p className="text-sm font-bold text-slate-200">
-                {role === 'Admin' ? 'Quản trị viên' : role === 'Owner' ? 'Chủ quán' : role}
+                {isAdmin ? 'Quản trị viên' : 'Chủ quán'}
               </p>
             </div>
             <button
-              onClick={() => { clear(); navigate('/login', { replace: true }) }}
+              onClick={() => { clear(); navigate('/role-select', { replace: true }) }}
               className="p-2 bg-slate-800 text-slate-400 rounded-lg hover:text-white hover:bg-red-600 transition-colors"
               title="Đăng xuất"
             >
@@ -79,6 +100,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-2">
           <span className="text-2xl">🍲</span>
           <span className="font-bold text-lg">Vĩnh Khánh</span>
+          <span className={`text-xs px-2 py-0.5 rounded-full ${isAdmin ? 'bg-orange-600' : 'bg-emerald-600'} font-bold`}>
+            {isAdmin ? 'Admin' : 'Owner'}
+          </span>
         </div>
         <button onClick={toggleMenu} className="p-2 text-slate-300 hover:text-white focus:outline-none">
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -98,7 +122,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-4 py-4 rounded-lg text-base font-semibold ${
                     isActive 
-                      ? 'bg-orange-600 text-white' 
+                      ? `${isAdmin ? 'bg-orange-600' : 'bg-emerald-600'} text-white` 
                       : 'text-slate-300 hover:bg-slate-800'
                   }`}
                 >
@@ -110,10 +134,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </nav>
           <div className="p-6 border-t border-slate-800 flex justify-between items-center">
             <span className="font-bold text-slate-300">
-              User: <span className="text-orange-500">{role === 'Admin' ? 'Admin' : role}</span>
+              Vai trò: <span className={`${isAdmin ? 'text-orange-500' : 'text-emerald-500'}`}>{isAdmin ? 'Admin' : 'Chủ Quán'}</span>
             </span>
             <button
-              onClick={() => { clear(); navigate('/login', { replace: true }) }}
+              onClick={() => { clear(); navigate('/role-select', { replace: true }) }}
               className="flex items-center gap-2 px-4 py-2 bg-red-600 rounded-lg text-white font-bold"
             >
               <LogOut size={18} /> Đăng Xuất

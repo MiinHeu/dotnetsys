@@ -1,0 +1,1910 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRD — Hệ Thống Thuyết Minh Tự Động Đa Ngôn Ngữ | Phố Ẩm Thực Vĩnh Khánh</title>
+    <meta name="description" content="Product Requirements Document cho dự án Thuyết Minh Tự Động Đa Ngôn Ngữ — Phố Ẩm Thực Vĩnh Khánh, Quận 4, TP.HCM">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --primary: #e65100;
+            --primary-light: #ff833a;
+            --primary-dark: #ac1900;
+            --accent: #00838f;
+            --accent-light: #4fb3bf;
+            --bg: #fafafa;
+            --surface: #ffffff;
+            --text: #1a1a2e;
+            --text-secondary: #555770;
+            --border: #e0e0e0;
+            --code-bg: #1e1e2e;
+            --code-text: #cdd6f4;
+            --success: #2e7d32;
+            --warning: #f57f17;
+            --info: #1565c0;
+            --danger: #c62828;
+            --poc-color: #1565c0;
+            --mvp-color: #121013;
+            --ai-color: #00695c;
+            --radius: 12px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,.1);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,.15);
+            --gradient-primary: linear-gradient(135deg, #e65100, #ff833a);
+            --gradient-accent: linear-gradient(135deg, #00695c, #00838f, #4fb3bf);
+            --gradient-hero: linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 60%, #e94560 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== NAV ===== */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            color: white; padding: 0 2rem; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 1px 20px rgba(0,0,0,.2);
+            border-bottom: 1px solid rgba(255,255,255,.06);
+        }
+        nav .logo { font-weight: 800; font-size: 1.05rem; letter-spacing: -.5px; display: flex; align-items: center; gap: .5rem; }
+        nav .logo span { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        nav .nav-links { display: flex; gap: .3rem; list-style: none; flex-wrap: wrap; }
+        nav .nav-links a {
+            color: rgba(255,255,255,.7); text-decoration: none; font-size: .78rem;
+            padding: .3rem .65rem; border-radius: 6px; transition: all .2s; font-weight: 500;
+        }
+        nav .nav-links a:hover { background: rgba(255,255,255,.1); color: #fff; }
+
+        /* ===== HERO ===== */
+        .hero {
+            margin-top: 60px; background: var(--gradient-hero);
+            color: white; padding: 5rem 2rem 4rem; text-align: center;
+            position: relative; overflow: hidden;
+        }
+        .hero::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 30% 50%, rgba(233,69,96,.15), transparent 60%),
+                        radial-gradient(ellipse at 70% 80%, rgba(0,131,143,.1), transparent 50%);
+        }
+        .hero h1 {
+            font-size: 2.8rem; font-weight: 900; margin-bottom: .6rem;
+            letter-spacing: -1.5px; position: relative;
+            background: linear-gradient(135deg, #fff, #f0f0f0, #e94560);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero .subtitle {
+            font-size: 1.15rem; opacity: .85; max-width: 750px;
+            margin: 0 auto 1rem; position: relative; font-weight: 300;
+        }
+        .hero .doc-type {
+            display: inline-block; background: rgba(233,69,96,.3); backdrop-filter: blur(8px);
+            padding: .4rem 1.2rem; border-radius: 20px; font-size: .8rem; font-weight: 600;
+            margin-bottom: 1.5rem; position: relative; border: 1px solid rgba(233,69,96,.3);
+        }
+        .hero .badges { display: flex; justify-content: center; gap: .5rem; flex-wrap: wrap; position: relative; }
+        .hero .badge {
+            background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
+            padding: .3rem .8rem; border-radius: 20px; font-size: .75rem;
+            backdrop-filter: blur(4px); font-weight: 500;
+        }
+        .hero .meta { margin-top: 1.5rem; font-size: .8rem; opacity: .5; position: relative; }
+
+        /* ===== SECTIONS ===== */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+        section { padding: 3.5rem 0; }
+        section:nth-child(even) > .container { }
+        .section-header {
+            display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;
+            padding-bottom: 1rem; border-bottom: 2px solid var(--border);
+        }
+        .section-header .icon {
+            width: 48px; height: 48px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; flex-shrink: 0;
+        }
+        .section-header h2 { font-size: 1.6rem; font-weight: 800; color: var(--text); letter-spacing: -.5px; }
+        .section-header .section-num {
+            font-size: .7rem; text-transform: uppercase; letter-spacing: 1.5px;
+            color: var(--primary); font-weight: 700;
+        }
+
+        /* ===== CARDS ===== */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.2rem; margin: 1.5rem 0; }
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1.5rem;
+            transition: all .25s; position: relative; overflow: hidden;
+        }
+        .card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); border-color: rgba(230,81,0,.2); }
+        .card h3 { font-size: 1rem; margin-bottom: .5rem; color: var(--primary-dark); font-weight: 700; }
+        .card p, .card li { font-size: .88rem; color: var(--text-secondary); }
+        .card ul { padding-left: 1.2rem; margin-top: .4rem; }
+        .card li { margin-bottom: .25rem; }
+
+        /* ===== TABLES ===== */
+        .table-wrap { overflow-x: auto; margin: 1rem 0; border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+        table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+        th {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white; padding: .7rem 1rem; text-align: left; font-weight: 600;
+            font-size: .78rem; text-transform: uppercase; letter-spacing: .5px;
+        }
+        td { padding: .6rem 1rem; border-bottom: 1px solid var(--border); }
+        tr:hover td { background: #fff8f0; }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:nth-child(even) td { background: #fafafa; }
+        tbody tr:nth-child(even):hover td { background: #fff8f0; }
+
+        /* ===== CODE ===== */
+        code {
+            background: #f0f0f5; padding: .15rem .45rem; border-radius: 4px;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: .82em; color: var(--primary-dark);
+        }
+
+        /* ===== MERMAID ===== */
+        .mermaid-container {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1.5rem; margin: 1.5rem 0;
+            overflow-x: auto; box-shadow: var(--shadow-sm);
+        }
+        .mermaid-container h4 {
+            font-size: .9rem; color: var(--text-secondary); margin-bottom: 1rem;
+            padding-bottom: .5rem; border-bottom: 1px dashed var(--border);
+        }
+        .mermaid { text-align: center; }
+
+        /* ===== FLOW ===== */
+        .flow { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin: 1rem 0; }
+        .flow-step {
+            background: var(--gradient-primary); color: white;
+            padding: .4rem .9rem; border-radius: 8px; font-size: .82rem;
+            font-weight: 600; white-space: nowrap;
+        }
+        .flow-step.alt { background: var(--gradient-accent); }
+        .flow-step.success { background: var(--success); }
+        .flow-step.warning { background: var(--warning); color: var(--text); }
+        .flow-step.info { background: var(--info); }
+        .flow-step.mvp { background: var(--mvp-color); }
+        .flow-arrow { font-size: 1.2rem; color: var(--text-secondary); }
+
+        /* ===== HIGHLIGHT ===== */
+        .highlight {
+            border-left: 4px solid var(--primary); background: #fff3e0;
+            padding: 1rem 1.2rem; border-radius: 0 var(--radius) var(--radius) 0;
+            margin: 1rem 0; font-size: .88rem;
+        }
+        .highlight.info { border-color: var(--info); background: #e3f2fd; }
+        .highlight.success { border-color: var(--success); background: #e8f5e9; }
+        .highlight.danger { border-color: var(--danger); background: #ffebee; }
+        .highlight strong { color: var(--text); }
+
+        /* ===== STATS ===== */
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .stat-card {
+            text-align: center; padding: 1.2rem .8rem;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); transition: all .25s;
+        }
+        .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .stat-card .value { font-size: 2rem; font-weight: 900; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-card .label { font-size: .75rem; color: var(--text-secondary); margin-top: .2rem; font-weight: 500; }
+
+        /* ===== TIER LIST ===== */
+        .tier-list { margin: 1rem 0; }
+        .tier-item { display: flex; align-items: stretch; margin-bottom: .6rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+        .tier-label { width: 90px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .82rem; color: white; flex-shrink: 0; }
+        .tier-content { flex: 1; padding: .7rem 1rem; background: var(--surface); }
+        .tier-content strong { display: block; font-size: .88rem; margin-bottom: .2rem; }
+        .tier-content span { font-size: .82rem; color: var(--text-secondary); }
+
+        /* ===== TIMELINE ===== */
+        .timeline { position: relative; padding-left: 2rem; margin: 1.5rem 0; }
+        .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, var(--primary), var(--accent)); }
+        .timeline-item { position: relative; margin-bottom: 1.5rem; }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -2rem; top: 6px;
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--primary); border: 3px solid white;
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+        .timeline-item h4 { font-size: .92rem; color: var(--primary-dark); margin-bottom: .3rem; }
+        .timeline-item p { font-size: .85rem; color: var(--text-secondary); }
+
+        /* ===== FEATURE TAG ===== */
+        .feature-tag {
+            display: inline-block; padding: .2rem .6rem; border-radius: 4px;
+            font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+        }
+        .tag-poc { background: #e3f2fd; color: var(--poc-color); }
+        .tag-mvp { background: #f3e5f5; color: var(--mvp-color); }
+        .tag-ai { background: #e0f2f1; color: var(--ai-color); }
+
+        /* ===== ARCHITECTURE GRID ===== */
+        .arch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .8rem; margin: 1.5rem 0; }
+        .arch-module {
+            border: 2px solid var(--border); border-radius: var(--radius);
+            padding: 1.2rem; text-align: center; transition: all .25s;
+        }
+        .arch-module:hover { border-color: var(--primary); box-shadow: 0 2px 12px rgba(230,81,0,.15); transform: translateY(-2px); }
+        .arch-module .mod-icon { font-size: 2rem; margin-bottom: .3rem; }
+        .arch-module .mod-name { font-weight: 700; font-size: .88rem; color: var(--primary-dark); }
+        .arch-module .mod-desc { font-size: .75rem; color: var(--text-secondary); margin-top: .2rem; }
+
+        /* ===== TOC ===== */
+        .toc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; margin: 2rem 0; }
+        .toc h3 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--text); }
+        .toc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: .3rem; }
+        .toc a {
+            display: block; padding: .4rem .8rem; color: var(--text-secondary);
+            text-decoration: none; font-size: .85rem; border-radius: 6px;
+            transition: all .2s;
+        }
+        .toc a:hover { background: #fff3e0; color: var(--primary); }
+        .toc a .num { color: var(--primary); font-weight: 700; margin-right: .4rem; }
+
+        /* ===== FOOTER ===== */
+        footer {
+            text-align: center; padding: 3rem 2rem;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: rgba(255,255,255,.5); font-size: .8rem;
+        }
+        footer strong { color: rgba(255,255,255,.85); }
+
+        /* ===== DIAGRAM MODAL ===== */
+        .diagram-overlay {
+            display: none; position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,.65); backdrop-filter: blur(6px);
+            align-items: center; justify-content: center;
+        }
+        .diagram-overlay.active { display: flex; }
+        .diagram-modal {
+            background: white; border-radius: 16px; width: 96vw; height: 92vh;
+            display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: var(--shadow-lg); animation: modalIn .3s ease-out;
+        }
+        @keyframes modalIn { from { transform: scale(.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .dm-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: .7rem 1.2rem; background: var(--gradient-primary); color: white; flex-shrink: 0;
+        }
+        .dm-header h3 { font-size: 1rem; font-weight: 600; }
+        .dm-close {
+            background: rgba(255,255,255,.2); color: white; border: none;
+            width: 34px; height: 34px; border-radius: 8px; font-size: 1.1rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .dm-close:hover { background: rgba(255,255,255,.35); }
+        .dm-body { flex: 1; overflow: auto; padding: 2rem; background: #fafafa; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 1.8rem; }
+            section { padding: 2rem 0; }
+            .container { padding: 0 1rem; }
+            .card-grid { grid-template-columns: 1fr; }
+            .arch-grid { grid-template-columns: repeat(2, 1fr); }
+            nav .nav-links { display: none; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .toc-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAV -->
+    <nav>
+        <div class="logo">🍜 <span>Vĩnh Khánh PRD</span></div>
+        <ul class="nav-links">
+            <li><a href="#overview">Tổng quan</a></li>
+            <li><a href="#actors">Actors</a></li>
+            <li><a href="#usecase">Use Case</a></li>
+            <li><a href="#poc">PoC</a></li>
+            <li><a href="#mvp">MVP</a></li>
+            <li><a href="#ai-features">AI</a></li>
+            <li><a href="#architecture">Kiến trúc</a></li>
+            <li><a href="#database">Database</a></li>
+            <li><a href="#api">API</a></li>
+            <li><a href="#diagrams">Sơ đồ</a></li>
+            <li><a href="#tech">Tech Stack</a></li>
+        </ul>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="doc-type">📋 PRODUCT REQUIREMENTS DOCUMENT (PRD)</div>
+        <h1>Thuyết Minh Tự Động Đa Ngôn Ngữ<br>Phố Ẩm Thực Vĩnh Khánh</h1>
+        <p class="subtitle">Hệ thống hướng dẫn du lịch ẩm thực thông minh — tự động phát thuyết minh đa ngôn ngữ theo vị trí GPS thời gian thực khi du khách dạo phố Vĩnh Khánh, Quận 4, TP.HCM</p>
+        <div class="badges">
+            <span class="badge">.NET 10 LTS</span>
+            <span class="badge">C# 14</span>
+            <span class="badge">ASP.NET Core 10</span>
+            <span class="badge">.NET MAUI</span>
+            <span class="badge">React 19</span>
+            <span class="badge">PostgreSQL 17</span>
+            <span class="badge">SignalR</span>
+            <span class="badge">Ollama AI</span>
+            <span class="badge">7 Ngôn Ngữ</span>
+        </div>
+        <p class="meta">Phiên bản: 1.0 | Ngày: 11/04/2026 | Framework: .NET 10 + C# 14</p>
+    </div>
+
+    <!-- STATS -->
+    <section>
+        <div class="container">
+            <div class="stats-row">
+                <div class="stat-card"><div class="value">3</div><div class="label">Actors (Khách / Chủ quán / Admin)</div></div>
+                <div class="stat-card"><div class="value">11</div><div class="label">Chức năng chính</div></div>
+                <div class="stat-card"><div class="value">5</div><div class="label">PoC Features</div></div>
+                <div class="stat-card"><div class="value">3</div><div class="label">MVP Features</div></div>
+                <div class="stat-card"><div class="value">3</div><div class="label">AI Features</div></div>
+                <div class="stat-card"><div class="value">7</div><div class="label">Ngôn ngữ hỗ trợ</div></div>
+                <div class="stat-card"><div class="value">11</div><div class="label">API Controllers</div></div>
+                <div class="stat-card"><div class="value">9</div><div class="label">Database Tables</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TABLE OF CONTENTS -->
+    <section>
+        <div class="container">
+            <div class="toc">
+                <h3>📑 Mục Lục Tài Liệu</h3>
+                <div class="toc-grid">
+                    <a href="#overview"><span class="num">01</span>Tổng Quan Dự Án</a>
+                    <a href="#actors"><span class="num">02</span>Actors & Stakeholders</a>
+                    <a href="#usecase"><span class="num">03</span>Use Case Diagrams</a>
+                    <a href="#poc"><span class="num">04</span>PoC — Chức năng bắt buộc</a>
+                    <a href="#mvp"><span class="num">05</span>MVP — Chức năng mở rộng</a>
+                    <a href="#ai-features"><span class="num">06</span>AI Features</a>
+                    <a href="#architecture"><span class="num">07</span>Kiến Trúc Hệ Thống</a>
+                    <a href="#database"><span class="num">08</span>Database Schema & Models</a>
+                    <a href="#api"><span class="num">09</span>API Endpoints</a>
+                    <a href="#diagrams"><span class="num">10</span>Sơ Đồ Toàn Diện (UML)</a>
+                    <a href="#tech"><span class="num">11</span>Technology Stack</a>
+                    <a href="#nfr"><span class="num">12</span>Yêu Cầu Phi Chức Năng</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 01: OVERVIEW -->
+    <section id="overview">
+        <div class="container">
+            <div class="section-header">
+                <div class="icon" style="background:#fff3e0;color:var(--primary);">🏗️</div>
+                <div>
+                    <div class="section-num">Chương 01</div>
+                    <h2>Tổng Quan Dự Án</h2>
+                </div>
+            </div>
+
+            <div class="highlight info">
+                <strong>Tầm nhìn:</strong> Khách du lịch đi dạo phố ẩm thực Vĩnh Khánh. Điện thoại họ <strong>tự động phát thuyết minh bằng ngôn ngữ của họ</strong> khi đến gần một quán ăn — không cần bấm gì cả. Đó là cốt lõi. Mọi thứ còn lại là hạ tầng phục vụ cho điều đó.
+            </div>
+
+            <h3 style="margin: 1.5rem 0 .8rem;">Phạm Vi Dự Án</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h3><span class="feature-tag tag-poc">PoC</span> Proof of Concept</h3>
+                    <p>5 chức năng cốt lõi bắt buộc phải có để chứng minh tính khả thi:</p>
+                    <ul>
+                        <li>GPS Tracking thời gian thực</li>
+                        <li>Geofence / Kích hoạt điểm thuyết minh</li>
+                        <li>Thuyết minh tự động (TTS + Audio)</li>
+                        <li>Quản lý dữ liệu POI</li>
+                        <li>Map View bản đồ tương tác</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3><span class="feature-tag tag-mvp">MVP</span> Minimum Viable Product</h3>
+                    <p>3 chức năng mở rộng nâng cao trải nghiệm:</p>
+                    <ul>
+                        <li>Hệ thống quản trị CMS (Web Admin)</li>
+                        <li>Analytics — Phân tích dữ liệu ẩn danh</li>
+                        <li>QR Code kích hoạt nội dung</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3><span class="feature-tag tag-ai">AI</span> Tính Năng Thông Minh</h3>
+                    <p>3 chức năng AI tích hợp:</p>
+                    <ul>
+                        <li>Chatbot trợ lý AI 24/7</li>
+                        <li>Thuyết minh đa ngôn ngữ tự động</li>
+                        <li>Hỗ trợ giao tiếp đa ngôn ngữ</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 style="margin: 1.5rem 0 .8rem;">Luồng Hoạt Động Chính</h3>
+            <div class="flow">
+                <span class="flow-step">Khách mở App</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step alt">GPS liên tục</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step info">Geofence check</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step warning">Khoảng cách < Bán kính?</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step success">Phát thuyết minh tự động</span>
+            </div>
+            <div class="flow">
+                <span class="flow-step mvp">Khách quét QR</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step info">Lấy POI ID</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step success">Phát ngay (không cần GPS)</span>
+            </div>
+            <div class="flow">
+                <span class="flow-step alt">Khách hỏi AI</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step info">Server Ollama</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step success">Trả lời + Dẫn đường</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 02: ACTORS -->
+    <section id="actors">
+        <div class="container">
+            <div class="section-header">
+                <div class="icon" style="background:#e8f5e9;color:var(--success);">👥</div>
+                <div>
+                    <div class="section-num">Chương 02</div>
+                    <h2>Actors & Stakeholders</h2>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Actor</th>
+                            <th>Platform</th>
+                            <th>Vai Trò</th>
+                            <th>Chức Năng Chính</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>🧑‍🤝‍🧑 Khách Tham Quan</strong></td>
+                            <td>Mobile App (.NET MAUI)</td>
+                            <td>End-user</td>
+                            <td>Đi dạo → Nghe thuyết minh tự động → Quét QR → Hỏi AI → Xem bản đồ → Theo tour</td>
+                        </tr>
+                        <tr>
+                            <td><strong>🏪 Chủ Quán</strong></td>
+                            <td>Web (React 19)</td>
+                            <td>Content Owner</td>
+                            <td>Thêm/sửa POI quán mình → Upload audio → Thêm bản dịch → Xem thống kê riêng</td>
+                        </tr>
+                        <tr>
+                            <td><strong>👨‍💼 Admin</strong></td>
+                            <td>Web (React 19)</td>
+                            <td>System Admin</td>
+                            <td>Quản lý toàn bộ POI → CRUD Tour → Analytics → History → Quản lý users</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin: 1.5rem 0 .8rem;">Data Flow theo Actor</h3>
+            <div class="highlight">
+                <strong>📱 Data << SQLite (không cần wifi):</strong> POI cache, audio files tải trước — app hoạt động offline.<br>
+                <strong>☁️ Data >> PostgreSQL (cần wifi):</strong> Đồng bộ dữ liệu mới từ server qua API.
+            </div>
+
+            <div class="mermaid-container">
+                <h4>📊 Sơ đồ Actor & System Boundary</h4>
+                <pre class="mermaid">
+graph LR
+    subgraph Clients
+        A["🧑‍🤝‍🧑 Khách Tham Quan<br/>.NET MAUI App"]
+        B["🏪 Chủ Quán<br/>React Web"]
+        C["👨‍💼 Admin<br/>React Web"]
+    end
+    subgraph Server
+        D["⚙️ ASP.NET Core 10<br/>Web API"]
+        E["🧠 Ollama AI<br/>llama3.2:3b"]
+        F["📡 SignalR Hub<br/>Real-time"]
+    end
+    subgraph Data
+        G["🐘 PostgreSQL 17"]
+        H["📦 Redis 8"]
+        I["💾 SQLite<br/>Offline Cache"]
+    end
+    A -->|"REST API + GPS data"| D
+    B -->|"REST API + JWT"| D
+    C -->|"REST API + JWT"| D
+    D --> G
+    D --> H
+    D --> E
+    D --> F
+    F -->|"Real-time updates"| B
+    F -->|"Real-time updates"| C
+    A -->|"Local storage"| I
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 03: USE CASE -->
+    <section id="usecase">
+        <div class="container">
+            <div class="section-header">
+                <div class="icon" style="background:#e3f2fd;color:var(--info);">📋</div>
+                <div>
+                    <div class="section-num">Chương 03</div>
+                    <h2>Use Case Diagrams</h2>
+                </div>
+            </div>
+
+            <div class="mermaid-container">
+                <h4>📊 Use Case Diagram — Khách Tham Quan (Mobile App)</h4>
+                <pre class="mermaid">
+graph TB
+    Actor1["🧑‍🤝‍🧑 Khách Tham Quan"]
+
+    subgraph UC_Visitor["Use Cases — Khách Tham Quan"]
+        UC1["UC01: Nghe thuyết minh<br/>tự động theo GPS"]
+        UC2["UC02: Quét QR kích hoạt<br/>nội dung"]
+        UC3["UC03: Xem bản đồ<br/>POI & vị trí"]
+        UC4["UC04: Hỏi AI chatbot<br/>24/7"]
+        UC5["UC05: Theo dõi Tour<br/>lộ trình"]
+        UC6["UC06: Chọn ngôn ngữ<br/>ưu thích"]
+        UC7["UC07: Tải dữ liệu<br/>offline"]
+        UC8["UC08: Xem chi tiết<br/>quán ăn"]
+    end
+
+    Actor1 --> UC1
+    Actor1 --> UC2
+    Actor1 --> UC3
+    Actor1 --> UC4
+    Actor1 --> UC5
+    Actor1 --> UC6
+    Actor1 --> UC7
+    Actor1 --> UC8
+                </pre>
+            </div>
+
+            <div class="mermaid-container">
+                <h4>📊 Use Case Diagram — Chủ Quán & Admin (Web)</h4>
+                <pre class="mermaid">
+graph TB
+    Actor2["🏪 Chủ Quán"]
+    Actor3["👨‍💼 Admin"]
+
+    subgraph UC_Owner["Use Cases — Chủ Quán"]
+        UC9["UC09: Đăng nhập JWT"]
+        UC10["UC10: Thêm/Sửa POI<br/>quán của mình"]
+        UC11["UC11: Upload audio<br/>thuyết minh"]
+        UC12["UC12: Thêm bản dịch<br/>đa ngôn ngữ"]
+        UC13["UC13: Xem thống kê<br/>quán riêng"]
+    end
+
+    subgraph UC_Admin["Use Cases — Admin"]
+        UC14["UC14: Quản lý<br/>toàn bộ POI"]
+        UC15["UC15: Quản lý Tour<br/>& TourStop"]
+        UC16["UC16: Xem Analytics<br/>& Heatmap"]
+        UC17["UC17: Xem History<br/>sự kiện"]
+        UC18["UC18: Quản lý Users<br/>& phân quyền"]
+        UC19["UC19: Quản lý<br/>bản dịch"]
+    end
+
+    Actor2 --> UC9
+    Actor2 --> UC10
+    Actor2 --> UC11
+    Actor2 --> UC12
+    Actor2 --> UC13
+    Actor3 --> UC9
+    Actor3 --> UC14
+    Actor3 --> UC15
+    Actor3 --> UC16
+    Actor3 --> UC17
+    Actor3 --> UC18
+    Actor3 --> UC19
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 04: PoC -->
+    <section id="poc">
+        <div class="container">
+            <div class="section-header">
+                <div class="icon" style="background:#e3f2fd;color:var(--poc-color);">🔬</div>
+                <div>
+                    <div class="section-num">Chương 04</div>
+                    <h2>PoC — Chức Năng Bắt Buộc (Proof of Concept)</h2>
+                </div>
+            </div>
+
+            <!-- PoC 1: GPS -->
+            <h3 style="margin: 1.5rem 0 .8rem;"><span class="feature-tag tag-poc">PoC 1</span> GPS Tracking Thời Gian Thực</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>📍 Mô tả</h3>
+                    <p>Hệ thống liên tục đọc tọa độ GPS của điện thoại khách — kể cả khi app chạy ngầm. Đây là nền tảng của toàn bộ dự án.</p>
+                    <ul>
+                        <li><strong>Android:</strong> Foreground Service (<code>GpsForegroundService</code>)</li>
+                        <li><strong>iOS:</strong> <code>CLLocationManager</code> với quyền <code>always</code></li>
+                        <li>Vòng lặp 3 giây đọc vị trí</li>
+                        <li>Gửi qua <code>WeakReferenceMessenger</code></li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>⚙️ Technical Details</h3>
+                    <ul>
+                        <li><strong>Interface:</strong> <code>IGpsService</code></li>
+                        <li><strong>Implementation:</strong> <code>GpsService.cs</code></li>
+                        <li><strong>Android:</strong> <code>ForegroundService.TypeLocation</code> + notification channel</li>
+                        <li><strong>iOS:</strong> <code>Info.plist</code> — <code>UIBackgroundModes: location</code></li>
+                        <li><strong>Permissions:</strong> <code>ACCESS_FINE_LOCATION</code>, <code>ACCESS_BACKGROUND_LOCATION</code>, <code>FOREGROUND_SERVICE_LOCATION</code></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mermaid-container">
+                <h4>📊 Activity Diagram — GPS Tracking</h4>
+                <pre class="mermaid">
+flowchart TD
+    A([Start App]) --> B{Platform?}
+    B -->|Android| C[Request LocationAlways]
+    B -->|iOS| D[Request LocationAlways]
+    C --> E[Start Foreground Service]
+    D --> F[Start iOS Loop]
+    E --> G[Tracking Loop 3s]
+    F --> G
+    G --> H[GetLocationAsync]
+    H --> I{Location != null?}
+    I -->|Yes| J[Send LocationUpdatedMessage]
+    I -->|No| K[Wait 1s retry]
+    J --> L[Delay 3s]
+    K --> G
+    L --> G
+                </pre>
+            </div>
+
+            <!-- PoC 2: Geofence -->
+            <h3 style="margin: 2rem 0 .8rem;"><span class="feature-tag tag-poc">PoC 2</span> Geofence / Kích Hoạt Điểm Thuyết Minh</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>🎯 Mô tả</h3>
+                    <p>Mỗi quán ăn (POI) được cài đặt:</p>
+                    <ul>
+                        <li><strong>Tọa độ:</strong> Latitude / Longitude</li>
+                        <li><strong>Bán kính kích hoạt:</strong> mặc định 15m</li>
+                        <li><strong>Cooldown:</strong> 60s (nghe rồi thì 60s mới kích hoạt lại)</li>
+                        <li><strong>Mức ưu tiên:</strong> Priority (0-1000), cao phát trước</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>⚙️ Haversine Formula</h3>
+                    <p>Tính khoảng cách thực giữa 2 tọa độ GPS trên bề mặt trái đất:</p>
+                    <ul>
+                        <li><code>GeoMath.Haversine(lat1, lon1, lat2, lon2)</code></li>
+                        <li>R = 6,371,000 mét (bán kính trái đất)</li>
+                        <li>Kết quả: khoảng cách tính bằng mét</li>
+                        <li><code>GpsRadiusMultiplier</code> — điều chỉnh độ nhạy</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mermaid-container">
+                <h4>📊 Sequence Diagram — Geofence Trigger</h4>
+                <pre class="mermaid">
+sequenceDiagram
+    participant GPS as GpsService
+    participant VM as MainViewModel
+    participant GF as GeofenceService
+    participant NS as NarrationService
+    participant API as ApiService
+
+    loop Every 3 seconds
+        GPS->>VM: LocationUpdatedMessage
+        VM->>GF: CheckTriggeredAsync(location, pois)
+        GF->>GF: Haversine distance calc
+        GF->>GF: Check cooldown
+        GF->>GF: Sort by Priority
+        alt distance < radius AND not in cooldown
+            GF-->>VM: List of triggered POIs
+            VM->>NS: EnqueueAsync(poi, language)
+            VM->>API: LogHistoryAsync GPS_TRIGGER
+        else
+            GF-->>VM: Empty list
+        end
+    end
+                </pre>
+            </div>
+
+            <div class="mermaid-container">
+                <h4>📊 State Diagram — POI Geofence State</h4>
+                <pre class="mermaid">
+stateDiagram-v2
+    [*] --> Idle: App khởi động
+    Idle --> InRange: distance < radius
+    InRange --> Triggered: Cooldown expired
+    Triggered --> Playing: NarrationService.Enqueue
+    Playing --> Cooldown: Audio finished
+    Cooldown --> Idle: cooldownSeconds elapsed
+    InRange --> Idle: User rời vùng
+    Playing --> Idle: User dừng audio
+                </pre>
+            </div>
+
+            <!-- PoC 3: Narration -->
+            <h3 style="margin: 2rem 0 .8rem;"><span class="feature-tag tag-poc">PoC 3</span> Thuyết Minh Tự Động (Narration Engine)</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>🔊 Chiến Lược Phát Âm Thanh</h3>
+                    <p>Ưu tiên theo thứ tự:</p>
+                    <ul>
+                        <li><strong>1.</strong> File audio thu sẵn theo ngôn ngữ (<code>PoiTranslation.AudioUrl</code>)</li>
+                        <li><strong>2.</strong> File audio tiếng Việt thu sẵn (<code>Poi.AudioViUrl</code>)</li>
+                        <li><strong>3.</strong> TTS — Text-to-Speech fallback (<code>MauiTtsService</code>)</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>🎵 Queue Management</h3>
+                    <ul>
+                        <li><code>SemaphoreSlim</code> — chống race condition</li>
+                        <li>Queue FIFO — xếp hàng, phát lần lượt</li>
+                        <li>Không phát trùng (kiểm tra POI ID)</li>
+                        <li>Tự dừng khi <code>StopCurrentAsync()</code></li>
+                        <li>Android: <code>AudioFocusHelper</code> — dừng khi có thông báo</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mermaid-container">
+                <h4>📊 Activity Diagram — Narration Engine</h4>
+                <pre class="mermaid">
+flowchart TD
+    A([EnqueueAsync]) --> B{POI already in queue?}
+    B -->|Yes| Z([Return - skip])
+    B -->|No| C[Add to Queue]
+    C --> D{isPlaying?}
+    D -->|Yes| Z
+    D -->|No| E[ProcessQueueAsync]
+    E --> F{Queue empty?}
+    F -->|Yes| G[isPlaying = false]
+    F -->|No| H[Dequeue POI + Lang]
+    H --> I[Find Translation]
+    I --> J{Has AudioUrl?}
+    J -->|Yes| K[AudioPlayerService.Play]
+    J -->|No| L{Has AudioViUrl?}
+    L -->|Yes| K
+    L -->|No| M[MauiTtsService.Speak]
+    K --> N[Log History]
+    M --> N
+    N --> F
+                </pre>
+            </div>
+
+            <!-- PoC 4: POI Data -->
+            <h3 style="margin: 2rem 0 .8rem;"><span class="feature-tag tag-poc">PoC 4</span> Quản Lý Dữ Liệu POI</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>💾 Storage Strategy</h3>
+                    <ul>
+                        <li><strong>SQLite (offline):</strong> <code>LocalDbService</code> — cache trên điện thoại</li>
+                        <li><strong>PostgreSQL (online):</strong> Database chính, đồng bộ qua API</li>
+                        <li><strong>ConnectivityService:</strong> Auto-sync khi WiFi kết nối lại</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>📦 POI Data Model</h3>
+                    <ul>
+                        <li>Tên, Mô tả văn bản</li>
+                        <li>Tọa độ GPS (lat/lon)</li>
+                        <li>Vị trí grid (MapX/MapY 0-100%)</li>
+                        <li>Bán kính, Cooldown, Priority</li>
+                        <li>Ảnh minh họa, Audio, QR Code</li>
+                        <li>Bản dịch đa ngôn ngữ (<code>PoiTranslation</code>)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- PoC 5: Map -->
+            <h3 style="margin: 2rem 0 .8rem;"><span class="feature-tag tag-poc">PoC 5</span> Map View — Bản Đồ Tương Tác</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>🗺️ Chức Năng Map</h3>
+                    <ul>
+                        <li>Hiển thị vị trí khách (chấm xanh GPS)</li>
+                        <li>Hiển thị tất cả POI trên bản đồ</li>
+                        <li>Vòng tròn geofence radius cho mỗi POI</li>
+                        <li>Highlight POI gần nhất</li>
+                        <li>Nhấn POI → xem chi tiết</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>📐 Bảng Lưới POI (x,y)</h3>
+                    <ul>
+                        <li>Sơ đồ đơn giản hóa phố ẩm thực</li>
+                        <li><code>MapX, MapY</code>: vị trí tương đối 0-100%</li>
+                        <li>Hover hiển thị tên quán</li>
+                        <li>Mobile: MAUI Maps SDK</li>
+                        <li>Web: react-leaflet + Leaflet.js</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 05: MVP -->
+    <section id="mvp">
+        <div class="container">
+            <div class="section-header">
+                <div class="icon" style="background:#f3e5f5;color:var(--mvp-color);">🚀</div>
+                <div>
+                    <div class="section-num">Chương 05</div>
+                    <h2>MVP — Chức Năng Mở Rộng</h2>
+                </div>
+            </div>
+
+            <!-- MVP 1 -->
+            <h3 style="margin: 1.5rem 0 .8rem;"><span class="feature-tag tag-mvp">MVP 1</span> CMS — Hệ Thống Quản Trị Nội Dung</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>📝 5 Mục Quản Lý</h3>
+                    <ul>
+                        <li><strong>POI:</strong> Thêm/Sửa/Xóa/Toggle trạng thái</li>
+                        <li><strong>Audio:</strong> Upload mp3/wav/m4a</li>
+                        <li><strong>Bản dịch:</strong> Đa ngôn ngữ (en, zh, ko, ja, km, th)</li>
+                        <li><strong>Lịch sử:</strong> Event log với filter + pagination</li>
+                        <li><strong>Tour:</strong> Tạo lộ trình có TourStops</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>🔧 Tech Implementation</h3>
+                    <ul>
+                        <li>React 19 + TypeScript + Vite 6</li>
+                        <li>TanStack Query v5 (data fetching)</li>
+                        <li>Zustand (state management)</li>
+                        <li>shadcn/ui + Tailwind CSS v4</li>
+                        <li>SignalR real-time updates</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mermaid-container">
+                <h4>📊 Activity Diagram — CMS CRUD POI</h4>
+                <pre class="mermaid">
+flowchart TD
+    A([Admin/Owner Login]) --> B[Dashboard]
+    B --> C{Chọn chức năng}
+    C -->|POI| D[Danh sách POI]
+    C -->|Tour| E[Danh sách Tour]
+    C -->|Translation| F[Quản lý bản dịch]
+    C -->|Analytics| G[Biểu đồ thống kê]
+    C -->|History| H[Lịch sử sự kiện]
+    D --> I{Action?}
+    I -->|Thêm| J[PoiEditor Form]
+    I -->|Sửa| J
+    I -->|Xóa| K[Deactivate via API]
+    J --> L[POST/PUT /api/poi]
+    L --> M[SignalR PoiCreated/Updated]
+    M --> N[Real-time cập nhật UI]
+    K --> M
+                </pre>
+            </div>
+
+            <!-- MVP 2 -->
+            <h3 style="margin: 2rem 0 .8rem;"><span class="feature-tag tag-mvp">MVP 2</span> Analytics — Phân Tích Dữ Liệu</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>📊 Dữ liệu thu thập (ẩn danh)</h3>
+                    <ul>
+                        <li>Tuyến đường di chuyển (MovementLog)</li>
+                        <li>Top POI được nghe nhiều nhất</li>
+                        <li>Thời gian trung bình nghe mỗi POI</li>
+                        <li>Heat map — bản đồ nhiệt vị trí</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>⚙️ Implementation</h3>
+                    <ul>
+                        <li><code>AnalyticsController</code>: Top POI + Heatmap</li>
+                        <li><code>MovementController</code>: Batch GPS log</li>
+                        <li>Web: Recharts (bar chart) + Leaflet heatmap</li>
+                        <li>Batch upload: mỗi 10s gom GPS points</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- MVP 3 -->
+            <h3 style="margin: 2rem 0 .8rem;"><span class="feature-tag tag-mvp">MVP 3</span> QR Code Kích Hoạt Nội Dung</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>📱 Mô tả</h3>
+                    <ul>
+                        <li>In QR tại điểm dừng xe bus, bảng hiệu</li>
+                        <li>Quét → nghe ngay, không cần GPS</li>
+                        <li>Format: <code>VK-POI-{id}</code></li>
+                        <li>Cooldown 2 giây chống spam</li>
+                        <li>Server generate QR image (QRCoder)</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>⚙️ Implementation</h3>
+                    <ul>
+                        <li>Mobile: <code>ZXing.Net.MAUI</code> scanner</li>
+                        <li><code>QrViewModel</code>: parse code → load POI → narrate</li>
+                        <li>API: <code>GET /api/poi/qrcode/{code}</code></li>
+                        <li>API: <code>GET /api/poi/{id}/qrcode</code> → PNG image</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mermaid-container">
+                <h4>📊 Sequence Diagram — QR Code Flow</h4>
+                <pre class="mermaid">
+sequenceDiagram
+    participant U as User App
+    participant QR as QrScanPage
+    participant VM as QrViewModel
+    participant API as ApiService
+    participant NS as NarrationService
+
+    U->>QR: Mở camera quét QR
+    QR->>QR: ZXing detect barcode
+    QR->>VM: HandleQrScanAsync(poiId)
+    VM->>API: GetPoiByIdAsync(poiId)
+    API-->>VM: POI data + translations
+    VM->>NS: EnqueueAsync(poi, lang)
+    VM->>API: LogHistoryAsync QR_SCAN
+    VM->>U: Navigate to PoiDetailPage
+    NS->>U: Phát audio/TTS thuyết minh
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 06: AI -->
+    <section id="ai-features">
+        <div class="container">
+            <div class="section-header">
+                <div class="icon" style="background:#e0f2f1;color:var(--ai-color);">🤖</div>
+                <div>
+                    <div class="section-num">Chương 06</div>
+                    <h2>AI Features — Tính Năng Thông Minh</h2>
+                </div>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h3><span class="feature-tag tag-ai">AI 1</span> Chatbot 24/7</h3>
+                    <p>Trợ lý AI tích hợp trong app, biết toàn bộ danh sách quán và vị trí. Hỏi "tôi muốn ăn bánh canh ở đâu?" → AI chỉ đường.</p>
+                    <ul>
+                        <li>System prompt chứa context POI + Tour</li>
+                        <li>Ollama local (PoC) / Azure OpenAI (production)</li>
+                        <li>Lưu history chat (max 10 messages)</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3><span class="feature-tag tag-ai">AI 2</span> Đa Ngôn Ngữ TTS</h3>
+                    <p>7 ngôn ngữ: Việt, Anh, Trung, Hàn, Nhật, Khmer, Thái.</p>
+                    <ul>
+                        <li>MAUI native TTS (miễn phí)</li>
+                        <li>Azure Cognitive TTS (giọng neural)</li>
+                        <li>VoiceRSS fallback option</li>
+                        <li>Rate = 0.85 (nói chậm 15% ngoài phố)</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3><span class="feature-tag tag-ai">AI 3</span> Giao Tiếp Đa Ngôn Ngữ</h3>
+                    <p>Khách hỏi tiếng Anh → AI trả lời tiếng Anh. System prompt tự động:</p>
+                    <ul>
+                        <li>Nhận diện ngôn ngữ người dùng</li>
+                        <li>Trả lời bằng ngôn ngữ đó</li>
+                        <li>Dẫn đường khu vực theo loại món</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mermaid-container">
+                <h4>📊 Sequence Diagram — AI Chat Flow</h4>
+                <pre class="mermaid">
+sequenceDiagram
+    participant U as User App
+    participant VM as ChatViewModel
+    participant API as ApiService
+    participant AC as AiController
+    participant AI as OllamaAiService
+    participant DB as Database
+
+    U->>VM: Nhập câu hỏi
+    VM->>VM: Add user message to UI
+    VM->>VM: Show typing indicator
+    VM->>API: ChatWithAiAsync(message, lang, history)
+    API->>AC: POST /api/ai/chat
+    AC->>DB: Load POIs + Tours context
+    AC->>AC: Build system prompt with POI/Tour data
+    AC->>AI: ChatAsync(system, user, history)
+    AI->>AI: POST to Ollama /api/chat
+    AI-->>AC: AI reply text
+    AC-->>API: JSON reply + language
+    API-->>VM: reply string
+    VM->>VM: Remove typing, add AI message
+    VM->>API: LogHistoryAsync AI_CHAT
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 07: ARCHITECTURE -->
+    <section id="architecture">
+        <div class="container">
+            <div class="section-header">
+                <div class="icon" style="background:#fce4ec;color:var(--danger);">🏛️</div>
+                <div>
+                    <div class="section-num">Chương 07</div>
+                    <h2>Kiến Trúc Hệ Thống</h2>
+                </div>
+            </div>
+
+            <div class="arch-grid">
+                <div class="arch-module">
+                    <div class="mod-icon">📱</div>
+                    <div class="mod-name">VinhKhanh.App</div>
+                    <div class="mod-desc">.NET MAUI 10 — Mobile Client (Android/iOS)</div>
+                </div>
+                <div class="arch-module">
+                    <div class="mod-icon">⚙️</div>
+                    <div class="mod-name">VinhKhanh.API</div>
+                    <div class="mod-desc">ASP.NET Core 10 Web API — Backend</div>
+                </div>
+                <div class="arch-module">
+                    <div class="mod-icon">🌐</div>
+                    <div class="mod-name">vinh-khanh-web</div>
+                    <div class="mod-desc">React 19 + TypeScript — Web Admin</div>
+                </div>
+                <div class="arch-module">
+                    <div class="mod-icon">📦</div>
+                    <div class="mod-name">VinhKhanh.Shared</div>
+                    <div class="mod-desc">Models, DTOs, GeoMath — Shared Library</div>
+                </div>
+                <div class="arch-module">
+                    <div class="mod-icon">🗄️</div>
+                    <div class="mod-name">VinhKhanh.Infrastructure</div>
+                    <div class="mod-desc">EF Core DbContext, Migrations</div>
+                </div>
+            </div>
+
+            <div class="mermaid-container">
+                <h4>📊 Class Diagram — Core Domain Models</h4>
+                <pre class="mermaid">
+classDiagram
+    class Poi {
+        +int Id
+        +string Name
+        +string Description
+        +double Latitude
+        +double Longitude
+        +double MapX
+        +double MapY
+        +double TriggerRadiusMeters
+        +int CooldownSeconds
+        +int Priority
+        +string QrCode
+        +PoiCategory Category
+        +bool IsActive
+        +int ContentVersion
+        +int? OwnerUserId
+        +ICollection~PoiTranslation~ Translations
+        +ICollection~PoiVisitLog~ VisitLogs
+        +ICollection~TourStop~ TourStops
+    }
+
+    class PoiTranslation {
+        +int Id
+        +int PoiId
+        +string LanguageCode
+        +string Name
+        +string Description
+        +string OriginalDescription
+        +string AudioUrl
+    }
+
+    class Tour {
+        +int Id
+        +string Name
+        +string Description
+        +int EstimatedMinutes
+        +bool IsActive
+        +ICollection~TourStop~ Stops
+        +ICollection~TourTranslation~ Translations
+    }
+
+    class TourStop {
+        +int Id
+        +int TourId
+        +int PoiId
+        +int StopOrder
+        +int StayMinutes
+        +string Note
+    }
+
+    class AppUser {
+        +int Id
+        +string Username
+        +string PasswordHash
+        +string Role
+        +bool IsActive
+    }
+
+    class PoiVisitLog {
+        +int Id
+        +int PoiId
+        +string SessionId
+        +string LanguageCode
+        +string TriggerType
+        +int ListenDurationSeconds
+        +DateTime VisitedAt
+    }
+
+    class MovementLog {
+        +long Id
+        +string SessionId
+        +double Latitude
+        +double Longitude
+        +float AccuracyMeters
+        +DateTime RecordedAt
+    }
+
+    class AppHistoryLog {
+        +long Id
+        +string SessionId
+        +string EventType
+        +int? PoiId
+        +int? TourId
+        +string LanguageCode
+        +string Payload
+        +DateTime CreatedAt
+    }
+
+    Poi "1" --> "*" PoiTranslation : translations
+    Poi "1" --> "*" PoiVisitLog : visitLogs
+    Poi "1" --> "*" TourStop : tourStops
+    Tour "1" --> "*" TourStop : stops
+    Tour "1" --> "*" TourTranslation : translations
+    TourStop --> Poi : poi
+    TourStop --> Tour : tour
+    AppUser "1" --> "*" Poi : ownedPois
+                </pre>
+            </div>
+
+            <div class="mermaid-container">
+                <h4>📊 Deployment Diagram — Kiến Trúc Triển Khai</h4>
+                <pre class="mermaid">
+graph TB
+    subgraph Client_Layer["Client Layer"]
+        MA["📱 .NET MAUI App<br/>Android / iOS"]
+        WA["🌐 React Web Admin<br/>localhost:5173"]
+    end
+
+    subgraph Server_Layer["Server Layer"]
+        API["⚙️ ASP.NET Core 10<br/>localhost:5000"]
+        HUB["📡 SignalR Hub<br/>/hubs/vinh-khanh"]
+        AI["🧠 Ollama AI<br/>localhost:11434"]
+    end
+
+    subgraph Data_Layer["Data Layer"]
+        PG["🐘 PostgreSQL 17<br/>port 5432"]
+        RD["📦 Redis 8<br/>port 6379"]
+        FS["📁 File Storage<br/>wwwroot/audio"]
+    end
+
+    subgraph Mobile_Local["Mobile Local Storage"]
+        SL["💾 SQLite<br/>vinh_khanh.db3"]
+    end
+
+    MA -->|"HTTP REST"| API
+    WA -->|"HTTP + WS"| API
+    API --> HUB
+    API --> PG
+    API --> RD
+    API --> AI
+    API --> FS
+    MA --> SL
+    HUB -->|"Real-time"| WA
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 08: DATABASE -->
+    <section id="database">
+        <div class="container">
+            <div class="section-header">
+                <div class="icon" style="background:#e8eaf6;color:#283593;">🗄️</div>
+                <div>
+                    <div class="section-num">Chương 08</div>
+                    <h2>Database Schema & Models</h2>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Table</th>
+                            <th>Primary Key</th>
+                            <th>Mô Tả</th>
+                            <th>Indexes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>Pois</code></td>
+                            <td>Id (int)</td>
+                            <td>Điểm quan tâm — quán ăn, khu vực</td>
+                            <td>Lat+Lon, Category, QrCode (unique), OwnerUserId, ContentVersion</td>
+                        </tr>
+                        <tr>
+                            <td><code>PoiTranslations</code></td>
+                            <td>Id (int)</td>
+                            <td>Bản dịch đa ngôn ngữ cho POI</td>
+                            <td>PoiId+LanguageCode (unique)</td>
+                        </tr>
+                        <tr>
+                            <td><code>PoiVisitLogs</code></td>
+                            <td>Id (int)</td>
+                            <td>Log lượt nghe thuyết minh</td>
+                            <td>VisitedAt</td>
+                        </tr>
+                        <tr>
+                            <td><code>AppUsers</code></td>
+                            <td>Id (int)</td>
+                            <td>Tài khoản Admin/Owner</td>
+                            <td>Username (unique)</td>
+                        </tr>
+                        <tr>
+                            <td><code>Tours</code></td>
+                            <td>Id (int)</td>
+                            <td>Tour lộ trình tham quan</td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td><code>TourStops</code></td>
+                            <td>Id (int)</td>
+                            <td>Điểm dừng trong tour</td>
+                            <td>TourId+StopOrder (unique)</td>
+                        </tr>
+                        <tr>
+                            <td><code>TourTranslations</code></td>
+                            <td>Id (int)</td>
+                            <td>Bản dịch cho tour</td>
+                            <td>TourId+LanguageCode (unique)</td>
+                        </tr>
+                        <tr>
+                            <td><code>MovementLogs</code></td>
+                            <td>Id (long)</td>
+                            <td>GPS path ẩn danh (analytics)</td>
+                            <td>RecordedAt, SessionId</td>
+                        </tr>
+                        <tr>
+                            <td><code>AppHistoryLogs</code></td>
+                            <td>Id (long)</td>
+                            <td>Event log hệ thống</td>
+                            <td>CreatedAt, EventType</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mermaid-container">
+                <h4>📊 ER Diagram — Database Relationships</h4>
+                <pre class="mermaid">
+erDiagram
+    Pois ||--o{ PoiTranslations : "has translations"
+    Pois ||--o{ PoiVisitLogs : "has visit logs"
+    Pois ||--o{ TourStops : "included in tours"
+    Tours ||--o{ TourStops : "has stops"
+    Tours ||--o{ TourTranslations : "has translations"
+    AppUsers ||--o{ Pois : "owns POIs"
+
+    Pois {
+        int Id PK
+        string Name
+        string Description
+        double Latitude
+        double Longitude
+        double MapX
+        double MapY
+        double TriggerRadiusMeters
+        int Priority
+        string QrCode UK
+        int Category
+        bool IsActive
+        int ContentVersion
+        int OwnerUserId FK
+    }
+
+    PoiTranslations {
+        int Id PK
+        int PoiId FK
+        string LanguageCode
+        string Name
+        string Description
+        string OriginalDescription
+        string AudioUrl
+    }
+
+    Tours {
+        int Id PK
+        string Name
+        string Description
+        int EstimatedMinutes
+        bool IsActive
+    }
+
+    TourStops {
+        int Id PK
+        int TourId FK
+        int PoiId FK
+        int StopOrder
+        int StayMinutes
+        string Note
+    }
+
+    AppUsers {
+        int Id PK
+        string Username UK
+        string PasswordHash
+        string Role
+        bool IsActive
+    }
+
+    MovementLogs {
+        long Id PK
+        string SessionId
+        double Latitude
+        double Longitude
+        float AccuracyMeters
+        datetime RecordedAt
+    }
+
+    AppHistoryLogs {
+        long Id PK
+        string SessionId
+        string EventType
+        int PoiId FK
+        string LanguageCode
+        datetime CreatedAt
+    }
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 09: API -->
+    <section id="api">
+        <div class="container">
+            <div class="section-header">
+                <div class="icon" style="background:#e0f7fa;color:var(--accent);">🔌</div>
+                <div>
+                    <div class="section-num">Chương 09</div>
+                    <h2>API Endpoints</h2>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Controller</th><th>Method</th><th>Endpoint</th><th>Auth</th><th>Mô Tả</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td rowspan="7"><strong>PoiController</strong></td><td>GET</td><td><code>/api/poi</code></td><td>—</td><td>Danh sách POI (kèm translations)</td></tr>
+                        <tr><td>GET</td><td><code>/api/poi/{id}</code></td><td>—</td><td>Chi tiết 1 POI</td></tr>
+                        <tr><td>GET</td><td><code>/api/poi/qrcode/{code}</code></td><td>—</td><td>Tìm POI theo mã QR</td></tr>
+                        <tr><td>POST</td><td><code>/api/poi/nearby</code></td><td>—</td><td>Tìm POI trong bán kính (Haversine)</td></tr>
+                        <tr><td>POST</td><td><code>/api/poi</code></td><td>Admin/Owner</td><td>Tạo POI mới</td></tr>
+                        <tr><td>PUT</td><td><code>/api/poi/{id}</code></td><td>Admin/Owner</td><td>Cập nhật POI</td></tr>
+                        <tr><td>POST</td><td><code>/api/poi/{id}/translation</code></td><td>Admin/Owner</td><td>Thêm/sửa bản dịch</td></tr>
+
+                        <tr><td rowspan="5"><strong>TourController</strong></td><td>GET</td><td><code>/api/tour</code></td><td>—</td><td>Danh sách tour</td></tr>
+                        <tr><td>GET</td><td><code>/api/tour/{id}</code></td><td>—</td><td>Chi tiết tour + stops</td></tr>
+                        <tr><td>POST</td><td><code>/api/tour</code></td><td>Admin</td><td>Tạo tour mới</td></tr>
+                        <tr><td>PUT</td><td><code>/api/tour/{id}</code></td><td>Admin</td><td>Cập nhật tour</td></tr>
+                        <tr><td>DELETE</td><td><code>/api/tour/{id}</code></td><td>Admin</td><td>Soft-delete tour</td></tr>
+
+                        <tr><td rowspan="2"><strong>AiController</strong></td><td>POST</td><td><code>/api/ai/chat</code></td><td>—</td><td>Chatbot AI 24/7</td></tr>
+                        <tr><td>POST</td><td><code>/api/ai/tts</code></td><td>—</td><td>Server-side TTS synthesis</td></tr>
+
+                        <tr><td rowspan="3"><strong>AnalyticsController</strong></td><td>POST</td><td><code>/api/analytics/log</code></td><td>—</td><td>Log lượt nghe</td></tr>
+                        <tr><td>GET</td><td><code>/api/analytics/top</code></td><td>—</td><td>Top POI được nghe</td></tr>
+                        <tr><td>GET</td><td><code>/api/analytics/heatmap</code></td><td>—</td><td>Heatmap dữ liệu</td></tr>
+
+                        <tr><td rowspan="2"><strong>AudioController</strong></td><td>POST</td><td><code>/api/audio/upload</code></td><td>Admin/Owner</td><td>Upload file audio</td></tr>
+                        <tr><td>GET</td><td><code>/api/audio/{filename}</code></td><td>—</td><td>Serve file audio (range)</td></tr>
+
+                        <tr><td rowspan="2"><strong>AuthController</strong></td><td>POST</td><td><code>/api/auth/login</code></td><td>—</td><td>JWT login + BCrypt verify</td></tr>
+                        <tr><td>POST</td><td><code>/api/auth/register</code></td><td>Admin</td><td>Đăng ký user mới</td></tr>
+
+                        <tr><td rowspan="2"><strong>MovementController</strong></td><td>POST</td><td><code>/api/movement/batch</code></td><td>—</td><td>Batch log GPS points</td></tr>
+                        <tr><td>GET</td><td><code>/api/movement/heatmap</code></td><td>—</td><td>Movement heatmap data</td></tr>
+
+                        <tr><td rowspan="2"><strong>HistoryController</strong></td><td>POST</td><td><code>/api/history/log</code></td><td>—</td><td>Log event (anonymous)</td></tr>
+                        <tr><td>GET</td><td><code>/api/history</code></td><td>Admin</td><td>Query event history</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 10: ALL DIAGRAMS -->
+    <section id="diagrams">
+        <div class="container">
+            <div class="section-header">
+                <div class="icon" style="background:#ede7f6;color:#4527a0;">📐</div>
+                <div>
+                    <div class="section-num">Chương 10</div>
+                    <h2>Sơ Đồ Toàn Diện (UML)</h2>
+                </div>
+            </div>
+
+            <p style="color:var(--text-secondary); margin-bottom: 1.5rem;">Toàn bộ sơ đồ UML cho tất cả chức năng: Use Case, Activity, Sequence, State, Class, và Deployment.</p>
+
+            <!-- E2E Sequence -->
+            <div class="mermaid-container">
+                <h4>📊 Sequence Diagram — End-to-End: Từ Mở App đến Nghe Audio (C# Stack)</h4>
+                <pre class="mermaid">
+sequenceDiagram
+    participant U as User Phone
+    participant MA as MAUI App
+    participant GPS as GpsService
+    participant GF as GeofenceService
+    participant NS as NarrationService
+    participant TTS as MauiTtsService
+    participant AP as AudioPlayerService
+    participant API as ASP.NET Core API
+    participant DB as PostgreSQL
+    participant SR as SignalR Hub
+
+    U->>MA: Mở app
+    MA->>MA: InitAsync - Load POI
+    MA->>DB: GET /api/poi (via API)
+    DB-->>MA: POI list + translations
+    MA->>GPS: StartTrackingAsync()
+
+    loop GPS Loop (3s)
+        GPS->>MA: LocationUpdatedMessage
+        MA->>GF: CheckTriggeredAsync(loc, pois)
+        GF->>GF: Haversine distance calc
+        GF->>GF: Cooldown check
+        alt POI triggered
+            GF-->>MA: triggered POIs
+            MA->>NS: EnqueueAsync(poi, lang)
+            NS->>NS: Check queue for duplicates
+            alt Has recorded audio
+                NS->>AP: PlayAsync(audioUrl)
+                AP->>U: Play MP3 speaker
+            else TTS fallback
+                NS->>TTS: SpeakAsync(text, lang)
+                TTS->>U: Speak via device TTS
+            end
+            MA->>API: POST /api/history/log
+            MA->>API: POST /api/analytics/log
+        end
+    end
+                </pre>
+            </div>
+
+            <!-- Auth Flow -->
+            <div class="mermaid-container">
+                <h4>📊 Sequence Diagram — Authentication (JWT + BCrypt)</h4>
+                <pre class="mermaid">
+sequenceDiagram
+    participant U as User Browser
+    participant FE as React Frontend
+    participant API as AuthController
+    participant DB as PostgreSQL
+
+    U->>FE: Nhập username + password
+    FE->>API: POST /api/auth/login
+    API->>DB: Find user by username
+    DB-->>API: AppUser record
+    API->>API: BCrypt.Verify(password, hash)
+    alt Password correct
+        API->>API: Generate JWT token
+        API-->>FE: LoginResponse(token, role, expires)
+        FE->>FE: Zustand setAuth(token, role)
+        FE->>U: Redirect to Dashboard
+    else Password wrong
+        API-->>FE: 401 Unauthorized
+        FE->>U: Show error message
+    end
+                </pre>
+            </div>
+
+            <!-- Tour Following -->
+            <div class="mermaid-container">
+                <h4>📊 Activity Diagram — Tour Following (Mobile App)</h4>
+                <pre class="mermaid">
+flowchart TD
+    A([Khách chọn Tour]) --> B[LoadToursAsync]
+    B --> C[Hiển thị danh sách Tour]
+    C --> D[Chọn 1 Tour]
+    D --> E[StartTourAsync]
+    E --> F[Set ActiveTour, CurrentStopIndex=0]
+    F --> G[Phát thuyết minh Stop 1]
+    G --> H{Khách nhấn Next?}
+    H -->|Yes| I[CurrentStopIndex++]
+    I --> J{StopIndex >= Total stops?}
+    J -->|No| K[Phát thuyết minh Stop tiếp]
+    K --> H
+    J -->|Yes| L[Tour hoàn thành!]
+    L --> M[Hiển thị thông báo chúc mừng]
+    H -->|Stop Tour| N[StopTourAsync]
+    N --> O([Quay về danh sách])
+                </pre>
+            </div>
+
+            <!-- Translation Workflow -->
+            <div class="mermaid-container">
+                <h4>📊 Activity Diagram — Translation Management (Web Admin)</h4>
+                <pre class="mermaid">
+flowchart TD
+    A([Admin mở Translations]) --> B[Chọn ngôn ngữ đích]
+    B --> C[Load POI list với translations]
+    C --> D[Hiển thị bảng POI + bản dịch hiện có]
+    D --> E{Chọn POI để sửa}
+    E --> F[Mở form nhập Name + Description]
+    F --> G[Nhấn Lưu]
+    G --> H[POST /api/poi/id/translation]
+    H --> I{LanguageCode exists?}
+    I -->|Yes| J[UPDATE existing translation]
+    I -->|No| K[INSERT new translation]
+    J --> L[ContentVersion++]
+    K --> L
+    L --> M[SignalR PoiUpdated]
+    M --> N[Refresh UI real-time]
+                </pre>
+            </div>
+
+            <!-- Audio Upload -->
+            <div class="mermaid-container">
+                <h4>📊 Sequence Diagram — Audio Upload & Serve</h4>
+                <pre class="mermaid">
+sequenceDiagram
+    participant O as Owner/Admin
+    participant FE as React Form
+    participant AC as AudioController
+    participant FS as File System
+    participant MA as MAUI App
+
+    O->>FE: Chọn file MP3/WAV
+    FE->>AC: POST /api/audio/upload (multipart)
+    AC->>AC: Validate extension (mp3/wav/m4a)
+    AC->>AC: Generate unique filename
+    AC->>FS: Save to wwwroot/audio/
+    AC-->>FE: JSON url /audio/filename
+    FE->>FE: Update POI audioViUrl
+
+    Note over MA: Khi khách đến gần POI
+    MA->>AC: GET /api/audio/filename
+    AC->>FS: PhysicalFile (range support)
+    FS-->>MA: Audio stream
+    MA->>MA: AudioPlayerService.Play()
+                </pre>
+            </div>
+
+            <!-- State: App Connectivity -->
+            <div class="mermaid-container">
+                <h4>📊 State Diagram — App Online/Offline Behavior</h4>
+                <pre class="mermaid">
+stateDiagram-v2
+    [*] --> CheckingNetwork: App khởi động
+    CheckingNetwork --> Online: Có internet
+    CheckingNetwork --> Offline: Không có internet
+
+    Online --> LoadingFromServer: Load POI từ API
+    LoadingFromServer --> DataReady: SaveToSQLite
+    Online --> Offline: Mất kết nối
+
+    Offline --> LoadingFromCache: Load POI từ SQLite
+    LoadingFromCache --> DataReady: Cached data
+
+    DataReady --> GPSTracking: Start GPS
+    GPSTracking --> GeofenceCheck: Location update
+    GeofenceCheck --> AudioPlay: POI triggered
+    AudioPlay --> GPSTracking: Audio finished
+
+    Offline --> Online: WiFi kết nối lại
+    Online --> SyncData: ConnectivityService
+    SyncData --> DataReady: Cập nhật SQLite
+                </pre>
+            </div>
+
+            <!-- SignalR Real-time -->
+            <div class="mermaid-container">
+                <h4>📊 Sequence Diagram — SignalR Real-time Updates</h4>
+                <pre class="mermaid">
+sequenceDiagram
+    participant A as Admin Browser
+    participant API as PoiController
+    participant Hub as VinhKhanhHub
+    participant W1 as Web Client 1
+    participant W2 as Web Client 2
+
+    Note over W1,W2: useSignalR() hook connected
+
+    A->>API: POST /api/poi (create new)
+    API->>API: Save to database
+    API->>Hub: SendAsync PoiCreated poi
+    Hub->>W1: PoiCreated event
+    Hub->>W2: PoiCreated event
+    W1->>W1: invalidateQueries pois
+    W2->>W2: invalidateQueries pois
+    Note over W1,W2: UI tự động refresh
+                </pre>
+            </div>
+
+            <!-- Movement Analytics -->
+            <div class="mermaid-container">
+                <h4>📊 Activity Diagram — Analytics Data Pipeline</h4>
+                <pre class="mermaid">
+flowchart TD
+    A([MAUI App]) --> B[GPS position every 3s]
+    B --> C[Buffer in GeofenceService._batch]
+    C --> D{10 seconds elapsed?}
+    D -->|No| B
+    D -->|Yes| E[SendMovementBatchAsync]
+    E --> F[POST /api/movement/batch]
+    F --> G[Save to MovementLogs table]
+
+    H([POI triggered]) --> I[LogVisit via AnalyticsController]
+    I --> J[Save to PoiVisitLogs table]
+
+    K([Admin opens Analytics]) --> L[GET /api/analytics/top]
+    L --> M[GroupBy PoiId, Count, AvgDuration]
+    M --> N[Recharts Bar Chart]
+
+    K --> O[GET /api/analytics/heatmap]
+    O --> P[MovementLogs lat/lon points]
+    P --> Q[Leaflet Heatmap Layer]
+                </pre>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- SECTION 11: TECH STACK -->
+    <section id="tech">
+        <div class="container">
+            <div class="section-header">
+                <div class="icon" style="background:#fce4ec;color:#b71c1c;">🛠️</div>
+                <div>
+                    <div class="section-num">Chương 11</div>
+                    <h2>Technology Stack</h2>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Layer</th><th>Technology</th><th>Version</th><th>Package</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Runtime</td><td><strong>.NET 10 LTS</strong></td><td>10.0</td><td>—</td></tr>
+                        <tr><td>Language</td><td><strong>C# 14</strong></td><td>built-in</td><td>—</td></tr>
+                        <tr><td>Backend API</td><td><strong>ASP.NET Core 10 Web API</strong></td><td>10.0</td><td>Microsoft.AspNetCore.App</td></tr>
+                        <tr><td>Real-time</td><td><strong>SignalR</strong></td><td>built-in</td><td>built-in ASP.NET Core</td></tr>
+                        <tr><td>API Docs</td><td><strong>Scalar</strong></td><td>2.x</td><td>Scalar.AspNetCore</td></tr>
+                        <tr><td>Web Admin</td><td><strong>React 19 + TypeScript 5.7</strong></td><td>19.0</td><td>npm</td></tr>
+                        <tr><td>Build Tool</td><td><strong>Vite 6</strong></td><td>6.x</td><td>npm create vite</td></tr>
+                        <tr><td>State</td><td><strong>Zustand 5</strong></td><td>5.x</td><td>zustand</td></tr>
+                        <tr><td>Data Fetching</td><td><strong>TanStack Query v5</strong></td><td>5.x</td><td>@tanstack/react-query</td></tr>
+                        <tr><td>Maps (Web)</td><td><strong>react-leaflet + Leaflet.js</strong></td><td>4.x</td><td>react-leaflet</td></tr>
+                        <tr><td>Charts</td><td><strong>Recharts</strong></td><td>2.x</td><td>recharts</td></tr>
+                        <tr><td>Mobile</td><td><strong>.NET MAUI 10</strong></td><td>10.0</td><td>workload: maui</td></tr>
+                        <tr><td>ORM</td><td><strong>EF Core 10</strong></td><td>10.0</td><td>Microsoft.EntityFrameworkCore</td></tr>
+                        <tr><td>DB Server</td><td><strong>PostgreSQL 17</strong></td><td>17.x</td><td>Npgsql.EntityFrameworkCore.PostgreSQL</td></tr>
+                        <tr><td>DB Offline</td><td><strong>SQLite</strong></td><td>3.x</td><td>sqlite-net-pcl</td></tr>
+                        <tr><td>Cache</td><td><strong>Redis 8</strong></td><td>8.x</td><td>StackExchange.Redis</td></tr>
+                        <tr><td>MVVM</td><td><strong>CommunityToolkit.Mvvm</strong></td><td>8.4</td><td>CommunityToolkit.Mvvm</td></tr>
+                        <tr><td>QR</td><td><strong>ZXing.Net.MAUI + QRCoder</strong></td><td>1.x</td><td>ZXing.Net.MAUI.Controls</td></tr>
+                        <tr><td>Maps (Mobile)</td><td><strong>MAUI Maps</strong></td><td>10.0</td><td>Microsoft.Maui.Controls.Maps</td></tr>
+                        <tr><td>AI (PoC)</td><td><strong>Ollama + llama3.2:3b</strong></td><td>local</td><td>HTTP direct</td></tr>
+                        <tr><td>AI (Prod)</td><td><strong>Azure OpenAI GPT-4o-mini</strong></td><td>latest</td><td>Azure.AI.OpenAI</td></tr>
+                        <tr><td>TTS (device)</td><td><strong>MAUI TextToSpeech</strong></td><td>built-in</td><td>—</td></tr>
+                        <tr><td>TTS (server)</td><td><strong>Azure / VoiceRSS</strong></td><td>latest</td><td>Microsoft.CognitiveServices.Speech</td></tr>
+                        <tr><td>Auth</td><td><strong>JWT Bearer + BCrypt.Net</strong></td><td>—</td><td>JwtBearer + BCrypt.Net-Next</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 12: NFR -->
+    <section id="nfr">
+        <div class="container">
+            <div class="section-header">
+                <div class="icon" style="background:#fff8e1;color:var(--warning);">⚡</div>
+                <div>
+                    <div class="section-num">Chương 12</div>
+                    <h2>Yêu Cầu Phi Chức Năng</h2>
+                </div>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h3>🔋 Performance</h3>
+                    <ul>
+                        <li>GPS loop 3s — tối ưu pin</li>
+                        <li>Foreground Service — không bị kill</li>
+                        <li>Movement batch mỗi 10s</li>
+                        <li>Redis cache cho hot data</li>
+                        <li>EF Core AsNoTracking cho reads</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>🔒 Security</h3>
+                    <ul>
+                        <li>JWT Bearer authentication</li>
+                        <li>BCrypt password hashing</li>
+                        <li>Role-based access (Admin/Owner)</li>
+                        <li>CORS policy per environment</li>
+                        <li>Input validation toàn bộ endpoints</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>📴 Offline Capability</h3>
+                    <ul>
+                        <li>SQLite cache POI + Tour</li>
+                        <li>Audio files tải trước</li>
+                        <li>ConnectivityService auto-sync</li>
+                        <li>TTS fallback khi offline</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>🌐 Scalability</h3>
+                    <ul>
+                        <li>Modular solution (5 projects)</li>
+                        <li>DI container cho services</li>
+                        <li>Interface-based design</li>
+                        <li>Docker Compose deployment</li>
+                        <li>SignalR horizontal scale via Redis</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>🌍 Internationalization</h3>
+                    <ul>
+                        <li>7 ngôn ngữ: vi, en, zh, ko, ja, km, th</li>
+                        <li>PoiTranslation per language</li>
+                        <li>TTS voice mapping per language</li>
+                        <li>AI chatbot đa ngôn ngữ</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>📊 Monitoring</h3>
+                    <ul>
+                        <li>AppHistoryLog — event tracking</li>
+                        <li>MovementLog — GPS analytics</li>
+                        <li>PoiVisitLog — listen metrics</li>
+                        <li>Health check endpoint /health</li>
+                        <li>Console + Debug logging</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 style="margin: 2rem 0 .8rem;">Key Constants & Thông Số</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Constant</th><th>Value</th><th>Location</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>GPS Loop Interval</td><td>3 seconds</td><td>GpsService.cs / GpsForegroundService.cs</td></tr>
+                        <tr><td>Default Geofence Radius</td><td>15 meters</td><td>Poi.TriggerRadiusMeters</td></tr>
+                        <tr><td>Default Cooldown</td><td>60 seconds</td><td>Poi.CooldownSeconds</td></tr>
+                        <tr><td>Max Priority</td><td>1000</td><td>Poi.Priority</td></tr>
+                        <tr><td>Movement Batch Interval</td><td>10 seconds</td><td>GeofenceService.cs</td></tr>
+                        <tr><td>TTS Speech Rate</td><td>0.85 (15% chậm hơn)</td><td>MauiTtsService.cs</td></tr>
+                        <tr><td>JWT Expiry</td><td>1440 minutes (24h)</td><td>appsettings.json</td></tr>
+                        <tr><td>QR Scan Debounce</td><td>2 seconds</td><td>QrScanPage.cs</td></tr>
+                        <tr><td>Chat History Limit</td><td>10 messages</td><td>AiController.cs</td></tr>
+                        <tr><td>AI Text Limit</td><td>5000 characters</td><td>AiController.cs</td></tr>
+                        <tr><td>Audio Max Size</td><td>mp3/wav/m4a</td><td>AudioController.cs</td></tr>
+                        <tr><td>Supported Languages</td><td>vi, en, zh, ko, ja, km, th</td><td>AiController.cs</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p><strong>📋 PRD — Thuyết Minh Tự Động Đa Ngôn Ngữ | Phố Ẩm Thực Vĩnh Khánh</strong></p>
+        <p>Full-stack: ASP.NET Core 10 + .NET MAUI + React 19 + PostgreSQL 17 + Ollama AI</p>
+        <p style="margin-top:.5rem;">C# 14 | .NET 10 LTS | Ngày tạo: 11/04/2026 | Được tạo từ phân tích toàn bộ mã nguồn</p>
+        <p style="margin-top:.5rem;opacity:.5;">Generated from codebase analysis • All data verified against source code</p>
+    </footer>
+
+    <!-- Mermaid Init -->
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#e65100',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#ac1900',
+                lineColor: '#555770',
+                secondaryColor: '#e3f2fd',
+                tertiaryColor: '#f3e5f5',
+                fontSize: '14px',
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            sequence: {
+                useMaxWidth: true,
+                showSequenceNumbers: false,
+                actorMargin: 50,
+                messageAlign: 'center'
+            },
+            er: {
+                useMaxWidth: true
+            }
+        });
+
+        // Smooth scroll for nav links
+        document.querySelectorAll('nav a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                e.preventDefault();
+                const target = document.querySelector(a.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Active nav link on scroll
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('nav .nav-links a');
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const top = section.offsetTop - 100;
+                if (scrollY >= top) current = section.getAttribute('id');
+            });
+            navLinks.forEach(link => {
+                link.style.background = link.getAttribute('href') === '#' + current
+                    ? 'rgba(255,255,255,.12)' : '';
+                link.style.color = link.getAttribute('href') === '#' + current
+                    ? '#fff' : '';
+            });
+        });
+
+        // Nav shadow on scroll
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            nav.style.boxShadow = scrollY > 10
+                ? '0 4px 30px rgba(0,0,0,.3)'
+                : '0 1px 20px rgba(0,0,0,.2)';
+        });
+    </script>
+</body>
+
+</html>

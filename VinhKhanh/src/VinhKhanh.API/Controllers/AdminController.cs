@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VinhKhanh.API.Services;
@@ -20,8 +20,8 @@ public class AdminController(ApplicationDbContext db) : ControllerBase
 
 		var ownerStats = await db.Pois.AsNoTracking()
 			.Where(p => p.OwnerUserId.HasValue)
-			.GroupBy(p => p.OwnerUserId)
-			.Select(g => new { OwnerId = g.Key.Value, PoiCount = g.Count() })
+			.GroupBy(p => p.OwnerUserId!.Value)
+			.Select(g => new { OwnerId = g.Key, PoiCount = g.Count() })
 			.ToListAsync(ct);
 
 		return Ok(new { totalPois, totalTours, totalUsers, totalVisits, ownerStats });
@@ -33,9 +33,8 @@ public class AdminController(ApplicationDbContext db) : ControllerBase
 	{
 		try
 		{
-			await db.Database.EnsureCreatedAsync(ct);
-			db.SeedDemoData();
-			await DbSeeder.SeedAsync(db, ct);
+			await db.Database.MigrateAsync(ct);
+			await DbSeeder.SeedAsync(db, forceDefaultCredentials: false, ct);
 
 			var summary = new
 			{

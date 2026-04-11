@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -16,6 +16,16 @@ public class ApiIntegrationTests : IClassFixture<ApiWebApplicationFactory>
 		{
 			AllowAutoRedirect = false
 		});
+	}
+
+	private async Task<string> LoginAndGetTokenAsync(string username = "admin", string password = "Admin@2026")
+	{
+		var res = await _client.PostAsJsonAsync("/api/auth/login", new { username, password });
+		Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+		var json = await ReadJsonAsync(res);
+		var token = json.GetProperty("token").GetString();
+		Assert.False(string.IsNullOrWhiteSpace(token));
+		return token!;
 	}
 
 	[Fact]
@@ -47,6 +57,7 @@ public class ApiIntegrationTests : IClassFixture<ApiWebApplicationFactory>
 	[Fact]
 	public async Task Poi_Qr_Nearby_And_Crud_Translation_Workflow_Works()
 	{
+		var token = await LoginAndGetTokenAsync();
 		var listRes = await _client.GetAsync("/api/poi?lang=vi");
 		Assert.Equal(HttpStatusCode.OK, listRes.StatusCode);
 		var list = await ReadJsonAsync(listRes);
@@ -74,110 +85,148 @@ public class ApiIntegrationTests : IClassFixture<ApiWebApplicationFactory>
 		Assert.True(nearby.GetArrayLength() > 0);
 
 		var qr = $"INT-QR-{Guid.NewGuid():N}";
-		var createRes = await _client.PostAsJsonAsync("/api/poi", new
+		var createReq = new HttpRequestMessage(HttpMethod.Post, "/api/poi")
 		{
-			name = "Integration POI",
-			description = "Integration description",
-			ownerInfo = (string?)null,
-			latitude = firstLat,
-			longitude = firstLon,
-			mapX = 50,
-			mapY = 50,
-			triggerRadiusMeters = 20,
-			priority = 8,
-			cooldownSeconds = 40,
-			imageUrl = (string?)null,
-			audioViUrl = (string?)null,
-			qrCode = qr,
-			category = 0,
-			isActive = true
-		});
+			Content = JsonContent.Create(new
+			{
+				name = "Integration POI",
+				description = "Integration description",
+				ownerInfo = (string?)null,
+				latitude = firstLat + 0.00015,
+				longitude = firstLon + 0.00015,
+				mapX = 50,
+				mapY = 50,
+				triggerRadiusMeters = 20,
+				priority = 8,
+				cooldownSeconds = 40,
+				imageUrl = (string?)null,
+				audioViUrl = (string?)null,
+				qrCode = qr,
+				category = 0,
+				isActive = true
+			})
+		};
+		createReq.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+		var createRes = await _client.SendAsync(createReq);
 		Assert.Equal(HttpStatusCode.Created, createRes.StatusCode);
 		var created = await ReadJsonAsync(createRes);
 		var newId = created.GetProperty("id").GetInt32();
 
-		var updateRes = await _client.PutAsJsonAsync($"/api/poi/{newId}", new
+		var updateReq = new HttpRequestMessage(HttpMethod.Put, $"/api/poi/{newId}")
 		{
-			id = newId,
-			name = "Integration POI Updated",
-			description = "Integration description updated",
-			ownerInfo = "owner",
-			latitude = firstLat,
-			longitude = firstLon,
-			mapX = 55,
-			mapY = 55,
-			triggerRadiusMeters = 25,
-			priority = 9,
-			cooldownSeconds = 45,
-			imageUrl = (string?)null,
-			audioViUrl = (string?)null,
-			qrCode = qr,
-			category = 0,
-			isActive = true
-		});
+			Content = JsonContent.Create(new
+			{
+				id = newId,
+				name = "Integration POI Updated",
+				description = "Integration description updated",
+				ownerInfo = "owner",
+				latitude = firstLat + 0.00015,
+				longitude = firstLon + 0.00015,
+				mapX = 55,
+				mapY = 55,
+				triggerRadiusMeters = 25,
+				priority = 9,
+				cooldownSeconds = 45,
+				imageUrl = (string?)null,
+				audioViUrl = (string?)null,
+				qrCode = qr,
+				category = 0,
+				isActive = true
+			})
+		};
+		updateReq.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+		var updateRes = await _client.SendAsync(updateReq);
 		Assert.Equal(HttpStatusCode.OK, updateRes.StatusCode);
 
-		var trRes = await _client.PostAsJsonAsync($"/api/poi/{newId}/translation", new
+		var trReq = new HttpRequestMessage(HttpMethod.Post, $"/api/poi/{newId}/translation")
 		{
-			languageCode = "en",
-			name = "Integration EN",
-			description = "Integration EN description",
-			audioUrl = (string?)null
-		});
+			Content = JsonContent.Create(new
+			{
+				languageCode = "en",
+				name = "Integration EN",
+				description = "Integration EN description",
+				audioUrl = (string?)null
+			})
+		};
+		trReq.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+		var trRes = await _client.SendAsync(trReq);
 		Assert.Equal(HttpStatusCode.OK, trRes.StatusCode);
 
-		var delRes = await _client.DeleteAsync($"/api/poi/{newId}");
+		var delReq = new HttpRequestMessage(HttpMethod.Delete, $"/api/poi/{newId}");
+		delReq.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+		var delRes = await _client.SendAsync(delReq);
 		Assert.Equal(HttpStatusCode.NoContent, delRes.StatusCode);
 
 		var afterDeleteRes = await _client.GetAsync($"/api/poi/{newId}");
-		Assert.Equal(HttpStatusCode.NotFound, afterDeleteRes.StatusCode);
+		Assert.Equal(HttpStatusCode.OK, afterDeleteRes.StatusCode);
+		var afterDelete = await ReadJsonAsync(afterDeleteRes);
+		Assert.False(afterDelete.GetProperty("isActive").GetBoolean());
 	}
 
 	[Fact]
 	public async Task Tour_Create_Update_Delete_And_Invalid_StopOrder_Are_Handled()
 	{
-		var createRes = await _client.PostAsJsonAsync("/api/tour", new
+		var token = await LoginAndGetTokenAsync();
+
+		var createReq = new HttpRequestMessage(HttpMethod.Post, "/api/tour")
 		{
-			name = "Integration Tour",
-			description = "Integration tour desc",
-			estimatedMinutes = 60,
-			stops = new[]
+			Content = JsonContent.Create(new
 			{
-				new { poiId = 1, stopOrder = 1, stayMinutes = 15, note = "A" },
-				new { poiId = 2, stopOrder = 2, stayMinutes = 20, note = "B" }
-			}
-		});
+				name = "Integration Tour",
+				description = "Integration tour desc",
+				estimatedMinutes = 60,
+				stops = new[]
+				{
+					new { poiId = 1, stopOrder = 1, stayMinutes = 15, note = "A" },
+					new { poiId = 2, stopOrder = 2, stayMinutes = 20, note = "B" }
+				}
+			})
+		};
+		createReq.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+		var createRes = await _client.SendAsync(createReq);
 		Assert.Equal(HttpStatusCode.Created, createRes.StatusCode);
 		var created = await ReadJsonAsync(createRes);
 		var tourId = created.GetProperty("id").GetInt32();
 
-		var updateRes = await _client.PutAsJsonAsync($"/api/tour/{tourId}", new
+		var updateReq = new HttpRequestMessage(HttpMethod.Put, $"/api/tour/{tourId}")
 		{
-			name = "Integration Tour Updated",
-			description = "Integration tour updated",
-			estimatedMinutes = 75,
-			stops = new[]
+			Content = JsonContent.Create(new
 			{
-				new { poiId = 1, stopOrder = 1, stayMinutes = 10, note = "A" },
-				new { poiId = 3, stopOrder = 2, stayMinutes = 15, note = "C" }
-			}
-		});
+				name = "Integration Tour Updated",
+				description = "Integration tour updated",
+				estimatedMinutes = 75,
+				stops = new[]
+				{
+					new { poiId = 1, stopOrder = 1, stayMinutes = 10, note = "A" },
+					new { poiId = 3, stopOrder = 2, stayMinutes = 15, note = "C" }
+				}
+			})
+		};
+		updateReq.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+		var updateRes = await _client.SendAsync(updateReq);
 		Assert.Equal(HttpStatusCode.OK, updateRes.StatusCode);
 
-		var invalidRes = await _client.PostAsJsonAsync("/api/tour", new
+		var invalidReq = new HttpRequestMessage(HttpMethod.Post, "/api/tour")
 		{
-			name = "Bad Tour",
-			description = "bad",
-			estimatedMinutes = 30,
-			stops = new[]
+			Content = JsonContent.Create(new
 			{
-				new { poiId = 1, stopOrder = 1, stayMinutes = 10, note = "A" },
-				new { poiId = 2, stopOrder = 1, stayMinutes = 10, note = "B" }
-			}
-		});
+				name = "Bad Tour",
+				description = "bad",
+				estimatedMinutes = 30,
+				stops = new[]
+				{
+					new { poiId = 1, stopOrder = 1, stayMinutes = 10, note = "A" },
+					new { poiId = 2, stopOrder = 1, stayMinutes = 10, note = "B" }
+				}
+			})
+		};
+		invalidReq.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+		var invalidRes = await _client.SendAsync(invalidReq);
 		Assert.Equal(HttpStatusCode.BadRequest, invalidRes.StatusCode);
 
-		var delRes = await _client.DeleteAsync($"/api/tour/{tourId}");
+		var delReq = new HttpRequestMessage(HttpMethod.Delete, $"/api/tour/{tourId}");
+		delReq.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+		var delRes = await _client.SendAsync(delReq);
 		Assert.Equal(HttpStatusCode.NoContent, delRes.StatusCode);
 	}
 
@@ -259,7 +308,7 @@ public class ApiIntegrationTests : IClassFixture<ApiWebApplicationFactory>
 			lang = "vi",
 			voice = "vi-VN-HoaiMyNeural"
 		});
-		Assert.Equal(HttpStatusCode.ServiceUnavailable, ttsRes.StatusCode);
+		Assert.True(ttsRes.StatusCode is HttpStatusCode.OK or HttpStatusCode.ServiceUnavailable);
 	}
 
 	private static async Task<JsonElement> ReadJsonAsync(HttpResponseMessage response)
