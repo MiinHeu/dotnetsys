@@ -5,11 +5,14 @@ namespace VinhKhanh.API.Services;
 
 public static class DbSeeder
 {
-	public static async Task SeedAsync(ApplicationDbContext db, CancellationToken ct = default)
-	{
-		var adminHash = BCrypt.Net.BCrypt.HashPassword("Admin@2026");
-		var ownerHash = BCrypt.Net.BCrypt.HashPassword("Owner@2026");
+	private const string DefaultAdminPassword = "Admin@2026";
+	private const string DefaultOwnerPassword = "Owner@2026";
 
+	public static async Task SeedAsync(
+		ApplicationDbContext db,
+		bool forceDefaultCredentials = false,
+		CancellationToken ct = default)
+	{
 		var changed = false;
 
 		var admin = await db.AppUsers.FirstOrDefaultAsync(u => u.Username == "admin", ct);
@@ -18,7 +21,7 @@ public static class DbSeeder
 			db.AppUsers.Add(new AppUser
 			{
 				Username = "admin",
-				PasswordHash = adminHash,
+				PasswordHash = BCrypt.Net.BCrypt.HashPassword(DefaultAdminPassword),
 				Role = "Admin",
 				IsActive = true,
 				CreatedAt = DateTime.UtcNow
@@ -27,10 +30,21 @@ public static class DbSeeder
 		}
 		else
 		{
-			admin.PasswordHash = adminHash;
-			admin.Role = "Admin";
-			admin.IsActive = true;
-			changed = true;
+			if (admin.Role != "Admin")
+			{
+				admin.Role = "Admin";
+				changed = true;
+			}
+			if (!admin.IsActive)
+			{
+				admin.IsActive = true;
+				changed = true;
+			}
+			if (forceDefaultCredentials && !BCrypt.Net.BCrypt.Verify(DefaultAdminPassword, admin.PasswordHash))
+			{
+				admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(DefaultAdminPassword);
+				changed = true;
+			}
 		}
 
 		var owner = await db.AppUsers.FirstOrDefaultAsync(u => u.Username == "owner1", ct);
@@ -39,7 +53,7 @@ public static class DbSeeder
 			db.AppUsers.Add(new AppUser
 			{
 				Username = "owner1",
-				PasswordHash = ownerHash,
+				PasswordHash = BCrypt.Net.BCrypt.HashPassword(DefaultOwnerPassword),
 				Role = "Owner",
 				IsActive = true,
 				CreatedAt = DateTime.UtcNow
@@ -48,10 +62,21 @@ public static class DbSeeder
 		}
 		else
 		{
-			owner.PasswordHash = ownerHash;
-			owner.Role = "Owner";
-			owner.IsActive = true;
-			changed = true;
+			if (owner.Role != "Owner")
+			{
+				owner.Role = "Owner";
+				changed = true;
+			}
+			if (!owner.IsActive)
+			{
+				owner.IsActive = true;
+				changed = true;
+			}
+			if (forceDefaultCredentials && !BCrypt.Net.BCrypt.Verify(DefaultOwnerPassword, owner.PasswordHash))
+			{
+				owner.PasswordHash = BCrypt.Net.BCrypt.HashPassword(DefaultOwnerPassword);
+				changed = true;
+			}
 		}
 
 		if (changed)

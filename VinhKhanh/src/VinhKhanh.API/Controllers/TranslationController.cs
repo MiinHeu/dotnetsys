@@ -21,7 +21,7 @@ public class TranslationController(ITranslationService translationService) : Con
 		{
 			return StatusCode(StatusCodes.Status503ServiceUnavailable, new
 			{
-				message = "Dich vu Microsoft Translator chua san sang. Hay kiem tra cau hinh Translator."
+				message = "Dich vu dich thuat chua san sang. Hay bat Ollama/LibreTranslate hoac cau hinh Translator API key."
 			});
 		}
 

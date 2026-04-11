@@ -45,3 +45,13 @@ public record PoiTranslationDto(
 	string Description,
 	string? AudioUrl = null);
 
+public record TourTranslationDto(
+	string LanguageCode,
+	string Name,
+	string Description);
+
+public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
+
+public record ForgotPasswordRequest(string Username, string NewPassword);
+public record UpdateUserStatusRequest(bool IsActive);
+

@@ -6,11 +6,29 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+// Attach JWT token to every request
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
+
+// Auto-logout on 401 (token expired or invalid)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      const store = useAuthStore.getState()
+      // Only clear if we were actually logged in (has token)
+      if (store.token) {
+        store.clear()
+        // Force redirect to role selection
+        window.location.href = '/role-select'
+      }
+    }
+    return Promise.reject(error)
+  }
+)
 
 export type Poi = {
   id: number

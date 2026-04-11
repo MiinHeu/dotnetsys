@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 // using StackExchange.Redis;
@@ -26,12 +28,14 @@ builder.Services.AddControllers()
 		// Prevent runtime 500 when entities have circular navigation references (EF)
 		options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 	});
+builder.Services.AddHealthChecks();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
 #if DEBUG
 	var sqlite = builder.Configuration.GetConnectionString("Sqlite") ?? "Data Source=app.db";
 	options.UseSqlite(sqlite);
+	options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
 #else
 	var connStr = builder.Configuration.GetConnectionString("Default");
 	options.UseNpgsql(connStr);
@@ -41,18 +45,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddSignalR();
 
 builder.Services.AddHttpClient();
-if (!string.IsNullOrWhiteSpace(builder.Configuration["Ollama:BaseUrl"]))
-{
-	builder.Services.AddScoped<ITranslationService, OllamaTranslationService>();
-}
-else if (!string.IsNullOrWhiteSpace(builder.Configuration["LibreTranslate:BaseUrl"]))
-{
-	builder.Services.AddScoped<ITranslationService, LibreTranslateService>();
-}
-else
-{
-	builder.Services.AddScoped<ITranslationService, MicrosoftTranslatorService>();
-}
+builder.Services.AddScoped<OllamaTranslationService>();
+builder.Services.AddScoped<LibreTranslateService>();
+builder.Services.AddScoped<MicrosoftTranslatorService>();
+builder.Services.AddScoped<ITranslationService, ResilientTranslationService>();
 if (!string.IsNullOrWhiteSpace(builder.Configuration["AzureOpenAI:Endpoint"])
     && !string.IsNullOrWhiteSpace(builder.Configuration["AzureOpenAI:Key"]))
 {
@@ -76,21 +72,43 @@ builder.Services.AddScoped<IRedisService, NoOpRedisService>();
 
 builder.Services.AddCors(options =>
 {
-	options.AddPolicy("Dev", policy =>
+	options.AddPolicy("Default", policy =>
 	{
-		policy
-			.SetIsOriginAllowed(origin =>
-			{
-				if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
-					return false;
+		var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 
-				return uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
-				       || uri.Host.Equals("127.0.0.1")
-				       || uri.Host.Equals("10.0.2.2");
-			})
-			.AllowAnyMethod()
-			.AllowAnyHeader()
-			.AllowCredentials();
+		// Production-safe default: allow any origin (no credentials).
+		// If you set Cors:AllowedOrigins, we will lock it down to those origins.
+		if (allowedOrigins is { Length: > 0 })
+		{
+			policy
+				.WithOrigins(allowedOrigins)
+				.AllowAnyMethod()
+				.AllowAnyHeader();
+		}
+		else if (builder.Environment.IsDevelopment())
+		{
+			// Dev convenience: web (localhost) + Android emulator (10.0.2.2)
+			policy
+				.SetIsOriginAllowed(origin =>
+				{
+					if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+						return false;
+
+					return uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+					       || uri.Host.Equals("127.0.0.1")
+					       || uri.Host.Equals("10.0.2.2");
+				})
+				.AllowAnyMethod()
+				.AllowAnyHeader()
+				.AllowCredentials();
+		}
+		else
+		{
+			policy
+				.AllowAnyOrigin()
+				.AllowAnyMethod()
+				.AllowAnyHeader();
+		}
 	});
 });
 
@@ -115,24 +133,31 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Auto-migrate on startup (only for real databases)
-#if !DEBUG
 using (var scope = app.Services.CreateScope())
 {
 	var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-	db.Database.Migrate();
-	await DbSeeder.SeedAsync(db);
+	var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+	var forceDefaultCredentials = builder.Configuration.GetValue<bool>("Seed:ForceDefaultCredentials");
+	try
+	{
+		if (db.Database.IsSqlite() && await IsLegacySqliteDatabaseAsync(db))
+		{
+			// Legacy dev DB created via EnsureCreated (no migration history).
+			// Skip Migrate() to avoid noisy "table already exists" startup failures.
+			db.Database.EnsureCreated();
+		}
+		else
+		{
+			db.Database.Migrate();
+		}
+	}
+	catch (Exception ex)
+	{
+		logger.LogWarning(ex, "Database.Migrate failed, fallback to EnsureCreated.");
+		db.Database.EnsureCreated();
+	}
+	await DbSeeder.SeedAsync(db, forceDefaultCredentials);
 }
-#else
-// Database EnsureCreated for local SQLite.
-using (var scope = app.Services.CreateScope())
-{
-	var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-	db.Database.EnsureCreated();
-	db.SeedDemoData();
-	await DbSeeder.SeedAsync(db);
-}
-#endif
 
 if (app.Environment.IsDevelopment())
 {
@@ -144,7 +169,7 @@ if (!app.Environment.IsDevelopment())
 {
 	app.UseHttpsRedirection();
 }
-app.UseCors("Dev");
+app.UseCors("Default");
 app.UseStaticFiles();
 
 app.UseAuthentication();
@@ -152,7 +177,33 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<VinhKhanhHub>("/hubs/vinh-khanh");
+app.MapHealthChecks("/health");
 
 app.Run();
+
+static async Task<bool> IsLegacySqliteDatabaseAsync(ApplicationDbContext db)
+{
+	await using var conn = db.Database.GetDbConnection();
+	if (conn.State != System.Data.ConnectionState.Open)
+		await conn.OpenAsync();
+
+	// Has any user table?
+	await using var tableCmd = conn.CreateCommand();
+	tableCmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';";
+	var tableCount = Convert.ToInt32(await tableCmd.ExecuteScalarAsync());
+	if (tableCount == 0) return false;
+
+	// Has migration history table?
+	await using var histCmd = conn.CreateCommand();
+	histCmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='__EFMigrationsHistory';";
+	var historyCount = Convert.ToInt32(await histCmd.ExecuteScalarAsync());
+	if (historyCount == 0) return true;
+
+	// History table exists but has no rows => still a legacy EnsureCreated DB.
+	await using var rowCmd = conn.CreateCommand();
+	rowCmd.CommandText = "SELECT COUNT(*) FROM __EFMigrationsHistory;";
+	var appliedMigrations = Convert.ToInt32(await rowCmd.ExecuteScalarAsync());
+	return appliedMigrations == 0;
+}
 
 public partial class Program;

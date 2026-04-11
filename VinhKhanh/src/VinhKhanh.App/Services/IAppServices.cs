@@ -16,6 +16,7 @@ public interface IGeofenceService
 public interface INarrationService
 {
 	Task EnqueueAsync(Poi poi, string language);
+	void InterruptIfHigherPriority(int newPriority);
 	Task StopCurrentAsync();
 	bool IsPlaying { get; }
 }

@@ -162,10 +162,11 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		var triggered = await _geofence.CheckTriggeredAsync(loc, domainPois);
 		var best = triggered.FirstOrDefault();
 
-		if (best != null && !_narration.IsPlaying)
+		if (best != null)
 		{
 			NearestPoiId = best.Id;
 			NearestLabel = best.Name;
+			_narration.InterruptIfHigherPriority(best.Priority);
 
 			if (!_cooldowns.CanTrigger(best.Id, best.CooldownSeconds))
 				return;
@@ -181,11 +182,6 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 			var history = new AppHistoryLogDto(_session.SessionId, "GPS_TRIGGER", PoiId: best.Id, LanguageCode: SelectedLanguage);
 			if (!await _api.TryPostHistoryLogAsync(history))
 				await _outbox.EnqueueHistoryAsync(history);
-		}
-		else if (best != null)
-		{
-			NearestPoiId = best.Id;
-			NearestLabel = best.Name;
 		}
 		else
 		{

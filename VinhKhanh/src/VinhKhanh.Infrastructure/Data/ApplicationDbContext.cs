@@ -123,6 +123,8 @@ public class ApplicationDbContext : DbContext
 				.WithMany(x => x.Translations)
 				.HasForeignKey(x => x.TourId)
 				.OnDelete(DeleteBehavior.Cascade);
+
+			entity.HasIndex(x => new { x.TourId, x.LanguageCode }).IsUnique();
 		});
 
 		modelBuilder.Entity<TourStop>(entity =>
@@ -253,113 +255,8 @@ public class ApplicationDbContext : DbContext
 			new TourStop { Id = 3, TourId = 1, PoiId = 3, StopOrder = 3, StayMinutes = 20, Note = null }
 		);
 
-		// Seed default admin user (password: Admin@2026)
-		modelBuilder.Entity<AppUser>().HasData(
-			new AppUser
-			{
-				Id = 1,
-				Username = "admin",
-				PasswordHash = "$2a$11$PBSPXvfmAZ.W8yyJfGlYOOqiMEgPBBCJOmYDGrqp8qJW3nDEFU.hm", // BCrypt hash of "Admin@2026"
-				Role = "Admin",
-				IsActive = true,
-				CreatedAt = seedTime
-			}
-		);
+		// NOTE: AppUser is NOT seeded via HasData; DbSeeder handles user
+		// creation at runtime so password hashes stay correct across machines.
 	}
 
-	/// <summary>
-	/// Seed demo data at runtime. Required for InMemoryDatabase (HasData is ignored).
-	/// Safe to call multiple times — only inserts if tables are empty.
-	/// </summary>
-	public void SeedDemoData()
-	{
-		var seedTime = new DateTime(2026, 03, 25, 0, 0, 0, DateTimeKind.Utc);
-
-		if (!AppUsers.Any())
-		{
-			AppUsers.AddRange(
-				new AppUser
-				{
-					Id = 1,
-					Username = "admin",
-					PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@2026"),
-					Role = "Admin",
-					IsActive = true,
-					CreatedAt = seedTime
-				},
-				new AppUser
-				{
-					Id = 2,
-					Username = "owner1",
-					PasswordHash = BCrypt.Net.BCrypt.HashPassword("Owner@2026"),
-					Role = "Owner",
-					IsActive = true,
-					CreatedAt = seedTime
-				}
-			);
-			SaveChanges();
-		}
-
-		if (!Pois.IgnoreQueryFilters().Any())
-		{
-			Pois.AddRange(
-				new Poi
-				{
-					Id = 1, Name = "Quan Com Tam Ba Ghien",
-					Description = "Com tam dac trung Sai Gon 30 nam.",
-					Latitude = 10.7531, Longitude = 106.6780,
-					MapX = 15, MapY = 40, TriggerRadiusMeters = 15,
-					Priority = 9, CooldownSeconds = 60,
-					Category = PoiCategory.ComTam,
-					QrCode = "VK-POI-001", ContentVersion = 1,
-					IsActive = true, CreatedAt = seedTime, UpdatedAt = seedTime
-				},
-				new Poi
-				{
-					Id = 2, Name = "Banh Canh Cua Ba Suong",
-					Description = "Banh canh cua tuoi boc day, 40 nam.",
-					Latitude = 10.7533, Longitude = 106.6781,
-					MapX = 30, MapY = 40, TriggerRadiusMeters = 15,
-					Priority = 8, CooldownSeconds = 60,
-					Category = PoiCategory.BanhCanh,
-					QrCode = "VK-POI-002", ContentVersion = 1,
-					IsActive = true, CreatedAt = seedTime, UpdatedAt = seedTime
-				},
-				new Poi
-				{
-					Id = 3, Name = "Khu Che Cuoi Pho",
-					Description = "Khu vuc tap trung hang che.",
-					Latitude = 10.7540, Longitude = 106.6785,
-					MapX = 75, MapY = 40, TriggerRadiusMeters = 20,
-					Priority = 5, CooldownSeconds = 120,
-					Category = PoiCategory.CheTrangMiem,
-					QrCode = "VK-POI-003", ContentVersion = 1,
-					IsActive = true, CreatedAt = seedTime, UpdatedAt = seedTime
-				}
-			);
-			SaveChanges();
-		}
-
-		if (!Tours.Any())
-		{
-			Tours.Add(new Tour
-			{
-				Id = 1, Name = "Tour Am Thuc 1 Gio Vinh Khanh",
-				Description = "Com tam -> Banh canh -> Che",
-				EstimatedMinutes = 60, IsActive = true,
-				CreatedAt = seedTime, UpdatedAt = seedTime
-			});
-			SaveChanges();
-		}
-
-		if (!TourStops.IgnoreQueryFilters().Any())
-		{
-			TourStops.AddRange(
-				new TourStop { Id = 1, TourId = 1, PoiId = 1, StopOrder = 1, StayMinutes = 20 },
-				new TourStop { Id = 2, TourId = 1, PoiId = 2, StopOrder = 2, StayMinutes = 20 },
-				new TourStop { Id = 3, TourId = 1, PoiId = 3, StopOrder = 3, StayMinutes = 20 }
-			);
-			SaveChanges();
-		}
-	}
 }

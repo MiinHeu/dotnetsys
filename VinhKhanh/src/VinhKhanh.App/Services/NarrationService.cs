@@ -13,7 +13,7 @@ public sealed class NarrationService(IAudioManager audioManager, ILogger<Narrati
 	private IAudioPlayer? _player;
 	private MemoryStream? _playbackStream;
 	private readonly SemaphoreSlim _gate = new(1, 1);
-	private readonly Queue<(Poi poi, string language)> _queue = [];
+	private readonly List<(Poi poi, string language)> _queue = [];
 	private readonly HashSet<string> _queuedKeys = [];
 	private readonly Dictionary<string, DateTime> _recentlyPlayed = [];
 	private CancellationTokenSource? _playCts;
@@ -29,7 +29,7 @@ public sealed class NarrationService(IAudioManager audioManager, ILogger<Narrati
 		{
 			logger.LogInformation("Interrupting narration: new priority {New} > current {Current}", newPriority, _currentPriority);
 			_playCts?.Cancel();
-			StopAsync();
+			_ = StopAsync();
 		}
 	}
 
@@ -60,8 +60,11 @@ public sealed class NarrationService(IAudioManager audioManager, ILogger<Narrati
 		if (_recentlyPlayed.TryGetValue(key, out var playedAt) &&
 		    DateTime.UtcNow - playedAt < DuplicateWindow) return Task.CompletedTask;
 
-		_queue.Enqueue((poi, language));
+		_queue.Add((poi, language));
+		// Keep higher priority items processed first while preserving FIFO within same priority.
+		_queue.Sort((a, b) => b.poi.Priority.CompareTo(a.poi.Priority));
 		_queuedKeys.Add(key);
+		InterruptIfHigherPriority(poi.Priority);
 		if (_isProcessing) return Task.CompletedTask;
 		_ = ProcessQueueAsync();
 		return Task.CompletedTask;
@@ -76,8 +79,13 @@ public sealed class NarrationService(IAudioManager audioManager, ILogger<Narrati
 		{
 			while (_queue.Count > 0)
 			{
-				var (poi, language) = _queue.Dequeue();
+				var (poi, language) = _queue[0];
+				_queue.RemoveAt(0);
 				_queuedKeys.Remove(BuildKey(poi.Id, language));
+				_currentPriority = poi.Priority;
+				_playCts?.Cancel();
+				_playCts?.Dispose();
+				_playCts = new CancellationTokenSource();
 
 				var poiSnapshot = new PoiSnapshot
 				{
@@ -106,12 +114,15 @@ public sealed class NarrationService(IAudioManager audioManager, ILogger<Narrati
 				};
 
 				var apiRoot = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, ApiClientService.GetDefaultApiBase()).TrimEnd('/');
-				await PlayPoiAsync(poiSnapshot, language, apiRoot);
+				await PlayPoiAsync(poiSnapshot, language, apiRoot, _playCts.Token);
 				_recentlyPlayed[BuildKey(poi.Id, language)] = DateTime.UtcNow;
 			}
 		}
 		finally
 		{
+			_playCts?.Dispose();
+			_playCts = null;
+			_currentPriority = 0;
 			_isProcessing = false;
 		}
 	}

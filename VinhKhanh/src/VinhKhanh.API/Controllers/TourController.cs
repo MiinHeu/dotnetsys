@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using VinhKhanh.API.Hubs;
 using VinhKhanh.Infrastructure.Data;
 using VinhKhanh.Shared.DTOs;
@@ -47,6 +48,7 @@ public class TourController(
 	}
 
 	[HttpPost]
+	[Authorize(Roles = "Admin")]
 	public async Task<IActionResult> Create([FromBody] TourCreateDto dto, CancellationToken ct = default)
 	{
 		if (!TryValidateTour(dto, out var error))
@@ -92,6 +94,7 @@ public class TourController(
 	}
 
 	[HttpPut("{id:int}")]
+	[Authorize(Roles = "Admin")]
 	public async Task<IActionResult> Update(int id, [FromBody] TourCreateDto dto, CancellationToken ct = default)
 	{
 		if (!TryValidateTour(dto, out var error))
@@ -140,6 +143,7 @@ public class TourController(
 	}
 
 	[HttpDelete("{id:int}")]
+	[Authorize(Roles = "Admin")]
 	public async Task<IActionResult> Deactivate(int id, CancellationToken ct = default)
 	{
 		var tour = await db.Tours.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id, ct);
@@ -154,6 +158,56 @@ public class TourController(
 		await db.SaveChangesAsync(ct);
 		await hub.Clients.All.SendAsync("TourUpdated", tour, ct);
 		return NoContent();
+	}
+
+	[HttpPost("{id:int}/translation")]
+	[Authorize(Roles = "Admin")]
+	public async Task<IActionResult> AddTranslation(int id, [FromBody] TourTranslationDto dto, CancellationToken ct = default)
+	{
+		var tour = await db.Tours.Include(t => t.Translations).FirstOrDefaultAsync(t => t.Id == id, ct);
+		if (tour == null) return NotFound(new { message = "Tour khong ton tai." });
+
+		var langCode = NormalizeLang(dto.LanguageCode);
+		if (tour.Translations.Any(t => t.LanguageCode == langCode))
+			return Conflict(new { message = $"Ban dich tieng '{langCode}' da ton tai." });
+
+		if (string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.Description))
+			return BadRequest(new { message = "Name va Description khong duoc de trong." });
+
+		var trans = new TourTranslation
+		{
+			LanguageCode = langCode,
+			Name = dto.Name.Trim(),
+			Description = dto.Description.Trim(),
+			TourId = id
+		};
+
+		db.TourTranslations.Add(trans);
+		await db.SaveChangesAsync(ct);
+		await hub.Clients.All.SendAsync("TourUpdated", tour, ct);
+		return Ok(trans);
+	}
+
+	[HttpPut("{id:int}/translation/{lang}")]
+	[Authorize(Roles = "Admin")]
+	public async Task<IActionResult> UpdateTranslation(int id, string lang, [FromBody] TourTranslationDto dto, CancellationToken ct = default)
+	{
+		var langCode = NormalizeLang(lang);
+		var trans = await db.TourTranslations.FirstOrDefaultAsync(t => t.TourId == id && t.LanguageCode == langCode, ct);
+		if (trans == null) return NotFound(new { message = "Ban dich khong ton tai." });
+
+		if (string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.Description))
+			return BadRequest(new { message = "Name va Description khong duoc de trong." });
+
+		trans.Name = dto.Name.Trim();
+		trans.Description = dto.Description.Trim();
+
+		await db.SaveChangesAsync(ct);
+		
+		var tour = await db.Tours.Include(t => t.Translations).FirstOrDefaultAsync(t => t.Id == id, ct);
+		await hub.Clients.All.SendAsync("TourUpdated", tour, ct);
+
+		return Ok(trans);
 	}
 
 	private static bool TryValidateTour(TourCreateDto dto, out string error)
