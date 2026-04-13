@@ -2,6 +2,7 @@ namespace VinhKhanh.App.Services;
 
 public static class AppPreferences
 {
+	public const string HasSelectedLanguage = "vk_has_selected_lang";
 	public const string ApiBaseUrl = "vk_api_base";
 	public const string UiLanguage = "vk_ui_lang";
 	public const string SessionId = "vk_session_id";

@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using VinhKhanh.App.Services;
 using VinhKhanh.Shared.DTOs;
@@ -123,7 +123,7 @@ public partial class QrScanPage : ContentPage
 
 			if (poi == null)
 			{
-				StatusLabel.Text = "Khong tim thay POI.";
+				StatusLabel.Text = VinhKhanh.App.Resources.Strings.AppResources.QrNotFoundStatus;
 				return;
 			}
 
@@ -137,7 +137,7 @@ public partial class QrScanPage : ContentPage
 			if (!await _api.TryPostHistoryLogAsync(history))
 				await _outbox.EnqueueHistoryAsync(history);
 
-			StatusLabel.Text = $"Da phat: {poi.ResolveName(lang)}";
+			StatusLabel.Text = string.Format(VinhKhanh.App.Resources.Strings.AppResources.QrFoundSatus, poi.ResolveName(lang));
 			ManualCodeEntry.Text = string.Empty;
 		}
 		catch (Exception ex)

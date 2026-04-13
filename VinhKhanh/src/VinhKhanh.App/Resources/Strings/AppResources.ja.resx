@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="LanguageSelectionTitle" xml:space="preserve"><value>言語の選択</value></data>
+  <data name="LanguageSelectionDesc" xml:space="preserve"><value>希望の言語を選択してください</value></data>
+  <data name="LanguageSelectionContinue" xml:space="preserve"><value>続ける</value></data>
+  <data name="TabMap" xml:space="preserve"><value>マップ</value></data>
+  <data name="TabTours" xml:space="preserve"><value>ツアー</value></data>
+  <data name="TabChat" xml:space="preserve"><value>チャット</value></data>
+  <data name="TabScan" xml:space="preserve"><value>QRスキャン</value></data>
+  <data name="TabSettings" xml:space="preserve"><value>設定</value></data>
+  <data name="MapTitle" xml:space="preserve"><value>ビンカンマップ</value></data>
+  <data name="LanguagePickerTitle" xml:space="preserve"><value>言語</value></data>
+  <data name="SyncButton" xml:space="preserve"><value>同期</value></data>
+  <data name="GpsButtonOn" xml:space="preserve"><value>GPSをオン</value></data>
+  <data name="GpsButtonOff" xml:space="preserve"><value>GPSをオフ</value></data>
+  <data name="StatusNearestPoiDefault" xml:space="preserve"><value>最寄りの場所を探しています...</value></data>
+  <data name="PoiDetailNearestLabel" xml:space="preserve"><value>最寄りの場所</value></data>
+  <data name="PoiDetailReadAudio" xml:space="preserve"><value>音声を再生</value></data>
+  <data name="SyncStatusSyncing" xml:space="preserve"><value>POIを同期中...</value></data>
+  <data name="SyncStatusSuccess" xml:space="preserve"><value>{0} POIを同期しました。</value></data>
+  <data name="SyncStatusOffline" xml:space="preserve"><value>オフライン: キャッシュに {0} POI。</value></data>
+  <data name="SyncStatusNoData" xml:space="preserve"><value>データがありません。APIを確認。</value></data>
+  <data name="SyncStatusNetworkError" xml:space="preserve"><value>ネットワークエラー - キャッシュ読込中。</value></data>
+  <data name="GpsStatusTracking" xml:space="preserve"><value>バックグラウンドでGPSを追跡中...</value></data>
+  <data name="GpsStatusStopped" xml:space="preserve"><value>追跡が停止しました。</value></data>
+  <data name="GpsStatusWait" xml:space="preserve"><value>位置情報を待機中...</value></data>
+  <data name="NarrationStatusPlaying" xml:space="preserve"><value>再生中: {0}</value></data>
+  <data name="NarrationStatusFinished" xml:space="preserve"><value>再生終了 ({0}s): {1}</value></data>
+  <data name="NarrationStatusError" xml:space="preserve"><value>音声エラー: {0}</value></data>
+  <data name="NarrationStatusNoPoi" xml:space="preserve"><value>再生するPOIがありません。</value></data>
+  <data name="ToursHeader" xml:space="preserve"><value>探索</value></data>
+  <data name="ToursTitle" xml:space="preserve"><value>ツアーの詳細</value></data>
+  <data name="ToursSubtitle" xml:space="preserve"><value>フードツアーのおすすめ</value></data>
+  <data name="ToursItemStopsCount" xml:space="preserve"><value>停留所: {0}</value></data>
+  <data name="ToursItemMinutes" xml:space="preserve"><value>所要時間: {0} 分</value></data>
+  <data name="ToursEmptyTitle" xml:space="preserve"><value>ツアーが見つかりません。</value></data>
+  <data name="ToursEmptySubtitle" xml:space="preserve"><value>再度同期するか、API接続を確認してください。</value></data>
+  <data name="ToursSyncError" xml:space="preserve"><value>ツアーの読み込みエラー。</value></data>
+  <data name="ChatSendButton" xml:space="preserve"><value>送信</value></data>
+  <data name="QrScanHint" xml:space="preserve"><value>カメラをQRコードに向けます (vk-poi-123 または /poi/123 を含むURL)</value></data>
+  <data name="QrPlaceholder" xml:space="preserve"><value>POIコードを手動で入力</value></data>
+  <data name="QrSubmitButton" xml:space="preserve"><value>処理</value></data>
+  <data name="QrFoundSatus" xml:space="preserve"><value>到着: {0}</value></data>
+  <data name="QrNotFoundStatus" xml:space="preserve"><value>このQRコードに該当するPOIが見つかりません。</value></data>
+  <data name="SettingsApiUrlLabel" xml:space="preserve"><value>API URL (末尾の / 無し/有り)</value></data>
+  <data name="SettingsGeofenceRadiusLabel" xml:space="preserve"><value>ジオフェンス半径の倍率 (1 = デフォルト)</value></data>
+  <data name="SettingsMockGpsLabel" xml:space="preserve"><value>GPS シミュレーションを有効 (.NET Mock)</value></data>
+  <data name="SettingsMockGpsDesc" xml:space="preserve"><value>オン：ブルー・ドットが各POIを自動で通過・ループします。</value></data>
+  <data name="SettingsSaveButton" xml:space="preserve"><value>保存</value></data>
+  <data name="SettingsApiHint" xml:space="preserve"><value>Androidエミュレータ：localhostでなく10.0.2.2。実機：PCのLAN IP。</value></data>
+  <data name="SettingsSavedSuccess" xml:space="preserve"><value>設定保存成功。</value></data>
+  <data name="MapLoadingError" xml:space="preserve"><value>マップ読み込みエラー。</value></data>
+  <data name="NearestLabelFormat" xml:space="preserve"><value>最寄りの: {0}</value></data>
+  <data name="PlaybackPoiLabel" xml:space="preserve"><value>解説: {0}</value></data>
+</root>

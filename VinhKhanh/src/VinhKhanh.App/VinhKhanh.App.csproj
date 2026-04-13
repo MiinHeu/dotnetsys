@@ -60,6 +60,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<EmbeddedResource Update="Resources\Strings\AppResources.resx">
+			<Generator>PublicResXFileCodeGenerator</Generator>
+			<LastGenOutput>AppResources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
 		<MauiXaml Update="App.xaml" />
 		<MauiXaml Update="AppShell.xaml" />
 		<MauiXaml Update="MainPage.xaml" />
@@ -85,6 +92,14 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\VinhKhanh.Shared\VinhKhanh.Shared.csproj" />
 	  <ProjectReference Include="..\VinhKhanh.Infrastructure\VinhKhanh.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Resources\Strings\AppResources.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>AppResources.resx</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 </Project>

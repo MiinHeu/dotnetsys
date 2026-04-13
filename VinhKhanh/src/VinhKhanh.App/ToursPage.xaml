@@ -1,17 +1,18 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:res="clr-namespace:VinhKhanh.App.Resources.Strings"
              x:Class="VinhKhanh.App.ToursPage"
-             Title="Danh sach lo trinh"
+             Title="{x:Static res:AppResources.TabTours}"
              BackgroundColor="#F8FAFC">
 
     <Grid RowDefinitions="Auto,*">
         <Border StrokeThickness="0" Background="#FFFFFF" Padding="20,24,20,16"
                 Shadow="{Shadow Brush=#000000, Offset='0,4', Opacity=0.03, Radius=4}">
             <VerticalStackLayout Spacing="4">
-                <Label Text="Kham pha" FontSize="14" TextColor="#EA580C" FontAttributes="Bold" TextTransform="Uppercase"/>
-                <Label Text="Danh sach lo trinh" FontSize="28" FontAttributes="Bold" TextColor="#0F172A" />
-                <Label Text="Goi y lo trinh tham quan am thuc" FontSize="15" TextColor="#475569" />
+                <Label Text="{x:Static res:AppResources.ToursHeader}" FontSize="14" TextColor="#EA580C" FontAttributes="Bold" TextTransform="Uppercase"/>
+                <Label Text="{x:Static res:AppResources.ToursTitle}" FontSize="28" FontAttributes="Bold" TextColor="#0F172A" />
+                <Label Text="{x:Static res:AppResources.ToursSubtitle}" FontSize="15" TextColor="#475569" />
             </VerticalStackLayout>
         </Border>
 
@@ -32,10 +33,10 @@
 
                                 <HorizontalStackLayout Spacing="12" Margin="0,16,0,0">
                                     <Border Stroke="#EA580C" StrokeThickness="1.5" Background="#FFF7ED" StrokeShape="RoundRectangle 8" Padding="12,6">
-                                        <Label Text="{Binding Stops.Count, StringFormat='So diem: {0}'}" FontSize="13" FontAttributes="Bold" TextColor="#EA580C" />
+                                        <Label Text="{Binding Stops.Count, StringFormat={x:Static res:AppResources.ToursItemStopsCount}}" FontSize="13" FontAttributes="Bold" TextColor="#EA580C" />
                                     </Border>
                                     <Border Stroke="#E2E8F0" StrokeThickness="1" Background="#F8FAFC" StrokeShape="RoundRectangle 8" Padding="12,6">
-                                        <Label Text="{Binding EstimatedMinutes, StringFormat='Thoi gian: {0} phut'}" FontSize="13" FontAttributes="Bold" TextColor="#475569" />
+                                        <Label Text="{Binding EstimatedMinutes, StringFormat={x:Static res:AppResources.ToursItemMinutes}}" FontSize="13" FontAttributes="Bold" TextColor="#475569" />
                                     </Border>
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
@@ -45,8 +46,8 @@
 
                 <CollectionView.EmptyView>
                     <VerticalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center" Margin="0,80,0,0">
-                        <Label Text="Khong co lo trinh nao." TextColor="#475569" FontAttributes="Bold" FontSize="18" HorizontalOptions="Center" />
-                        <Label Text="Thu dong bo lai hoac kiem tra ket noi API." TextColor="#64748B" FontSize="14" HorizontalOptions="Center" />
+                        <Label Text="{x:Static res:AppResources.ToursEmptyTitle}" TextColor="#475569" FontAttributes="Bold" FontSize="18" HorizontalOptions="Center" />
+                        <Label Text="{x:Static res:AppResources.ToursEmptySubtitle}" TextColor="#64748B" FontSize="14" HorizontalOptions="Center" />
                     </VerticalStackLayout>
                 </CollectionView.EmptyView>
             </CollectionView>

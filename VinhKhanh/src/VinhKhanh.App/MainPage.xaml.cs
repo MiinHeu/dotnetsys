@@ -36,20 +36,20 @@ public partial class MainPage : ContentPage
 				Dispatcher.Dispatch(() => StatusLabel.Text = _vm.StatusMessage);
 			if (e.PropertyName == nameof(MainViewModel.NearestLabel))
 				Dispatcher.Dispatch(() => NearestLabel.Text = string.IsNullOrWhiteSpace(_vm.NearestLabel)
-					? "Đang tìm điểm gần nhất..."
-					: $"Gần nhất: {_vm.NearestLabel}");
+					? VinhKhanh.App.Resources.Strings.AppResources.StatusNearestPoiDefault
+					: string.Format(VinhKhanh.App.Resources.Strings.AppResources.NearestLabelFormat, _vm.NearestLabel));
 			if (e.PropertyName == nameof(MainViewModel.NearestPoiId))
 				Dispatcher.Dispatch(UpdatePins);
 			if (e.PropertyName is nameof(MainViewModel.UserLatitude) or nameof(MainViewModel.UserLongitude))
 				Dispatcher.Dispatch(UpdateMapUser);
 			if (e.PropertyName == nameof(MainViewModel.IsTracking))
 				Dispatcher.Dispatch(() =>
-					TrackBtn.Text = _vm.IsTracking ? "Tắt GPS" : "Bật GPS");
+					TrackBtn.Text = _vm.IsTracking ? VinhKhanh.App.Resources.Strings.AppResources.GpsButtonOff : VinhKhanh.App.Resources.Strings.AppResources.GpsButtonOn);
 		};
 
 		_vm.Pois.CollectionChanged += OnPoisChanged;
 		StatusLabel.Text = _vm.StatusMessage;
-		NearestLabel.Text = "Đang tìm điểm gần nhất...";
+		NearestLabel.Text = VinhKhanh.App.Resources.Strings.AppResources.StatusNearestPoiDefault;
 
 		Loaded += async (_, _) =>
 		{
@@ -61,7 +61,7 @@ public partial class MainPage : ContentPage
 			}
 			catch (Exception ex)
 			{
-				StatusLabel.Text = "Lỗi tải bản đồ.";
+				StatusLabel.Text = VinhKhanh.App.Resources.Strings.AppResources.MapLoadingError;
 				System.Diagnostics.Debug.WriteLine($"MainPage Loaded error: {ex}");
 			}
 		};
@@ -87,10 +87,18 @@ public partial class MainPage : ContentPage
 
 	private void OnLangChanged(object? sender, EventArgs e)
 	{
-		if (LangPicker.SelectedItem is string lang)
+		if (LangPicker.SelectedItem is string lang && _vm.SelectedLanguage != lang)
 		{
 			_vm.SelectedLanguage = lang;
-			UpdatePins();
+			Microsoft.Maui.Storage.Preferences.Set(AppPreferences.UiLanguage, lang);
+			
+			var culture = new System.Globalization.CultureInfo(lang);
+			System.Globalization.CultureInfo.CurrentCulture = culture;
+			System.Globalization.CultureInfo.CurrentUICulture = culture;
+			System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
+			System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
+			
+			Application.Current!.MainPage = new AppShell();
 		}
 	}
 
@@ -202,20 +210,20 @@ public partial class MainPage : ContentPage
 		var poi = _selectedPoi ?? _vm.Pois.FirstOrDefault(x => x.Id == _vm.NearestPoiId);
 		if (poi == null)
 		{
-			StatusLabel.Text = "Chưa có POI để phát.";
+			StatusLabel.Text = VinhKhanh.App.Resources.Strings.AppResources.NarrationStatusNoPoi;
 			System.Diagnostics.Debug.WriteLine("[MainPage] No POI selected for playback");
 			return;
 		}
 
 		try
 		{
-			StatusLabel.Text = $"Đang phát: {poi.ResolveName(_vm.SelectedLanguage)}";
+			StatusLabel.Text = string.Format(VinhKhanh.App.Resources.Strings.AppResources.NarrationStatusPlaying, poi.ResolveName(_vm.SelectedLanguage));
 			var heardSeconds = await _narration.PlayPoiAsync(poi, _vm.SelectedLanguage, _vm.ApiRootForAudio);
-			StatusLabel.Text = $"Đã phát xong ({heardSeconds}s): {poi.ResolveName(_vm.SelectedLanguage)}";
+			StatusLabel.Text = string.Format(VinhKhanh.App.Resources.Strings.AppResources.NarrationStatusFinished, heardSeconds, poi.ResolveName(_vm.SelectedLanguage));
 		}
 		catch (Exception ex)
 		{
-			StatusLabel.Text = $"Lỗi phát audio: {ex.Message}";
+			StatusLabel.Text = string.Format(VinhKhanh.App.Resources.Strings.AppResources.NarrationStatusError, ex.Message);
 			System.Diagnostics.Debug.WriteLine($"[MainPage] Playback error: {ex}");
 		}
 	}

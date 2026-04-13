@@ -12,10 +12,25 @@ public partial class App : Application
 	{
 		InitializeComponent();
 		_connectivity = connectivity;
+
+		var langCode = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "en");
+		var culture = new System.Globalization.CultureInfo(langCode);
+		System.Globalization.CultureInfo.CurrentCulture = culture;
+		System.Globalization.CultureInfo.CurrentUICulture = culture;
+		System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
+		System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
 	}
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		return new Window(new AppShell());
+		var hasSelected = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.HasSelectedLanguage, false);
+		if (hasSelected)
+		{
+			return new Window(new AppShell());
+		}
+		else
+		{
+			return new Window(new LanguageSelectionPage());
+		}
 	}
 }

@@ -64,7 +64,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 	[RelayCommand]
 	private async Task SyncPoisAsync()
 	{
-		StatusMessage = "Dang dong bo POI...";
+		StatusMessage = VinhKhanh.App.Resources.Strings.AppResources.SyncStatusSyncing;
 		try
 		{
 			var remote = await _api.GetPoisAsync(SelectedLanguage);
@@ -72,15 +72,15 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 			{
 				await _cache.SavePoisAsync(remote);
 				ReplacePois(remote);
-				StatusMessage = $"Da dong bo {remote.Count} POI.";
+				StatusMessage = string.Format(VinhKhanh.App.Resources.Strings.AppResources.SyncStatusSuccess, remote.Count);
 			}
 			else
 			{
 				var local = await _cache.LoadPoisAsync();
 				ReplacePois(local);
 				StatusMessage = local.Count > 0
-					? $"Offline: {local.Count} POI trong cache."
-					: "Khong co du lieu. Kiem tra API.";
+					? string.Format(VinhKhanh.App.Resources.Strings.AppResources.SyncStatusOffline, local.Count)
+					: VinhKhanh.App.Resources.Strings.AppResources.SyncStatusNoData;
 			}
 
 			await _api.PostHistoryLogAsync(new AppHistoryLogDto(_session.SessionId, "SYNC_POI",
@@ -89,7 +89,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		}
 		catch (Exception ex)
 		{
-			StatusMessage = "Loi mang - dang doc cache.";
+			StatusMessage = VinhKhanh.App.Resources.Strings.AppResources.SyncStatusNetworkError;
 			Debug.WriteLine(ex);
 			var local = await _cache.LoadPoisAsync();
 			ReplacePois(local);
@@ -110,14 +110,14 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		{
 			await _gps.StopTrackingAsync();
 			IsTracking = false;
-			StatusMessage = "Da tat theo doi.";
+			StatusMessage = VinhKhanh.App.Resources.Strings.AppResources.GpsStatusStopped;
 			await FlushMovementAsync();
 			await FlushOutboxIfNeededAsync(force: true);
 			return;
 		}
 
 		IsTracking = true;
-		StatusMessage = "Dang theo doi GPS qua dich vu nen...";
+		StatusMessage = VinhKhanh.App.Resources.Strings.AppResources.GpsStatusTracking;
 		await _gps.StartTrackingAsync();
 		await FlushOutboxIfNeededAsync(force: true);
 	}
@@ -171,7 +171,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 			if (!_cooldowns.CanTrigger(best.Id, best.CooldownSeconds))
 				return;
 
-			StatusMessage = $"Thuyet minh: {NearestLabel}";
+			StatusMessage = string.Format(VinhKhanh.App.Resources.Strings.AppResources.PlaybackPoiLabel, NearestLabel);
 			await _narration.EnqueueAsync(best, SelectedLanguage);
 			_cooldowns.MarkTriggered(best.Id);
 
