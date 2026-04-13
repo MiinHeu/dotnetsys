@@ -47,6 +47,7 @@ public class PoiController(
 	}
 
 	[HttpGet]
+	[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 	public async Task<IActionResult> GetAll([FromQuery] string lang = "vi", CancellationToken ct = default)
 	{
 		_ = NormalizeLang(lang);
@@ -62,6 +63,7 @@ public class PoiController(
 	}
 
 	[HttpGet("{id:int}")]
+	[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 	public async Task<IActionResult> GetById(int id, CancellationToken ct = default)
 	{
 		var poi = await db.Pois
@@ -152,6 +154,9 @@ public class PoiController(
 		TrimPoiFields(poi);
 		if (!TryValidatePoi(poi, out var error))
 			return BadRequest(new { message = error });
+
+		if (!ModelState.IsValid)
+			return BadRequest(ModelState);
 
 		// Owner: tự động gán OwnerUserId
 		if (IsOwnerRole)
@@ -250,6 +255,23 @@ public class PoiController(
 			|| poi.IsActive != updated.IsActive
 			|| poi.OwnerUserId != updated.OwnerUserId;
 
+		var translationsChanged = false;
+		if (updated.Translations != null)
+		{
+			foreach (var upt in updated.Translations)
+			{
+				var existingT = poi.Translations.FirstOrDefault(t => t.LanguageCode == upt.LanguageCode);
+				if (existingT == null || 
+				    existingT.Name != upt.Name || 
+				    existingT.Description != upt.Description || 
+				    existingT.AudioUrl != upt.AudioUrl)
+				{
+					translationsChanged = true;
+					break;
+				}
+			}
+		}
+
 		poi.Name = updated.Name;
 		poi.Description = updated.Description;
 		poi.OwnerInfo = updated.OwnerInfo;
@@ -266,9 +288,38 @@ public class PoiController(
 		poi.ImageUrl = updated.ImageUrl;
 		poi.QrCode = newQr;
 		poi.OwnerUserId = updated.OwnerUserId;
-		if (contentChanged) poi.ContentVersion++;
+
+		if (contentChanged || translationsChanged) poi.ContentVersion++;
 
 		poi.UpdatedAt = DateTime.UtcNow;
+
+		// Sync translations
+		if (updated.Translations != null)
+		{
+			foreach (var upt in updated.Translations)
+			{
+				var existingT = poi.Translations.FirstOrDefault(t => t.LanguageCode == upt.LanguageCode);
+				if (existingT != null)
+				{
+					existingT.Name = upt.Name;
+					existingT.Description = upt.Description;
+					existingT.AudioUrl = upt.AudioUrl;
+					existingT.OriginalDescription = upt.OriginalDescription;
+				}
+				else
+				{
+					poi.Translations.Add(new PoiTranslation
+					{
+						LanguageCode = upt.LanguageCode,
+						Name = upt.Name,
+						Description = upt.Description,
+						AudioUrl = upt.AudioUrl,
+						OriginalDescription = upt.OriginalDescription
+					});
+				}
+			}
+		}
+
 		NormalizeTranslations(poi.Translations, poi.Description);
 
 		await db.SaveChangesAsync(ct);

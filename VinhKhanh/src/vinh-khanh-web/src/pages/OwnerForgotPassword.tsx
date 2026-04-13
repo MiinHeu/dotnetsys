@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router'
 import { api } from '@/lib/api'
-import { KeyRound, AlertCircle, ArrowLeft, Store, CheckCircle } from 'lucide-react'
+import { KeyRound, AlertCircle, ArrowLeft, CheckCircle } from 'lucide-react'
 
 export function OwnerForgotPassword() {
   const [u, setU] = useState('')

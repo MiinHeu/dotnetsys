@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router'
 import { useAuthStore } from '@/store/authStore'
-import { LayoutGrid, MapPin, Globe, Route, Mic2, BarChart2, Activity, LogOut, Menu, X, Languages, KeyRound, Users } from 'lucide-react'
+import { LayoutGrid, MapPin, Globe, Route, Mic2, BarChart2, Activity, LogOut, Menu, X, KeyRound, Users } from 'lucide-react'
 import { useState } from 'react'
 
 // Admin sees all; Owner sees only their relevant items
@@ -9,7 +9,6 @@ const adminNav = [
   { to: '/pois', label: 'Quán Ăn', icon: MapPin },
   { to: '/map', label: 'Bản Đồ', icon: Globe },
   { to: '/tours', label: 'Lộ Trình', icon: Route },
-  { to: '/translations', label: 'Bản Dịch', icon: Languages },
   { to: '/audio', label: 'Giọng Đọc', icon: Mic2 },
   { to: '/analytics', label: 'Thống Kê', icon: BarChart2 },
   { to: '/history', label: 'Lịch Sử', icon: Activity },
@@ -22,7 +21,6 @@ const ownerNav = [
   { to: '/pois', label: 'Quán Ăn Của Tôi', icon: MapPin },
   { to: '/map', label: 'Bản Đồ', icon: Globe },
   { to: '/tours', label: 'Lộ Trình', icon: Route },
-  { to: '/translations', label: 'Bản Dịch', icon: Languages },
   { to: '/audio', label: 'Giọng Đọc', icon: Mic2 },
   { to: '/change-password', label: 'Đổi Mật Khẩu', icon: KeyRound },
 ]
@@ -35,7 +33,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const isAdmin = role === 'Admin'
   const nav = isAdmin ? adminNav : ownerNav
-  const accentColor = isAdmin ? 'orange' : 'emerald'
 
   const toggleMenu = () => setMobileMenuOpen(!mobileMenuOpen)
 

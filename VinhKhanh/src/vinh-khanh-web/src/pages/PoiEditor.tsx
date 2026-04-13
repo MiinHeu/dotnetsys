@@ -69,7 +69,7 @@ function upsertTranslation(
           ? {
               ...item,
               ...patch,
-              ...(originalDescription !== undefined ? { originalDescription } : {}),
+              originalDescription: originalDescription ?? item.originalDescription ?? form.description,
             }
           : item,
       ),
@@ -132,7 +132,7 @@ async function geocodeAddress(address: string): Promise<GeoPoint> {
   throw new Error('Không tìm thấy tọa độ từ địa chỉ này. Hãy nhập rõ hơn, ví dụ kèm Quận 4.')
 }
 
-async function translateDescription(text: string, language: TtsLanguage): Promise<string> {
+async function translateText(text: string, language: TtsLanguage): Promise<string> {
   if (language.code === 'vi') return text
 
   const { data } = await api.post<{ translatedText?: string }>('/api/translation/text', {
@@ -261,10 +261,11 @@ export function PoiEditor() {
       } else {
         // Description thay đổi hoặc chưa có bản dịch → dịch lại
         setTtsMessage(`Đang dịch mô tả sang ${language.label}...`)
-        text = await translateDescription(sourceText, language)
+        text = await translateText(sourceText, language)
+        const translatedName = await translateText(form.name.trim() || 'POI', language)
         setForm((current) =>
           upsertTranslation(current, language.code, {
-            name: current.name,
+            name: translatedName,
             description: text,
           }, sourceText), // Lưu originalDescription để so sánh sau
         )
@@ -350,6 +351,59 @@ export function PoiEditor() {
           : (err as Error).message || 'Không xuất được voice từ mô tả.'
       setTtsMessage(message)
       throw err
+    } finally {
+      setTtsBusy(false)
+    }
+  }
+
+  const generateVoiceForAllLangs = async () => {
+    setTtsBusy(true)
+    setTtsMessage('Bắt đầu dịch và tạo audio cho tất cả các ngôn ngữ...')
+    try {
+      const sourceText = form.description.trim()
+      const sourceName = form.name.trim() || 'POI'
+      if (!sourceText) throw new Error('Vui lòng nhập mô tả Tiếng Việt trước.')
+
+      let currentForm = form
+      for (const language of ttsLanguages) {
+        setTtsMessage(`Đang xử lý ${language.label}...`)
+        
+        // 1. Translate
+        let text = sourceText
+        let name = sourceName
+        if (language.code !== 'vi') {
+          text = await translateText(sourceText, language)
+          name = await translateText(sourceName, language)
+        }
+
+        // 2. Generate Audio
+        setTtsMessage(`Đang tạo audio ${language.label}...`)
+        const { data } = await api.post<{ url?: string; filename?: string }>('/api/audio/generate-tts', {
+          text,
+          lang: language.code,
+          voice: language.voice,
+        })
+
+        if (!data?.url) {
+          throw new Error(`Đã xảy ra lỗi lấy audio từ backend cho ${language.code}.`)
+        }
+
+        // 3. Update Form
+        if (language.code === 'vi') {
+          currentForm = { ...currentForm, audioViUrl: data.url }
+        } else {
+          currentForm = upsertTranslation(currentForm, language.code, {
+            name: name,
+            description: text,
+            audioUrl: data.url,
+          }, sourceText)
+        }
+      }
+
+      setForm(currentForm)
+      setTtsMessage('Đã hoàn tất! Các dòng text và Audio URL của tất cả ngôn ngữ đã sẵn sàng.')
+    } catch (err: unknown) {
+      setTtsMessage('Lỗi khi tạo hàng loạt: ' + (err instanceof Error ? err.message : 'Unknown error'))
     } finally {
       setTtsBusy(false)
     }
@@ -446,6 +500,19 @@ export function PoiEditor() {
                 {ttsBusy ? 'Đang xuất mp3...' : 'Xuất mp3'}
               </button>
             </div>
+          </div>
+
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+             <button
+                type="button"
+                className="flex-1 rounded-lg border border-blue-500 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                onClick={async () => {
+                  generateVoiceForAllLangs()
+                }}
+                disabled={previewBusy || ttsBusy || save.isPending || audioBusy}
+              >
+                ⚡ Dịch & Trích xuất MP3 Tự động All Language
+              </button>
           </div>
 
           <div className="mt-3 rounded-md bg-stone-50 p-3 text-sm text-stone-700">

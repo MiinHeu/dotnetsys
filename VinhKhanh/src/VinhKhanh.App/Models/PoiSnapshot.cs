@@ -16,7 +16,7 @@ public sealed class PoiSnapshot
 	[JsonPropertyName("priority")] public int Priority { get; set; }
 	[JsonPropertyName("imageUrl")] public string? ImageUrl { get; set; }
 	[JsonPropertyName("audioViUrl")] public string? AudioViUrl { get; set; }
-	[JsonPropertyName("category")] public int Category { get; set; }
+	[JsonPropertyName("category")] public string Category { get; set; } = "";
 	[JsonPropertyName("qrCode")] public string? QrCode { get; set; }
 	[JsonPropertyName("contentVersion")] public int ContentVersion { get; set; }
 	[JsonPropertyName("translations")] public List<PoiTranslationSnapshot>? Translations { get; set; }

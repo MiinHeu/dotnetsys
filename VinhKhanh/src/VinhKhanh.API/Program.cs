@@ -27,6 +27,7 @@ builder.Services.AddControllers()
 	{
 		// Prevent runtime 500 when entities have circular navigation references (EF)
 		options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+		options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
 	});
 builder.Services.AddHealthChecks();
 

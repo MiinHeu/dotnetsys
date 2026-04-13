@@ -12,7 +12,6 @@ import { PoiEditor } from "./pages/PoiEditor";
 import { AdminMap } from "./pages/AdminMap";
 import { ToursAdmin } from "./pages/ToursAdmin";
 import { TourEditor } from "./pages/TourEditor";
-import { Translations } from "./pages/Translations";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { AudioPage } from "./pages/AudioPage";
@@ -22,7 +21,6 @@ import { UserManagement } from "./pages/UserManagement";
 export default function App() {
   const token = useAuthStore((s) => s.token);
   const role = useAuthStore((s) => s.role);
-  const selectedPortal = useAuthStore((s) => s.selectedPortal);
 
   // Not logged in — show auth flow
   if (!token) {
@@ -50,7 +48,6 @@ export default function App() {
         <Route path="/map" element={<AdminMap />} />
         <Route path="/tours" element={<ToursAdmin />} />
         <Route path="/tours/:id" element={<TourEditor />} />
-        <Route path="/translations" element={<Translations />} />
         <Route path="/audio" element={<AudioPage />} />
         <Route path="/change-password" element={<ChangePassword />} />
 
