@@ -52,9 +52,21 @@ public class PoiController(
 	{
 		_ = NormalizeLang(lang);
 
-		var pois = await db.Pois
+		var query = db.Pois
 			.Include(p => p.Translations)
-			.AsNoTracking()
+			.AsNoTracking();
+
+		// Nếu là Owner (và không phải Admin), chỉ cho phép thấy POI của chính mình quản lý
+		if (IsOwnerRole && !AuthClaims.IsAdmin(HttpContext.User))
+		{
+			var uid = CurrentUserId;
+			if (uid.HasValue)
+			{
+				query = query.Where(p => p.OwnerUserId == uid.Value);
+			}
+		}
+
+		var pois = await query
 			.OrderByDescending(p => p.Priority)
 			.ThenBy(p => p.Name)
 			.ToListAsync(ct);
@@ -252,8 +264,14 @@ public class PoiController(
 			|| poi.Priority != updated.Priority
 			|| poi.CooldownSeconds != updated.CooldownSeconds
 			|| poi.Category != updated.Category
-			|| poi.IsActive != updated.IsActive
-			|| poi.OwnerUserId != updated.OwnerUserId;
+			|| poi.IsActive != updated.IsActive;
+
+		// Chỉ Admin mới có quyền chuyển nhượng POI cho người khác
+		if (AuthClaims.IsAdmin(HttpContext.User))
+		{
+			contentChanged = contentChanged || poi.OwnerUserId != updated.OwnerUserId;
+			poi.OwnerUserId = updated.OwnerUserId;
+		}
 
 		var translationsChanged = false;
 		if (updated.Translations != null)
@@ -287,7 +305,6 @@ public class PoiController(
 		poi.AudioViUrl = updated.AudioViUrl;
 		poi.ImageUrl = updated.ImageUrl;
 		poi.QrCode = newQr;
-		poi.OwnerUserId = updated.OwnerUserId;
 
 		if (contentChanged || translationsChanged) poi.ContentVersion++;
 
