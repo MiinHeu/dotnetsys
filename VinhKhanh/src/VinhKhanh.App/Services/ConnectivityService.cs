@@ -23,7 +23,10 @@ public class ConnectivityService
 
 	private async void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
 	{
-		if (e.NetworkAccess != NetworkAccess.Internet)
+		// On Emulators, network often reports as Local or ConstrainedInternet
+		if (e.NetworkAccess != NetworkAccess.Internet && 
+		    e.NetworkAccess != NetworkAccess.Local && 
+		    e.NetworkAccess != NetworkAccess.ConstrainedInternet)
 			return;
 
 		var lang = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "vi");

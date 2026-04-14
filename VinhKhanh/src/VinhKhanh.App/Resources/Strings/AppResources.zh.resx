@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -56,4 +56,10 @@
   <data name="MapLoadingError" xml:space="preserve"><value>地图加载错误.</value></data>
   <data name="NearestLabelFormat" xml:space="preserve"><value>最近: {0}</value></data>
   <data name="PlaybackPoiLabel" xml:space="preserve"><value>讲解: {0}</value></data>
+  <data name="TabPois" xml:space="preserve"><value>餐厅</value></data>
+  <data name="PoiSearchPlaceholder" xml:space="preserve"><value>搜索餐厅...</value></data>
+  <data name="PoiEmptyList" xml:space="preserve"><value>未找到餐厅</value></data>
+  <data name="PoiReloadButton" xml:space="preserve"><value>重新加载数据</value></data>
+  <data name="PlayNarration" xml:space="preserve"><value>播放解说</value></data>
+  <data name="StopNarration" xml:space="preserve"><value>停止解说</value></data>
 </root>

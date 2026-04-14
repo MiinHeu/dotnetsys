@@ -57,4 +57,9 @@
   <data name="NearestLabelFormat" xml:space="preserve"><value>Nearest: {0}</value></data>
   <data name="PlaybackPoiLabel" xml:space="preserve"><value>Playback: {0}</value></data>
   <data name="TabPois" xml:space="preserve"><value>Restaurants</value></data>
+  <data name="PoiSearchPlaceholder" xml:space="preserve"><value>Search restaurants...</value></data>
+  <data name="PoiEmptyList" xml:space="preserve"><value>No restaurants found</value></data>
+  <data name="PoiReloadButton" xml:space="preserve"><value>Reload data</value></data>
+  <data name="PlayNarration" xml:space="preserve"><value>Play Narration</value></data>
+  <data name="StopNarration" xml:space="preserve"><value>Stop Narration</value></data>
 </root>

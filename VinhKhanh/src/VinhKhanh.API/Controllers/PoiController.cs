@@ -13,8 +13,12 @@ namespace VinhKhanh.API.Controllers;
 [ApiController, Route("api/[controller]")]
 public class PoiController(
 	ApplicationDbContext db,
-	IHubContext<VinhKhanhHub> hub) : ControllerBase
+	IHubContext<VinhKhanhHub> hub,
+	VinhKhanh.API.Services.ITranslationService translator,
+	ILogger<PoiController> logger) : ControllerBase
 {
+	private readonly VinhKhanh.API.Services.ITranslationService _translator = translator;
+	private readonly ILogger<PoiController> _logger = logger;
 	private static string? NormalizeQr(string? code)
 	{
 		if (string.IsNullOrWhiteSpace(code))
@@ -53,6 +57,7 @@ public class PoiController(
 		_ = NormalizeLang(lang);
 
 		var query = db.Pois
+			.Where(p => p.IsActive)
 			.Include(p => p.Translations)
 			.AsNoTracking();
 
@@ -140,6 +145,7 @@ public class PoiController(
 			return BadRequest(new { message = "Toa do khong hop le." });
 
 		var pois = await db.Pois
+			.Where(p => p.IsActive)
 			.Include(p => p.Translations)
 			.AsNoTracking()
 			.ToListAsync(ct);
@@ -497,5 +503,76 @@ public class PoiController(
 			if (string.IsNullOrWhiteSpace(t.OriginalDescription))
 				t.OriginalDescription = baseDescription;
 		}
+	}
+	[HttpPost("bulk-translate")]
+	[Authorize(Roles = "Admin")]
+	public async Task<IActionResult> BulkTranslate([FromQuery] bool overwrite = false, CancellationToken ct = default)
+	{
+		var targetLangs = new[] { "en", "ja", "ko", "zh" };
+		var pois = await db.Pois.Include(p => p.Translations).ToListAsync(ct);
+		var count = 0;
+
+		Console.WriteLine("\n=== BAT DAU TIEN TRINH DICH THUAT HANG LOAT ===");
+		_logger.LogInformation("Starting bulk translation for {Count} POIs", pois.Count);
+
+		foreach (var poi in pois)
+		{
+			Console.WriteLine($"> Dang xu ly: {poi.Name} (ID: {poi.Id})");
+			
+			foreach (var lang in targetLangs)
+			{
+				var existing = poi.Translations.FirstOrDefault(t => t.LanguageCode == lang);
+				if (existing != null && !overwrite && !string.IsNullOrWhiteSpace(existing.Description))
+				{
+					continue;
+				}
+
+				Console.WriteLine($"  - Dang dich sang [{lang.ToUpper()}]...");
+				
+				try
+				{
+					var translatedDesc = await _translator.TranslateAsync(poi.Description, "vi", lang, ct);
+					if (!string.IsNullOrWhiteSpace(translatedDesc))
+					{
+						// Giữ nguyên tên gốc, chỉ dịch mô tả
+						var translatedName = poi.Name;
+
+						if (existing != null)
+						{
+							existing.Name = translatedName;
+							existing.Description = translatedDesc;
+							existing.OriginalDescription = poi.Description;
+						}
+						else
+						{
+							poi.Translations.Add(new PoiTranslation
+							{
+								LanguageCode = lang,
+								Name = translatedName,
+								Description = translatedDesc,
+								OriginalDescription = poi.Description
+							});
+						}
+
+						Console.WriteLine($"    [OK] Xong: {translatedName}");
+						count++;
+					}
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"    [LOI] {lang}: {ex.Message}");
+				}
+			}
+
+			if (count > 0)
+			{
+				poi.ContentVersion++;
+				poi.UpdatedAt = DateTime.UtcNow;
+				await db.SaveChangesAsync(ct);
+			}
+		}
+
+		Console.WriteLine($"\n=== DA HOAN TAT: {count} ban dich moi ===");
+		return Ok(new { message = "Bulk translation finished", totalNewTranslations = count });
 	}
 }

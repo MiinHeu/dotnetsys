@@ -57,4 +57,9 @@
   <data name="NearestLabelFormat" xml:space="preserve"><value>Gần nhất: {0}</value></data>
   <data name="PlaybackPoiLabel" xml:space="preserve"><value>Thuyết minh: {0}</value></data>
   <data name="TabPois" xml:space="preserve"><value>Quán ăn</value></data>
+  <data name="PoiSearchPlaceholder" xml:space="preserve"><value>Tìm quán ăn...</value></data>
+  <data name="PoiEmptyList" xml:space="preserve"><value>Không tìm thấy quán ăn nào</value></data>
+  <data name="PoiReloadButton" xml:space="preserve"><value>Tải lại dữ liệu</value></data>
+  <data name="PlayNarration" xml:space="preserve"><value>Nghe thuyết minh</value></data>
+  <data name="StopNarration" xml:space="preserve"><value>Dừng thuyết minh</value></data>
 </root>

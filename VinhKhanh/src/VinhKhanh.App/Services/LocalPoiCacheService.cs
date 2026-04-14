@@ -24,6 +24,11 @@ public sealed class LocalPoiCacheService
 	public async Task SavePoisAsync(IEnumerable<PoiSnapshot> pois, CancellationToken ct = default)
 	{
 		var db = await GetDbAsync();
+
+		// Clear existing and replace to handle deactivations/deletions correctly
+		var existing = await db.Table<CachedPoiEntity>().ToListAsync();
+		foreach (var e in existing) await db.DeleteAsync(e);
+
 		foreach (var p in pois)
 		{
 			ct.ThrowIfCancellationRequested();

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -41,19 +41,25 @@
   <data name="ToursEmptySubtitle" xml:space="preserve"><value>再度同期するか、API接続を確認してください。</value></data>
   <data name="ToursSyncError" xml:space="preserve"><value>ツアーの読み込みエラー。</value></data>
   <data name="ChatSendButton" xml:space="preserve"><value>送信</value></data>
-  <data name="QrScanHint" xml:space="preserve"><value>カメラをQRコードに向けます (vk-poi-123 または /poi/123 を含むURL)</value></data>
-  <data name="QrPlaceholder" xml:space="preserve"><value>POIコードを手動で入力</value></data>
+  <data name="QrScanHint" xml:space="preserve"><value>カメラをQRコードに向けます (vk-poi-123 hoặc URL kết nối /poi/123)</value></data>
+  <data name="QrPlaceholder" xml:space="preserve"><value>POIコードを手 độngで入力</value></data>
   <data name="QrSubmitButton" xml:space="preserve"><value>処理</value></data>
   <data name="QrFoundSatus" xml:space="preserve"><value>到着: {0}</value></data>
   <data name="QrNotFoundStatus" xml:space="preserve"><value>このQRコードに該当するPOIが見つかりません。</value></data>
   <data name="SettingsApiUrlLabel" xml:space="preserve"><value>API URL (末尾の / 無し/有り)</value></data>
   <data name="SettingsGeofenceRadiusLabel" xml:space="preserve"><value>ジオフェンス半径の倍率 (1 = デフォルト)</value></data>
   <data name="SettingsMockGpsLabel" xml:space="preserve"><value>GPS シミュレーションを有効 (.NET Mock)</value></data>
-  <data name="SettingsMockGpsDesc" xml:space="preserve"><value>オン：ブルー・ドットが各POIを自動で通過・ループします。</value></data>
+  <data name="SettingsMockGpsDesc" xml:space="preserve"><value>オン：ブルー・ドットが các POIを tự động để duyệt qua.</value></data>
   <data name="SettingsSaveButton" xml:space="preserve"><value>保存</value></data>
-  <data name="SettingsApiHint" xml:space="preserve"><value>Androidエミュレータ：localhostでなく10.0.2.2。実機：PCのLAN IP。</value></data>
+  <data name="SettingsApiHint" xml:space="preserve"><value>Androidエミュレータ：localhost thay vì 10.0.2.2. Thiết bị thực: IP LAN của PC.</value></data>
   <data name="SettingsSavedSuccess" xml:space="preserve"><value>設定保存成功。</value></data>
   <data name="MapLoadingError" xml:space="preserve"><value>マップ読み込みエラー。</value></data>
   <data name="NearestLabelFormat" xml:space="preserve"><value>最寄りの: {0}</value></data>
   <data name="PlaybackPoiLabel" xml:space="preserve"><value>解説: {0}</value></data>
+  <data name="TabPois" xml:space="preserve"><value>飲食店</value></data>
+  <data name="PoiSearchPlaceholder" xml:space="preserve"><value>飲食店を検索...</value></data>
+  <data name="PoiEmptyList" xml:space="preserve"><value>飲食店は見つかりませんでした</value></data>
+  <data name="PoiReloadButton" xml:space="preserve"><value>データを再読み込み</value></data>
+  <data name="PlayNarration" xml:space="preserve"><value>解説を聞く</value></data>
+  <data name="StopNarration" xml:space="preserve"><value>解説を止める</value></data>
 </root>

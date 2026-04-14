@@ -23,11 +23,11 @@
     </Shell.ItemTemplate>
 
     <TabBar>
-        <ShellContent Title="{x:Static res:AppResources.TabMap}" ContentTemplate="{DataTemplate local:MainPage}" Route="MainPage" />
-        <ShellContent Title="{x:Static res:AppResources.TabPois}" ContentTemplate="{DataTemplate local:PoiListPage}" Route="PoiListPage" />
-        <ShellContent Title="{x:Static res:AppResources.TabTours}" ContentTemplate="{DataTemplate local:ToursPage}" Route="Tours" />
-        <ShellContent Title="{x:Static res:AppResources.TabChat}" ContentTemplate="{DataTemplate local:ChatPage}" Route="Chat" />
-        <ShellContent Title="{x:Static res:AppResources.TabScan}" ContentTemplate="{DataTemplate local:QrScanPage}" Route="Qr" />
-        <ShellContent Title="{x:Static res:AppResources.TabSettings}" ContentTemplate="{DataTemplate local:SettingsPage}" Route="Settings" />
+        <ShellContent x:Name="TabMap" Title="{x:Static res:AppResources.TabMap}" ContentTemplate="{DataTemplate local:MainPage}" Route="MainPage" />
+        <ShellContent x:Name="TabPois" Title="{x:Static res:AppResources.TabPois}" ContentTemplate="{DataTemplate local:PoiListPage}" Route="PoiListPage" />
+        <ShellContent x:Name="TabTours" Title="{x:Static res:AppResources.TabTours}" ContentTemplate="{DataTemplate local:ToursPage}" Route="Tours" />
+        <ShellContent x:Name="TabChat" Title="{x:Static res:AppResources.TabChat}" ContentTemplate="{DataTemplate local:ChatPage}" Route="Chat" />
+        <ShellContent x:Name="TabScan" Title="{x:Static res:AppResources.TabScan}" ContentTemplate="{DataTemplate local:QrScanPage}" Route="Qr" />
+        <ShellContent x:Name="TabSettings" Title="{x:Static res:AppResources.TabSettings}" ContentTemplate="{DataTemplate local:SettingsPage}" Route="Settings" />
     </TabBar>
 </Shell>

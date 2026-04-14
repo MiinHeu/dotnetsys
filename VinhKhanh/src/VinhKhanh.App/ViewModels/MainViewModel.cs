@@ -50,7 +50,17 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 
 	public ObservableCollection<PoiSnapshot> Pois { get; } = new();
 
-	[ObservableProperty] private string _selectedLanguage = "vi";
+	[ObservableProperty] 
+	[NotifyPropertyChangedFor(nameof(PageTitle))]
+	[NotifyPropertyChangedFor(nameof(SearchPlaceholder))]
+	[NotifyPropertyChangedFor(nameof(EmptyListText))]
+	[NotifyPropertyChangedFor(nameof(ReloadButtonText))]
+	private string _selectedLanguage = "vi";
+
+	public string PageTitle => VinhKhanh.App.Resources.Strings.AppResources.TabPois;
+	public string SearchPlaceholder => VinhKhanh.App.Resources.Strings.AppResources.PoiSearchPlaceholder;
+	public string EmptyListText => VinhKhanh.App.Resources.Strings.AppResources.PoiEmptyList;
+	public string ReloadButtonText => VinhKhanh.App.Resources.Strings.AppResources.PoiReloadButton;
 	[ObservableProperty] private string _statusMessage = "";
 	[ObservableProperty] private string _nearestLabel = "";
 	[ObservableProperty] private bool _isTracking;
@@ -59,7 +69,21 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 	[ObservableProperty] private int _nearestPoiId;
 
 	partial void OnSelectedLanguageChanged(string value)
-		=> Microsoft.Maui.Storage.Preferences.Set(AppPreferences.UiLanguage, value);
+	{
+		Microsoft.Maui.Storage.Preferences.Set(AppPreferences.UiLanguage, value);
+		
+		// Ép tệp tài nguyên hệ thống nạp lại theo ngôn ngữ mới
+		VinhKhanh.App.Resources.Strings.AppResources.Culture = new System.Globalization.CultureInfo(value);
+		
+		// Kích hoạt cập nhật lại các thuộc tính hiển thị (DisplayName, DisplayDescription) cho toàn bộ danh sách
+		foreach (var p in Pois)
+		{
+			p.RefreshTranslations();
+		}
+
+		// Thông báo cho Shell cập nhật lại các Tab
+		WeakReferenceMessenger.Default.Send(new LanguageChangedMessage(value));
+	}
 
 	[RelayCommand]
 	private async Task SyncPoisAsync()
@@ -68,20 +92,12 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		try
 		{
 			var remote = await _api.GetPoisAsync(SelectedLanguage);
-			if (remote.Count > 0)
-			{
-				await _cache.SavePoisAsync(remote);
-				ReplacePois(remote);
-				StatusMessage = string.Format(VinhKhanh.App.Resources.Strings.AppResources.SyncStatusSuccess, remote.Count);
-			}
-			else
-			{
-				var local = await _cache.LoadPoisAsync();
-				ReplacePois(local);
-				StatusMessage = local.Count > 0
-					? string.Format(VinhKhanh.App.Resources.Strings.AppResources.SyncStatusOffline, local.Count)
-					: VinhKhanh.App.Resources.Strings.AppResources.SyncStatusNoData;
-			}
+			
+			// Luôn lưu và cập nhật danh sách (kể cả khi trống) để đảm bảo đồng bộ IsActive từ Server
+			await _cache.SavePoisAsync(remote);
+			ReplacePois(remote);
+			
+			StatusMessage = string.Format(VinhKhanh.App.Resources.Strings.AppResources.SyncStatusSuccess, remote.Count);
 
 			await _api.PostHistoryLogAsync(new AppHistoryLogDto(_session.SessionId, "SYNC_POI",
 				LanguageCode: SelectedLanguage, Payload: $"count={Pois.Count}"));

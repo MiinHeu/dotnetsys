@@ -538,5 +538,49 @@ namespace VinhKhanh.App.Resources.Strings {
                 return ResourceManager.GetString("TabPois", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search restaurants....
+        /// </summary>
+        public static string PoiSearchPlaceholder {
+            get {
+                return ResourceManager.GetString("PoiSearchPlaceholder", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No restaurants found.
+        /// </summary>
+        public static string PoiEmptyList {
+            get {
+                return ResourceManager.GetString("PoiEmptyList", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Reload data.
+        /// </summary>
+        public static string PoiReloadButton {
+            get {
+                return ResourceManager.GetString("PoiReloadButton", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   Looks up a localized string similar to Play Narration.
+        /// </summary>
+        public static string PlayNarration {
+            get {
+                return ResourceManager.GetString("PlayNarration", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Stop Narration.
+        /// </summary>
+        public static string StopNarration {
+            get {
+                return ResourceManager.GetString("StopNarration", resourceCulture);
+            }
+        }
     }
 }

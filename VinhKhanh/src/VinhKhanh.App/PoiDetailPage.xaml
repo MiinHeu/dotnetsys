@@ -5,7 +5,7 @@
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="VinhKhanh.App.PoiDetailPage"
              x:DataType="vm:PoiDetailViewModel"
-             Title="Chi tiết quán ăn"
+             Title="{Binding PageTitle}"
              Shell.TabBarIsVisible="False"
              BackgroundColor="White">
 
@@ -47,7 +47,7 @@
                 <StackLayout Spacing="15">
                     <!-- Title & Category -->
                     <StackLayout Spacing="5">
-                        <Label Text="{Binding Poi.Name}" 
+                        <Label Text="{Binding DisplayName}" 
                                FontSize="24" 
                                FontAttributes="Bold" 
                                TextColor="#111827" />
@@ -61,12 +61,12 @@
                     <BoxView HeightRequest="1" Color="#F3F4F6" />
 
                     <!-- Description -->
-                    <Label Text="{Binding Poi.Description}" 
+                    <Label Text="{Binding DisplayDescription}" 
                            FontSize="16" 
                            TextColor="#4B5563" 
                            LineHeight="1.5" />
 
-                    <Label Text="Vị trí quán (Click vào Tiêu đề để quay lại Bản đồ zoom tới quán)" 
+                    <Label Text="{x:Static res:AppResources.PlaybackPoiLabel}" 
                            FontSize="12" 
                            TextColor="#9CA3AF" 
                            Margin="0,20,0,0" />
@@ -76,7 +76,7 @@
 
         <!-- Floating Action Button: Play Narration -->
         <Button Grid.Row="1"
-                Text="Nghe thuyết minh"
+                Text="{Binding PlayNarrationText}"
                 Command="{Binding PlayNarrationCommand}"
                 BackgroundColor="#FF5A1F"
                 TextColor="White"
@@ -92,7 +92,7 @@
         </Button>
 
         <Button Grid.Row="1"
-                Text="Dừng thuyết minh"
+                Text="{Binding StopNarrationText}"
                 Command="{Binding StopNarrationCommand}"
                 BackgroundColor="#E5E7EB"
                 TextColor="#374151"

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -41,7 +41,7 @@
   <data name="ToursEmptySubtitle" xml:space="preserve"><value>다시 동기화 하거나 API 연결 확인.</value></data>
   <data name="ToursSyncError" xml:space="preserve"><value>투어 불러오기 오류.</value></data>
   <data name="ChatSendButton" xml:space="preserve"><value>보내기</value></data>
-  <data name="QrScanHint" xml:space="preserve"><value>카메라를 QR 코드에 맞추세요 (vk-poi-123 또는 URL /poi/123 포함)</value></data>
+  <data name="QrScanHint" xml:space="preserve"><value>카메라를 QR 코드에 맞추세요 (vk-poi-123 hoặc URL kết nối /poi/123)</value></data>
   <data name="QrPlaceholder" xml:space="preserve"><value>수동으로 POI 코드 입력</value></data>
   <data name="QrSubmitButton" xml:space="preserve"><value>처리</value></data>
   <data name="QrFoundSatus" xml:space="preserve"><value>도착: {0}</value></data>
@@ -49,11 +49,17 @@
   <data name="SettingsApiUrlLabel" xml:space="preserve"><value>API URL (끝에 / 포함 여부 관계 없음)</value></data>
   <data name="SettingsGeofenceRadiusLabel" xml:space="preserve"><value>지오펜스 반경 배수 (1 = 기본)</value></data>
   <data name="SettingsMockGpsLabel" xml:space="preserve"><value>GPS 시뮬레이션 활성화 (.NET Mock)</value></data>
-  <data name="SettingsMockGpsDesc" xml:space="preserve"><value>켜짐: 블루닷이 각 POI를 자동으로 통과합니다.</value></data>
+  <data name="SettingsMockGpsDesc" xml:space="preserve"><value>켜짐: 블루닷이 các POI를 tự động 통과합니다.</value></data>
   <data name="SettingsSaveButton" xml:space="preserve"><value>저장</value></data>
-  <data name="SettingsApiHint" xml:space="preserve"><value>안드로이드 에뮬레이터: localhost 대신 10.0.2.2. 실제 장치: PC의 LAN IP.</value></data>
+  <data name="SettingsApiHint" xml:space="preserve"><value>안드로이드 에뮬레이터: localhost thay vì 10.0.2.2. Thiết bị thực: IP LAN của PC.</value></data>
   <data name="SettingsSavedSuccess" xml:space="preserve"><value>설정 저장 완료.</value></data>
   <data name="MapLoadingError" xml:space="preserve"><value>지도 로딩 오류.</value></data>
   <data name="NearestLabelFormat" xml:space="preserve"><value>가장 가까운 곳: {0}</value></data>
   <data name="PlaybackPoiLabel" xml:space="preserve"><value>해설: {0}</value></data>
+  <data name="TabPois" xml:space="preserve"><value>식당</value></data>
+  <data name="PoiSearchPlaceholder" xml:space="preserve"><value>식당 검색...</value></data>
+  <data name="PoiEmptyList" xml:space="preserve"><value>식당을 찾을 수 없습니다</value></data>
+  <data name="PoiReloadButton" xml:space="preserve"><value>데이터 다시 불러오기</value></data>
+  <data name="PlayNarration" xml:space="preserve"><value>내레이션 재생</value></data>
+  <data name="StopNarration" xml:space="preserve"><value>내레이션 중지</value></data>
 </root>

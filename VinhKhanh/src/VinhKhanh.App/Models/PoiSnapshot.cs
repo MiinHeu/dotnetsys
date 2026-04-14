@@ -1,8 +1,10 @@
 using System.Text.Json.Serialization;
+using CommunityToolkit.Mvvm.ComponentModel;
+using VinhKhanh.App.Services;
 
 namespace VinhKhanh.App.Models;
 
-public sealed class PoiSnapshot
+public partial class PoiSnapshot : ObservableObject
 {
 	[JsonPropertyName("id")] public int Id { get; set; }
 	[JsonPropertyName("name")] public string Name { get; set; } = "";
@@ -20,6 +22,19 @@ public sealed class PoiSnapshot
 	[JsonPropertyName("qrCode")] public string? QrCode { get; set; }
 	[JsonPropertyName("contentVersion")] public int ContentVersion { get; set; }
 	[JsonPropertyName("translations")] public List<PoiTranslationSnapshot>? Translations { get; set; }
+	
+	// Thuộc tính hiển thị thông minh (Tự động lấy ngôn ngữ hiện tại)
+	[JsonIgnore]
+	public string DisplayName => ResolveName(Microsoft.Maui.Storage.Preferences.Get(Services.AppPreferences.UiLanguage, "vi"));
+
+	[JsonIgnore]
+	public string DisplayDescription => ResolveDescription(Microsoft.Maui.Storage.Preferences.Get(Services.AppPreferences.UiLanguage, "vi"));
+
+	public void RefreshTranslations()
+	{
+		OnPropertyChanged(nameof(DisplayName));
+		OnPropertyChanged(nameof(DisplayDescription));
+	}
 
 	public string ResolveName(string lang)
 	{
