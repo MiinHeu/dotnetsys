@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Maui.Devices;
 using VinhKhanh.App.Models;
 using VinhKhanh.Shared.DTOs;
 
@@ -23,13 +24,17 @@ public sealed class ApiClientService
 
 	public static string GetDefaultApiBase()
 	{
+		if (DeviceInfo.DeviceType == DeviceType.Virtual)
+		{
 #if ANDROID
-		return "http://10.0.2.2:5283/";
-#elif IOS || MACCATALYST
-		return "http://127.0.0.1:5283/";
+			return "http://10.0.2.2:5283/";
 #else
-		return "http://localhost:5283/";
+			return "http://localhost:5283/";
 #endif
+		}
+
+		// Với máy thật, ưu tiên lấy IP đã cấu hình trong Preferences
+		return Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, "http://NHAP-IP-CUA-BAN:5283/");
 	}
 
 	public async Task<IReadOnlyList<PoiSnapshot>> GetPoisAsync(string lang, CancellationToken ct = default)
