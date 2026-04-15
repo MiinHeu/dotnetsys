@@ -40,6 +40,25 @@
                             HeightRequest="40"/>
                 </HorizontalStackLayout>
             </Border>
+            
+            <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                    IsVisible="{Binding SelectedTour, Converter={StaticResource IsNotNullConverter}}"
+                    Stroke="#EA580C" StrokeThickness="1"
+                    Background="#FFF7ED"
+                    StrokeShape="RoundRectangle 24"
+                    Padding="16,8"
+                    Margin="0,12,0,0"
+                    HorizontalOptions="Center" VerticalOptions="Start"
+                    Shadow="{Shadow Brush=#EA580C, Offset='0,4', Opacity=0.2, Radius=8}">
+                <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
+                    <Label Text="📍" FontSize="16" VerticalOptions="Center"/>
+                    <Label Text="{Binding SelectedTour.Name}" FontSize="14" FontAttributes="Bold" TextColor="#9A3412" VerticalOptions="Center"/>
+                    <Button Text="✕" Command="{Binding ClearTourCommand}"
+                            BackgroundColor="Transparent" TextColor="#EA580C"
+                            FontAttributes="Bold" FontSize="18"
+                            Padding="0" WidthRequest="32" HeightRequest="32" />
+                </HorizontalStackLayout>
+            </Border>
 
             <Button x:Name="TrackBtn"
                     Grid.Row="1" Grid.Column="1"

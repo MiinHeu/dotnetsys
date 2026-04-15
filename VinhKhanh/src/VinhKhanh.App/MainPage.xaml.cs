@@ -1,8 +1,14 @@
 using System.Collections.Specialized;
 using Mapsui;
 using Mapsui.Projections;
-using Mapsui.Tiling;
 using Mapsui.UI.Maui;
+using Mapsui.Layers;
+using Mapsui.Providers;
+using Mapsui.Styles;
+using Mapsui.Tiling;
+using Mapsui.Nts;
+using NetTopologySuite.Geometries;
+using Position = Mapsui.UI.Maui.Position;
 using VinhKhanh.App.Models;
 using VinhKhanh.App.Services;
 using VinhKhanh.App.ViewModels;
@@ -17,6 +23,7 @@ public partial class MainPage : ContentPage
 	private readonly NarrationService _narration;
 	private PoiSnapshot? _selectedPoi;
 	private bool _centerOnNextLocation = true;
+	private MemoryLayer? _tourLayer;
 
 	public MainPage()
 	{
@@ -45,6 +52,8 @@ public partial class MainPage : ContentPage
 			if (e.PropertyName == nameof(MainViewModel.IsTracking))
 				Dispatcher.Dispatch(() =>
 					TrackBtn.Text = _vm.IsTracking ? VinhKhanh.App.Resources.Strings.AppResources.GpsButtonOff : VinhKhanh.App.Resources.Strings.AppResources.GpsButtonOn);
+			if (e.PropertyName == nameof(MainViewModel.SelectedTour))
+				Dispatcher.Dispatch(UpdateTourPath);
 		};
 
 		_vm.Pois.CollectionChanged += OnPoisChanged;
@@ -225,6 +234,74 @@ public partial class MainPage : ContentPage
 		{
 			StatusLabel.Text = string.Format(VinhKhanh.App.Resources.Strings.AppResources.NarrationStatusError, ex.Message);
 			System.Diagnostics.Debug.WriteLine($"[MainPage] Playback error: {ex}");
+		}
+	}
+
+	private void UpdateTourPath()
+	{
+		// 1. Don dep Layer cu
+		if (_tourLayer != null)
+		{
+			StreetMap.Map.Layers.Remove(_tourLayer);
+			_tourLayer = null;
+		}
+
+		var tour = _vm.SelectedTour;
+		if (tour == null || tour.Stops == null || tour.Stops.Count < 2)
+		{
+			StreetMap.RefreshGraphics();
+			return;
+		}
+
+		// 2. Tao LineString tu danh sach stops (NTS style)
+		var coordinates = new List<Coordinate>();
+		var points = new List<Mapsui.MPoint>();
+		
+		foreach (var stop in tour.Stops.OrderBy(s => s.StopOrder))
+		{
+			if (stop.Poi == null) continue;
+			var sm = SphericalMercator.FromLonLat(stop.Poi.Longitude, stop.Poi.Latitude);
+			coordinates.Add(new Coordinate(sm.x, sm.y));
+			points.Add(new Mapsui.MPoint(sm.x, sm.y));
+		}
+
+		if (coordinates.Count < 2) return;
+		var lineString = new NetTopologySuite.Geometries.LineString(coordinates.ToArray());
+
+		// 3. Tao Layer moi voi Style mau cam
+		var feature = new GeometryFeature { Geometry = lineString };
+		_tourLayer = new MemoryLayer
+		{
+			Name = "SelectedTourPath",
+			Features = new[] { feature },
+			Style = new VectorStyle
+			{
+				Line = new Pen
+				{
+					Color = Mapsui.Styles.Color.Orange,
+					Width = 4,
+					PenStyle = PenStyle.Solid,
+					PenStrokeCap = PenStrokeCap.Round
+				}
+			}
+		};
+
+		StreetMap.Map.Layers.Add(_tourLayer);
+		StreetMap.RefreshGraphics();
+
+		// 4. Tu dong Zoom de thay tron ven lo trinh
+		if (points.Count > 0)
+		{
+			var minX = points.Min(p => p.X);
+			var minY = points.Min(p => p.Y);
+			var maxX = points.Max(p => p.X);
+			var maxY = points.Max(p => p.Y);
+			
+			// Them padding 10%
+			var dx = (maxX - minX) * 0.2;
+			var dy = (maxY - minY) * 0.2;
+			
+			StreetMap.Map.Navigator.ZoomToBox(new Mapsui.MRect(minX - dx, minY - dy, maxX + dx, maxY + dy));
 		}
 	}
 }

@@ -47,15 +47,28 @@ public partial class PoiSnapshot : ObservableObject
 	public string ResolveName(string lang)
 	{
 		var t = Translations?.FirstOrDefault(x => x.LanguageCode == lang);
-		return string.IsNullOrWhiteSpace(t?.Name) ? Name : t.Name;
+		if (!string.IsNullOrWhiteSpace(t?.Name)) return t.Name;
+
+		// Nếu yêu cầu tiếng Việt, ưu tiên lấy Name gốc thay vì dự phòng sang tiếng Anh
+		if (lang == "vi") return Name;
+
+		t = Translations?.FirstOrDefault(x => x.LanguageCode == "en");
+		if (!string.IsNullOrWhiteSpace(t?.Name)) return t.Name;
+
+		return Name;
 	}
 
 	public string ResolveDescription(string lang)
 	{
 		var t = Translations?.FirstOrDefault(x => x.LanguageCode == lang);
 		if (!string.IsNullOrWhiteSpace(t?.Description)) return t.Description;
+
+		// Nếu yêu cầu tiếng Việt, ưu tiên lấy Description gốc thay vì dự phòng sang tiếng Anh
+		if (lang == "vi") return Description;
+
 		t = Translations?.FirstOrDefault(x => x.LanguageCode == "en");
 		if (!string.IsNullOrWhiteSpace(t?.Description)) return t.Description;
+
 		return Description;
 	}
 

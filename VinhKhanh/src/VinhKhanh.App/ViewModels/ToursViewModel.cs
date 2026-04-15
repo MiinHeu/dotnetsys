@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VinhKhanh.App.Models;
@@ -11,11 +11,21 @@ public partial class ToursViewModel : ObservableObject
 {
 	private readonly ApiClientService _api;
 	private readonly ILocalDbService _localDb;
+	private readonly MainViewModel _mainVm;
 
-	public ToursViewModel(ApiClientService api, ILocalDbService localDb)
+	public ToursViewModel(ApiClientService api, ILocalDbService localDb, MainViewModel mainVm)
 	{
 		_api = api;
 		_localDb = localDb;
+		_mainVm = mainVm;
+	}
+
+	[RelayCommand]
+	private async Task SelectTour(TourSnapshot tour)
+	{
+		if (tour == null) return;
+		_mainVm.SelectedTour = tour;
+		await Shell.Current.GoToAsync("//MainPage");
 	}
 
 	public ObservableCollection<TourSnapshot> Tours { get; } = new();

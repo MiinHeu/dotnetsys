@@ -67,6 +67,13 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 	[ObservableProperty] private double _userLatitude = 10.7535;
 	[ObservableProperty] private double _userLongitude = 106.6783;
 	[ObservableProperty] private int _nearestPoiId;
+	[ObservableProperty] private TourSnapshot? _selectedTour;
+
+	[RelayCommand]
+	private void ClearTour()
+	{
+		SelectedTour = null;
+	}
 
 	partial void OnSelectedLanguageChanged(string value)
 	{

@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:res="clr-namespace:VinhKhanh.App.Resources.Strings"
+             xmlns:viewModels="clr-namespace:VinhKhanh.App.ViewModels"
              x:Class="VinhKhanh.App.ToursPage"
              Title="{x:Static res:AppResources.TabTours}"
              BackgroundColor="#F8FAFC">
@@ -27,6 +28,9 @@
                         <Border Stroke="#E2E8F0" StrokeThickness="1"
                                 Background="#FFFFFF" StrokeShape="RoundRectangle 16"
                                 Shadow="{Shadow Brush=#000000, Offset='0,8', Opacity=0.05, Radius=12}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:ToursViewModel}}, Path=SelectTourCommand}" CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
                             <VerticalStackLayout Padding="20" Spacing="8">
                                 <Label Text="{Binding Name}" FontSize="20" FontAttributes="Bold" TextColor="#0F172A" />
                                 <Label Text="{Binding Description}" FontSize="15" TextColor="#334155" MaxLines="3" LineBreakMode="WordWrap" />
