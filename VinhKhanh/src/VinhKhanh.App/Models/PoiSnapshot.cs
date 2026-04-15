@@ -16,7 +16,14 @@ public partial class PoiSnapshot : ObservableObject
 	[JsonPropertyName("triggerRadiusMeters")] public double TriggerRadiusMeters { get; set; }
 	[JsonPropertyName("cooldownSeconds")] public int CooldownSeconds { get; set; }
 	[JsonPropertyName("priority")] public int Priority { get; set; }
-	[JsonPropertyName("imageUrl")] public string? ImageUrl { get; set; }
+	private string? _imageUrl;
+	[JsonPropertyName("imageUrl")] 
+	public string? ImageUrl 
+	{ 
+		get => FixUrl(_imageUrl); 
+		set => _imageUrl = value; 
+	}
+
 	[JsonPropertyName("audioViUrl")] public string? AudioViUrl { get; set; }
 	[JsonPropertyName("category")] public string Category { get; set; } = "";
 	[JsonPropertyName("qrCode")] public string? QrCode { get; set; }
@@ -34,6 +41,7 @@ public partial class PoiSnapshot : ObservableObject
 	{
 		OnPropertyChanged(nameof(DisplayName));
 		OnPropertyChanged(nameof(DisplayDescription));
+		OnPropertyChanged(nameof(ImageUrl));
 	}
 
 	public string ResolveName(string lang)
@@ -58,12 +66,22 @@ public partial class PoiSnapshot : ObservableObject
 			: (lang == "vi" && !string.IsNullOrWhiteSpace(AudioViUrl) ? AudioViUrl
 			: Translations?.FirstOrDefault(x => x.LanguageCode == "en")?.AudioUrl);
 
-		// Debug logging
-		System.Diagnostics.Debug.WriteLine($"[ResolveAudioUrl] Lang={lang}, FoundUrl={audioUrl ?? "(null)"}, " +
-			$"TranslationsCount={Translations?.Count ?? 0}, " +
-			$"HasEnAudio={Translations?.Any(x => x.LanguageCode == "en" && !string.IsNullOrEmpty(x.AudioUrl)) ?? false}");
+		return FixUrl(audioUrl);
+	}
 
-		return audioUrl;
+	private static string? FixUrl(string? url)
+	{
+		if (string.IsNullOrWhiteSpace(url)) return url;
+
+		// Trên giả lập Android, localhost trỏ vào chính nó.
+		// Cần đổi sang 10.0.2.2 để truy cập vào máy tính (Host).
+		if (Microsoft.Maui.Devices.DeviceInfo.DeviceType == Microsoft.Maui.Devices.DeviceType.Virtual 
+		    && Microsoft.Maui.Devices.DeviceInfo.Platform == Microsoft.Maui.Devices.DevicePlatform.Android)
+		{
+			return url.Replace("localhost", "10.0.2.2")
+			          .Replace("127.0.0.1", "10.0.2.2");
+		}
+		return url;
 	}
 }
 

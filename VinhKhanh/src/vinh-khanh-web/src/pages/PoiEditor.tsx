@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState, type ChangeEvent } from 'react'
 import { api, type Poi } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 
@@ -237,8 +237,10 @@ export function PoiEditor() {
       qc.invalidateQueries({ queryKey: ['pois'] })
       navigate('/pois')
     },
-    onError: (err) => {
+    onError: (err: any) => {
       console.error('Mutation error:', err)
+      const message = err.response?.data?.message || 'Có lỗi xảy ra khi lưu dữ liệu.'
+      alert(message)
     },
   })
 
@@ -406,6 +408,32 @@ export function PoiEditor() {
       setTtsMessage('Lỗi khi tạo hàng loạt: ' + (err instanceof Error ? err.message : 'Unknown error'))
     } finally {
       setTtsBusy(false)
+    }
+  }
+
+  const [imageBusy, setImageBusy] = useState(false)
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImageBusy(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const { data } = await api.post<{ url: string }>('/api/upload/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+
+      if (data?.url) {
+        setForm((prev) => ({ ...prev, imageUrl: data.url }))
+      }
+    } catch (err) {
+      console.error('Image upload error:', err)
+      alert('Không upload được ảnh. Vui lòng thử lại.')
+    } finally {
+      setImageBusy(false)
     }
   }
 
@@ -641,14 +669,32 @@ export function PoiEditor() {
           />
         </label>
 
-        <label className="text-sm">
-          Ảnh URL
-          <input
-            className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
-            value={form.imageUrl ?? ''}
-            onChange={(e) => setForm({ ...form, imageUrl: e.target.value || null })}
-          />
-        </label>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold">Hình ảnh Quán ăn</label>
+          <div className="flex items-center gap-4">
+            {form.imageUrl && (
+              <div className="relative h-20 w-20 overflow-hidden rounded-lg border">
+                <img src={form.imageUrl} className="h-full w-full object-cover" />
+              </div>
+            )}
+            <div className="flex-1">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                id="image-upload"
+              />
+              <label
+                htmlFor="image-upload"
+                className="inline-block cursor-pointer rounded-lg bg-orange-100 px-4 py-2 text-sm font-medium text-orange-700 hover:bg-orange-200"
+              >
+                {imageBusy ? 'Đang tải lên...' : 'Chọn ảnh từ máy'}
+              </label>
+              <p className="mt-1 text-xs text-stone-500">Hỗ trợ: JPG, PNG, WEBP. Tối đa 10MB.</p>
+            </div>
+          </div>
+        </div>
 
         <label className="text-sm">
           Audio VI URL
