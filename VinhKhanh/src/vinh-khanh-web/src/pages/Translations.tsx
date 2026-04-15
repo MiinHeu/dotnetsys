@@ -51,12 +51,17 @@ export function Translations() {
   }, [poiQ.data, lang, poiId])
 
   return (
-    <div className="mx-auto max-w-xl space-y-4">
-      <h2 className="text-lg font-semibold">Bản dịch POI</h2>
-      <label className="block text-sm">
+    <div className="vk-page mx-auto max-w-3xl">
+      <section className="vk-page-header">
+        <h2 className="vk-page-title">Quản lý bản dịch nội dung</h2>
+        <p className="vk-page-subtitle">Biên tập tên, mô tả và audio theo từng ngôn ngữ cho mỗi quán ăn.</p>
+      </section>
+
+      <section className="vk-card p-5 md:p-6 space-y-4">
+      <label className="block text-sm font-medium text-slate-700">
         Chọn POI
         <select
-          className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
+          className="vk-input mt-1"
           value={poiId ?? ''}
           onChange={(e) => setPoiId(e.target.value ? Number(e.target.value) : null)}
         >
@@ -71,47 +76,47 @@ export function Translations() {
 
       {poiId != null && (
         <>
-          <label className="block text-sm">
+          <label className="block text-sm font-medium text-slate-700">
             Mã ngôn ngữ
             <input
-              className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
+              className="vk-input mt-1"
               value={lang}
               onChange={(e) => setLang(e.target.value)}
               placeholder="en, zh, ko…"
             />
           </label>
           {poiQ.data?.translations?.some((x) => x.languageCode === lang) && (
-            <p className="text-xs text-stone-500">Đang sửa bản dịch hiện có cho {lang}.</p>
+            <p className="text-xs text-emerald-700">Đang sửa bản dịch hiện có cho `{lang}`.</p>
           )}
-          <label className="block text-sm">
+          <label className="block text-sm font-medium text-slate-700">
             Tên
             <input
-              className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
+              className="vk-input mt-1"
               value={tName}
               onChange={(e) => setTName(e.target.value)}
               placeholder={poiQ.data?.name}
             />
           </label>
-          <label className="block text-sm">
+          <label className="block text-sm font-medium text-slate-700">
             Mô tả
             <textarea
-              className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
+              className="vk-input mt-1 min-h-28"
               rows={3}
               value={tDesc}
               onChange={(e) => setTDesc(e.target.value)}
             />
           </label>
-          <label className="block text-sm">
+          <label className="block text-sm font-medium text-slate-700">
             URL audio (tuỳ chọn)
             <input
-              className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
+              className="vk-input mt-1"
               value={tAudio}
               onChange={(e) => setTAudio(e.target.value)}
             />
           </label>
           <button
             type="button"
-            className="rounded-lg bg-orange-600 px-4 py-2 text-white"
+            className="vk-btn-primary"
             onClick={() => {
               if (!tName.trim() || !tDesc.trim()) {
                 alert('Nhập tên và mô tả bản dịch.')
@@ -125,6 +130,7 @@ export function Translations() {
           </button>
         </>
       )}
+      </section>
     </div>
   )
 }

@@ -218,21 +218,25 @@ public sealed class NarrationService(IAudioManager audioManager, ILogger<Narrati
 					var locale = await PickLocaleAsync(lang, ct);
 					logger.LogInformation("TTS locale selected: {Locale}", locale?.Language ?? "default");
 
-					if (locale != null)
+					// TextToSpeech on Android requires the main thread
+					await MainThread.InvokeOnMainThreadAsync(async () =>
 					{
-						var options = new SpeechOptions
+						if (locale != null)
 						{
-							Locale = locale,
-							Volume = 1f,
-							Pitch = 1f,
-							Rate = 0.92f
-						};
-						await TextToSpeech.Default.SpeakAsync(textToSpeak, options);
-					}
-					else
-					{
-						await TextToSpeech.Default.SpeakAsync(textToSpeak);
-					}
+							var options = new SpeechOptions
+							{
+								Locale = locale,
+								Volume = 1f,
+								Pitch = 1f,
+								Rate = 0.92f
+							};
+							await TextToSpeech.Default.SpeakAsync(textToSpeak, options, ct);
+						}
+						else
+						{
+							await TextToSpeech.Default.SpeakAsync(textToSpeak, cancelToken: ct);
+						}
+					});
 
 					logger.LogInformation("TTS completed successfully");
 					return ElapsedListenSeconds(sw);

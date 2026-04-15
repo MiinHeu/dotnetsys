@@ -22,7 +22,6 @@ import { UserManagement } from "./pages/UserManagement";
 export default function App() {
   const token = useAuthStore((s) => s.token);
   const role = useAuthStore((s) => s.role);
-  const selectedPortal = useAuthStore((s) => s.selectedPortal);
 
   // Not logged in — show auth flow
   if (!token) {

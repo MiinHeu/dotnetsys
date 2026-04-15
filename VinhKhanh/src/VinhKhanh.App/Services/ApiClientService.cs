@@ -24,7 +24,7 @@ public sealed class ApiClientService
 #if ANDROID
 		return "http://10.0.2.2:5283/";
 #elif IOS || MACCATALYST
-		return "http://127.0.0.1:5283/";
+		return "http://127.0.0.1:5283/"; 
 #else
 		return "http://localhost:5283/";
 #endif
@@ -46,18 +46,34 @@ public sealed class ApiClientService
 
 	public async Task<PoiSnapshot?> GetPoiAsync(int id, CancellationToken ct = default)
 	{
-		using var http = CreateClient();
-		return await http.GetFromJsonAsync<PoiSnapshot>($"api/poi/{id}", JsonOpts, ct);
+		try
+		{
+			using var http = CreateClient();
+			var res = await http.GetAsync($"api/poi/{id}", ct);
+			if (!res.IsSuccessStatusCode) return null;
+			return await res.Content.ReadFromJsonAsync<PoiSnapshot>(JsonOpts, ct);
+		}
+		catch
+		{
+			return null;
+		}
 	}
 
 	public async Task<PoiSnapshot?> GetPoiByQrCodeAsync(string qrCode, CancellationToken ct = default)
 	{
-		var code = Uri.EscapeDataString(qrCode.Trim());
-		using var http = CreateClient();
-		var res = await http.GetAsync($"api/poi/qrcode/{code}", ct);
-		if (res.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
-		res.EnsureSuccessStatusCode();
-		return await res.Content.ReadFromJsonAsync<PoiSnapshot>(JsonOpts, ct);
+		try
+		{
+			var code = Uri.EscapeDataString(qrCode.Trim());
+			using var http = CreateClient();
+			var res = await http.GetAsync($"api/poi/qrcode/{code}", ct);
+			if (res.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+			if (!res.IsSuccessStatusCode) return null;
+			return await res.Content.ReadFromJsonAsync<PoiSnapshot>(JsonOpts, ct);
+		}
+		catch
+		{
+			return null;
+		}
 	}
 
 	public async Task<bool> TryPostMovementBatchAsync(MovementBatchDto dto, CancellationToken ct = default)

@@ -12,7 +12,7 @@ public class ConnectivityService
 	private readonly LocalPoiCacheService _cache;
 	private readonly ApiClientService _api;
 	private static readonly string PrefsLastSync = "vk_last_sync_timestamp";
-	private static readonly string PrefsKnownVersions = "vk_known_versions";
+    private static readonly string PrefsKnownVersions = "vk_known_versions";
 
 	public ConnectivityService(LocalPoiCacheService cache, ApiClientService api)
 	{

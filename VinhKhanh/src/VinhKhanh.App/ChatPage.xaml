@@ -3,12 +3,31 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="VinhKhanh.App.ChatPage"
              Title="Trợ lý AI">
-    <Grid RowDefinitions="Auto,*,Auto" Padding="12" RowSpacing="8">
-        <Picker x:Name="LangPicker" Title="Ngôn ngữ AI" />
-        <CollectionView x:Name="ChatList" Grid.Row="1" />
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-            <Entry x:Name="MsgEntry" Placeholder="Hỏi về món, khu phố..." />
-            <Button Grid.Column="1" Text="Gửi" Clicked="OnSend" />
+    <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="12" BackgroundColor="#F8FAFC">
+        <Border Grid.Row="0"
+                Stroke="#E2E8F0"
+                Background="#FFFFFF"
+                StrokeShape="RoundRectangle 14"
+                Padding="12">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Trợ lý AI du lịch ẩm thực" FontSize="16" FontAttributes="Bold" TextColor="#0F172A" />
+                <Picker x:Name="LangPicker" Title="Ngôn ngữ AI" />
+            </VerticalStackLayout>
+        </Border>
+
+        <Border Grid.Row="1"
+                Stroke="#E2E8F0"
+                Background="#FFFFFF"
+                StrokeShape="RoundRectangle 14"
+                Padding="8">
+            <CollectionView x:Name="ChatList" />
+        </Border>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <Border Stroke="#CBD5E1" StrokeShape="RoundRectangle 12" Background="#FFFFFF" Padding="4,0">
+                <Entry x:Name="MsgEntry" Placeholder="Hỏi về món ăn, điểm dừng, gợi ý tham quan..." />
+            </Border>
+            <Button Grid.Column="1" Text="Gửi" Clicked="OnSend" CornerRadius="12" Padding="20,0" />
         </Grid>
     </Grid>
 </ContentPage>

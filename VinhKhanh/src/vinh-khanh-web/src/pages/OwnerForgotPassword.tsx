@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router'
 import { api } from '@/lib/api'
-import { KeyRound, AlertCircle, ArrowLeft, Store, CheckCircle } from 'lucide-react'
+import { KeyRound, AlertCircle, ArrowLeft, CheckCircle } from 'lucide-react'
 
 export function OwnerForgotPassword() {
   const [u, setU] = useState('')
@@ -56,7 +56,7 @@ export function OwnerForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-amber-50 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-amber-50 p-6">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-10">
         <button
           onClick={() => navigate('/owner-login', { replace: true })}

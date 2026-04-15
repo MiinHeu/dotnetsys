@@ -166,7 +166,9 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		{
 			NearestPoiId = best.Id;
 			NearestLabel = best.Name;
-			_narration.InterruptIfHigherPriority(best.Priority);
+			// QR playback must remain uninterrupted; defer GPS narration while any audio is playing.
+			if (_narration.IsPlaying)
+				return;
 
 			if (!_cooldowns.CanTrigger(best.Id, best.CooldownSeconds))
 				return;

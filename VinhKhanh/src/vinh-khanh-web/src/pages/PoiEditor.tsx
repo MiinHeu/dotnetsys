@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router'
 import { useEffect, useState } from 'react'
+import type { AxiosError } from 'axios'
 import { api, type Poi } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 
@@ -149,6 +150,15 @@ async function translateDescription(text: string, language: TtsLanguage): Promis
   return translated
 }
 
+function extractApiErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && err.message) {
+    const maybeAxios = err as AxiosError<{ message?: string }>
+    const apiMessage = maybeAxios.response?.data?.message
+    if (apiMessage && apiMessage.trim()) return apiMessage.trim()
+  }
+  return fallback
+}
+
 export function PoiEditor() {
   const { id } = useParams()
   const isNew = id === 'new'
@@ -164,11 +174,18 @@ export function PoiEditor() {
   const [audioBusy, setAudioBusy] = useState(false)
   const [previewBusy, setPreviewBusy] = useState(false)
   const [ttsLangCode, setTtsLangCode] = useState('vi')
+  const [ownerMessage, setOwnerMessage] = useState('')
 
   const poiQ = useQuery({
     queryKey: ['poi', id],
     enabled: !isNew && id !== 'new' && !!id,
     queryFn: async () => (await api.get<Poi>(`/api/poi/${id}`)).data,
+  })
+
+  const ownersQ = useQuery({
+    queryKey: ['owners'],
+    enabled: role === 'Admin',
+    queryFn: async () => (await api.get<{ id: number; username: string }[]>('/api/auth/owners')).data,
   })
 
   useEffect(() => {
@@ -183,6 +200,16 @@ export function PoiEditor() {
       setGeoMessage(`Địa chỉ hiện tại: ${poiQ.data.ownerInfo}`)
     }
   }, [poiQ.data])
+
+  useEffect(() => {
+    if (role !== 'Admin') return
+    if (!ownersQ.data || ownersQ.data.length === 0) return
+
+    setForm((current) => {
+      if (current.ownerUserId != null) return current
+      return { ...current, ownerUserId: ownersQ.data[0].id }
+    })
+  }, [ownersQ.data, role])
 
   const resolveAddressToCoordinates = async () => {
     const address = form.ownerInfo?.trim() ?? ''
@@ -211,6 +238,18 @@ export function PoiEditor() {
         if (!address) throw new Error('Vui lòng nhập địa chỉ / số nhà trước khi lưu.')
 
         let payload = form
+        if (role === 'Admin') {
+          if ((ownersQ.data?.length ?? 0) === 0) {
+            setOwnerMessage('Chưa có tài khoản chủ quán. Hãy tạo Owner trước khi lưu POI.')
+            throw new Error('Chưa có tài khoản chủ quán. Hãy tạo Owner trước khi lưu POI.')
+          }
+          if (!payload.ownerUserId) {
+            setOwnerMessage('Vui lòng chọn chủ quán trước khi lưu.')
+            throw new Error('Vui lòng chọn chủ quán trước khi lưu.')
+          }
+          setOwnerMessage('')
+        }
+
         if (!Number.isFinite(form.latitude) || !Number.isFinite(form.longitude) || !address) {
           const point = await geocodeAddress(address)
           payload = {
@@ -230,7 +269,7 @@ export function PoiEditor() {
         }
       } catch (err) {
         console.error('POI save error:', err)
-        throw err
+        throw new Error(extractApiErrorMessage(err, 'Không lưu được POI. Vui lòng kiểm tra dữ liệu.'))
       }
     },
     onSuccess: () => {
@@ -239,6 +278,10 @@ export function PoiEditor() {
     },
     onError: (err) => {
       console.error('Mutation error:', err)
+      const message = err instanceof Error ? err.message : ''
+      if (message.toLowerCase().includes('chủ quán') || message.toLowerCase().includes('owner')) {
+        setOwnerMessage(message)
+      }
     },
   })
 
@@ -357,7 +400,8 @@ export function PoiEditor() {
 
   if (!isNew && poiQ.isLoading) return <p>Đang tải...</p>
 
-  const isFormValid = form.name.trim().length > 0 && (form.ownerInfo?.trim().length ?? 0) > 0
+  const hasOwner = role !== 'Admin' || (!!form.ownerUserId && (ownersQ.data?.length ?? 0) > 0)
+  const isFormValid = form.name.trim().length > 0 && (form.ownerInfo?.trim().length ?? 0) > 0 && hasOwner
   const currentLanguage = ttsLanguages.find((item) => item.code === ttsLangCode) ?? ttsLanguages[0]
   const currentAudioUrl =
     ttsLangCode === 'vi' ? form.audioViUrl : (findTranslation(form, ttsLangCode)?.audioUrl ?? null)
@@ -382,6 +426,37 @@ export function PoiEditor() {
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
         </label>
+
+        {role === 'Admin' && (
+          <label className="text-sm">
+            Chủ quán
+            <select
+              className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
+              value={form.ownerUserId?.toString() ?? ''}
+              onChange={(e) => {
+                const value = e.target.value ? Number(e.target.value) : null
+                setForm({ ...form, ownerUserId: value })
+                setOwnerMessage('')
+              }}
+            >
+              <option value="">-- Chọn chủ quán --</option>
+              {(ownersQ.data ?? []).map((owner) => (
+                <option key={owner.id} value={owner.id}>
+                  {owner.username}
+                </option>
+              ))}
+            </select>
+            <div className="mt-1 text-xs text-stone-500">
+              Mỗi quán phải thuộc về đúng một chủ quán để quản trị QR và nội dung riêng.
+            </div>
+            {(ownersQ.data?.length ?? 0) === 0 && (
+              <div className="mt-1 text-xs text-red-600">
+                Chưa có owner nào trong hệ thống. Vui lòng tạo tài khoản chủ quán trước.
+              </div>
+            )}
+            {ownerMessage && <div className="mt-1 text-xs text-red-600">{ownerMessage}</div>}
+          </label>
+        )}
 
         <label className="text-sm">
           Mô tả
@@ -509,15 +584,41 @@ export function PoiEditor() {
           </div>
         </div>
 
-        <label className="text-sm">
-          Mã QR (bus / điểm dừng, ví dụ <span className="font-mono">VK-POI-001</span>)
+        <div className="rounded-lg border border-stone-200 p-4">
+          <h3 className="text-sm font-semibold text-stone-800">Mã QR (bus / điểm dừng)</h3>
+          <p className="mt-1 text-xs text-stone-500">
+            Có thể nhập mã tùy chỉnh, hoặc để trống để hệ thống tự sinh mã QR riêng cho quán này khi lưu.
+          </p>
           <input
-            className="mt-1 w-full rounded border px-2 py-1 font-mono dark:border-stone-600 dark:bg-stone-800"
-            placeholder="Để trống nếu không dùng QR"
+            className="mt-2 w-full rounded border px-2 py-1 font-mono dark:border-stone-600 dark:bg-stone-800"
+            placeholder="Để trống để hệ thống tự sinh mã"
             value={form.qrCode ?? ''}
             onChange={(e) => setForm({ ...form, qrCode: e.target.value.trim() || null })}
           />
-        </label>
+          {!isNew && form.qrCode && (
+            <div className="mt-3 flex flex-col items-start gap-3">
+              <img
+                src={`/api/poi/${id}/qrcode`}
+                alt={`QR code cho ${form.name}`}
+                className="h-40 w-40 rounded border border-stone-200 bg-white p-1"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
+              <a
+                href={`/api/poi/${id}/qrcode`}
+                download={`QR-${form.qrCode ?? id}.png`}
+                className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
+              >
+                Tải ảnh QR về in
+              </a>
+            </div>
+          )}
+          {!isNew && !form.qrCode && (
+            <p className="mt-2 text-xs text-stone-400">Chưa có mã QR. Lưu lại để hệ thống tự tạo mã riêng.</p>
+          )}
+          {isNew && (
+            <p className="mt-2 text-xs text-stone-400">Lưu POI trước, sau đó quay lại để xem ảnh QR.</p>
+          )}
+        </div>
 
         <div className="rounded-lg border border-stone-200 p-4">
           <h3 className="text-sm font-semibold text-stone-800">Hiển thị trên bản đồ nội bộ</h3>
@@ -641,7 +742,8 @@ export function PoiEditor() {
 
       {!isFormValid && (
         <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-700 dark:border-yellow-700 dark:bg-yellow-900/20">
-          Vui lòng điền <strong>Tên</strong> và <strong>Địa chỉ</strong> POI.
+          Vui lòng điền <strong>Tên</strong>, <strong>Địa chỉ</strong>
+          {role === 'Admin' ? ' và chọn chủ quán' : ''} cho POI.
         </div>
       )}
 

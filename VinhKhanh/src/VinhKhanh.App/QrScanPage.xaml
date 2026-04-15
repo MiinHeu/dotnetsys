@@ -4,23 +4,36 @@
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.Maui.Controls"
              x:Class="VinhKhanh.App.QrScanPage"
              Title="Quet QR POI">
-    <Grid RowDefinitions="Auto,*,Auto" Padding="0">
-        <Label x:Name="StatusLabel"
-               Padding="12"
-               Text="Huong camera vao ma QR (vk-poi-123 hoac URL co /poi/123)" />
+    <Grid RowDefinitions="Auto,*,Auto" Padding="12" RowSpacing="10" BackgroundColor="#F8FAFC">
+        <Border Grid.Row="0"
+                Stroke="#E2E8F0"
+                Background="#FFFFFF"
+                StrokeShape="RoundRectangle 14"
+                Padding="12">
+            <Label x:Name="StatusLabel"
+                   TextColor="#334155"
+                   Text="Hướng camera vào mã QR để phát thuyết minh ngay, không cần GPS." />
+        </Border>
 
         <zxing:CameraBarcodeReaderView x:Name="Scanner"
                                        Grid.Row="1"
+                                       Margin="0,0,0,2"
                                        IsDetecting="True"
                                        BarcodesDetected="OnBarcodesDetected" />
 
-        <Grid Grid.Row="2" Padding="12" ColumnDefinitions="*,Auto" ColumnSpacing="8" BackgroundColor="#FFFFFF">
-            <Entry x:Name="ManualCodeEntry"
-                   Placeholder="Nhap ma QR neu camera khong kha dung"
-                   ReturnType="Done"
-                   Completed="OnManualSubmit"
-                   ClearButtonVisibility="WhileEditing" />
-            <Button Grid.Column="1" Text="Xu ly" Clicked="OnManualSubmit" />
-        </Grid>
+        <Border Grid.Row="2"
+                Stroke="#E2E8F0"
+                Background="#FFFFFF"
+                StrokeShape="RoundRectangle 14"
+                Padding="12">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Entry x:Name="ManualCodeEntry"
+                       Placeholder="Nhập mã QR nếu camera không khả dụng"
+                       ReturnType="Done"
+                       Completed="OnManualSubmit"
+                       ClearButtonVisibility="WhileEditing" />
+                <Button Grid.Column="1" Text="Xử lý" Clicked="OnManualSubmit" CornerRadius="12" />
+            </Grid>
+        </Border>
     </Grid>
 </ContentPage>
