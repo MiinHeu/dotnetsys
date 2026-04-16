@@ -74,13 +74,22 @@ export function AdminMap() {
   }, [q.data])
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Bản đồ POI + bán kính geofence</h2>
-      <p className="text-sm text-stone-600">
-        Lưới Map X/Y chỉnh trên form POI. Vòng tròn = triggerRadiusMeters (m).
-      </p>
-      <div className="h-[520px] w-full overflow-hidden rounded-xl border border-stone-200 dark:border-stone-700 relative" ref={containerRef}>
-        {q.isLoading && <p className="p-4 absolute z-10 bg-white shadow rounded m-4">Đang tải…</p>}
+    <div className="vk-page">
+      <section className="vk-page-header">
+        <h2 className="vk-page-title">Bản đồ POI và vùng kích hoạt</h2>
+        <p className="vk-page-subtitle">
+          Quan sát vị trí quán theo thực địa. Vòng tròn thể hiện bán kính geofence đang cấu hình cho từng điểm.
+        </p>
+      </section>
+
+      <section className="vk-card p-4 md:p-5">
+        <div className="mb-3 flex flex-wrap gap-3 text-xs">
+          <span className="rounded-full bg-orange-50 px-3 py-1 font-semibold text-orange-700">Vòng tròn: trigger radius (m)</span>
+          <span className="rounded-full bg-sky-50 px-3 py-1 font-semibold text-sky-700">Marker: vị trí quán/POI</span>
+          <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">Map X/Y chỉnh ở trang quán ăn</span>
+        </div>
+        <div className="h-[560px] w-full overflow-hidden rounded-xl border border-slate-200 relative" ref={containerRef}>
+        {q.isLoading && <p className="p-4 absolute z-10 bg-white shadow rounded m-4">Đang tải dữ liệu bản đồ…</p>}
         {q.data && (
           <MapContainer
             center={center}
@@ -101,7 +110,7 @@ export function AdminMap() {
                   radius={p.triggerRadiusMeters}
                   pathOptions={{ color: '#ea580c', fillColor: '#fdba74', fillOpacity: 0.25 }}
                 />
-                <Marker 
+                <Marker
                   key={`marker-${p.id}`}
                   position={[p.latitude, p.longitude]}
                 >
@@ -115,7 +124,8 @@ export function AdminMap() {
             ))}
           </MapContainer>
         )}
-      </div>
+        </div>
+      </section>
     </div>
   )
 }

@@ -39,29 +39,34 @@ export function ChangePassword() {
   }
 
   return (
-    <div className="max-w-lg mx-auto">
-      <div className="flex items-center gap-3 mb-8">
+    <div className="vk-page max-w-xl mx-auto">
+      <section className="vk-page-header">
+        <h2 className="vk-page-title">Bảo mật tài khoản</h2>
+        <p className="vk-page-subtitle">Thay đổi mật khẩu định kỳ để bảo vệ dữ liệu vận hành.</p>
+      </section>
+
+      <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
           <KeyRound size={20} className="text-orange-600" />
         </div>
-        <h1 className="text-2xl font-bold text-slate-900">Đổi Mật Khẩu</h1>
+        <h1 className="text-xl font-bold text-slate-900">Đổi mật khẩu đăng nhập</h1>
       </div>
 
       {success && (
-        <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg p-4">
           <CheckCircle size={20} />
           <span className="font-semibold text-sm">Đổi mật khẩu thành công! Mật khẩu mới đã được lưu.</span>
         </div>
       )}
 
       {err && (
-        <div className="flex items-center gap-2 bg-red-50 text-red-600 border border-red-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center gap-2 bg-red-50 text-red-600 border border-red-200 rounded-lg p-4">
           <AlertCircle size={20} />
           <span className="font-semibold text-sm">{err}</span>
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-5">
+      <form onSubmit={onSubmit} className="vk-card p-8 space-y-5">
         <div className="space-y-2">
           <label className="block text-sm font-bold text-slate-700">Mật khẩu hiện tại</label>
           <input

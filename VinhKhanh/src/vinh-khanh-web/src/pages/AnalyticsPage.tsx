@@ -48,10 +48,14 @@ export function AnalyticsPage() {
     })) ?? []
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-lg font-semibold">Analytics</h2>
-      <section>
-        <h3 className="mb-2 text-sm font-medium text-stone-600">Top POI (30 ngày)</h3>
+    <div className="vk-page">
+      <section className="vk-page-header">
+        <h2 className="vk-page-title">Phân tích vận hành</h2>
+        <p className="vk-page-subtitle">Theo dõi điểm đến được nghe nhiều và mật độ di chuyển gần đây.</p>
+      </section>
+
+      <section className="vk-card p-5 md:p-6">
+        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Top POI (30 ngày)</h3>
         <div className="h-72 w-full">
           {top.isLoading ? (
             <p>Đang tải…</p>
@@ -68,8 +72,8 @@ export function AnalyticsPage() {
           )}
         </div>
       </section>
-      <section>
-        <h3 className="mb-2 text-sm font-medium text-stone-600">
+      <section className="vk-card p-5 md:p-6">
+        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
           Heatmap điểm (movement log, 48h) — trục X=kinh độ, Y=vĩ độ
         </h3>
         <div className="h-80 w-full">
