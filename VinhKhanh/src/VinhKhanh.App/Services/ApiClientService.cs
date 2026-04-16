@@ -1,5 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.Maui.Devices;
 using VinhKhanh.App.Models;
 using VinhKhanh.Shared.DTOs;
 
@@ -9,7 +11,8 @@ public sealed class ApiClientService
 {
 	private static readonly JsonSerializerOptions JsonOpts = new()
 	{
-		PropertyNameCaseInsensitive = true
+		PropertyNameCaseInsensitive = true,
+		Converters = { new JsonStringEnumConverter() }
 	};
 
 	public HttpClient CreateClient()
@@ -21,59 +24,51 @@ public sealed class ApiClientService
 
 	public static string GetDefaultApiBase()
 	{
+		if (DeviceInfo.DeviceType == DeviceType.Virtual)
+		{
 #if ANDROID
-		return "http://10.0.2.2:5283/";
-#elif IOS || MACCATALYST
-		return "http://127.0.0.1:5283/"; 
+			return "http://10.0.2.2:5283/";
 #else
-		return "http://localhost:5283/";
+			return "http://localhost:5283/";
 #endif
+		}
+
+		// Với máy thật, ưu tiên lấy IP đã cấu hình trong Preferences
+		return Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, "http://NHAP-IP-CUA-BAN:5283/");
 	}
 
 	public async Task<IReadOnlyList<PoiSnapshot>> GetPoisAsync(string lang, CancellationToken ct = default)
 	{
 		using var http = CreateClient();
-		var list = await http.GetFromJsonAsync<List<PoiSnapshot>>($"api/poi?lang={Uri.EscapeDataString(lang)}", JsonOpts, ct);
+		var url = $"api/poi?lang={Uri.EscapeDataString(lang)}&t={DateTime.UtcNow.Ticks}";
+		var list = await http.GetFromJsonAsync<List<PoiSnapshot>>(url, JsonOpts, ct);
 		return list ?? [];
 	}
 
 	public async Task<IReadOnlyList<TourSnapshot>> GetToursAsync(string lang, CancellationToken ct = default)
 	{
 		using var http = CreateClient();
-		var list = await http.GetFromJsonAsync<List<TourSnapshot>>($"api/tour?lang={Uri.EscapeDataString(lang)}", JsonOpts, ct);
+		var url = $"api/tour?lang={Uri.EscapeDataString(lang)}&t={DateTime.UtcNow.Ticks}";
+		var list = await http.GetFromJsonAsync<List<TourSnapshot>>(url, JsonOpts, ct);
 		return list ?? [];
 	}
 
 	public async Task<PoiSnapshot?> GetPoiAsync(int id, CancellationToken ct = default)
 	{
-		try
-		{
-			using var http = CreateClient();
-			var res = await http.GetAsync($"api/poi/{id}", ct);
-			if (!res.IsSuccessStatusCode) return null;
-			return await res.Content.ReadFromJsonAsync<PoiSnapshot>(JsonOpts, ct);
-		}
-		catch
-		{
-			return null;
-		}
+		using var http = CreateClient();
+		var url = $"api/poi/{id}?t={DateTime.UtcNow.Ticks}";
+		return await http.GetFromJsonAsync<PoiSnapshot>(url, JsonOpts, ct);
 	}
 
 	public async Task<PoiSnapshot?> GetPoiByQrCodeAsync(string qrCode, CancellationToken ct = default)
 	{
-		try
-		{
-			var code = Uri.EscapeDataString(qrCode.Trim());
-			using var http = CreateClient();
-			var res = await http.GetAsync($"api/poi/qrcode/{code}", ct);
-			if (res.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
-			if (!res.IsSuccessStatusCode) return null;
-			return await res.Content.ReadFromJsonAsync<PoiSnapshot>(JsonOpts, ct);
-		}
-		catch
-		{
-			return null;
-		}
+		var code = Uri.EscapeDataString(qrCode.Trim());
+		using var http = CreateClient();
+		var url = $"api/poi/qrcode/{code}?t={DateTime.UtcNow.Ticks}";
+		var res = await http.GetAsync(url, ct);
+		if (res.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+		res.EnsureSuccessStatusCode();
+		return await res.Content.ReadFromJsonAsync<PoiSnapshot>(JsonOpts, ct);
 	}
 
 	public async Task<bool> TryPostMovementBatchAsync(MovementBatchDto dto, CancellationToken ct = default)

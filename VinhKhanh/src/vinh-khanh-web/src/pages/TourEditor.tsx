@@ -15,7 +15,7 @@ export function TourEditor() {
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
   const [minutes, setMinutes] = useState(60)
-  const [stops, setStops] = useState<StopRow[]>([{ poiId: 1, stopOrder: 1, stayMinutes: 15 }])
+  const [stops, setStops] = useState<StopRow[]>([])
 
   const poisQ = useQuery({
     queryKey: ['pois', 'vi'],
@@ -46,6 +46,13 @@ export function TourEditor() {
     if (rows.length) setStops(rows)
   }, [tourQ.data])
 
+  // Tu dong nap diem dung dau tien cho Tour moi khi co danh sach Quan an (POI)
+  useEffect(() => {
+    if (isNew && poisQ.data?.length && stops.length === 0) {
+      setStops([{ poiId: poisQ.data[0].id, stopOrder: 1, stayMinutes: 15 }])
+    }
+  }, [isNew, poisQ.data])
+
   const save = useMutation({
     mutationFn: async () => {
       const body = {
@@ -65,6 +72,11 @@ export function TourEditor() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tours'] })
       navigate('/tours')
+    },
+    onError: (err: any) => {
+      console.error('Tour save error:', err)
+      const message = err.response?.data?.message || 'Có lỗi xảy ra khi lưu Tour.'
+      alert(message)
     },
   })
 
@@ -113,7 +125,7 @@ export function TourEditor() {
             onClick={() =>
               setStops((s) => [
                 ...s,
-                { poiId: poisQ.data?.[0]?.id ?? 1, stopOrder: s.length + 1, stayMinutes: 10 },
+                { poiId: poisQ.data?.[0]?.id || 0, stopOrder: s.length + 1, stayMinutes: 10 },
               ])
             }
           >

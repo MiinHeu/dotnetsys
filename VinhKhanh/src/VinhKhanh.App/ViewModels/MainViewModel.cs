@@ -50,38 +50,61 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 
 	public ObservableCollection<PoiSnapshot> Pois { get; } = new();
 
-	[ObservableProperty] private string _selectedLanguage = "vi";
+	[ObservableProperty] 
+	[NotifyPropertyChangedFor(nameof(PageTitle))]
+	[NotifyPropertyChangedFor(nameof(SearchPlaceholder))]
+	[NotifyPropertyChangedFor(nameof(EmptyListText))]
+	[NotifyPropertyChangedFor(nameof(ReloadButtonText))]
+	private string _selectedLanguage = "vi";
+
+	public string PageTitle => VinhKhanh.App.Resources.Strings.AppResources.TabPois;
+	public string SearchPlaceholder => VinhKhanh.App.Resources.Strings.AppResources.PoiSearchPlaceholder;
+	public string EmptyListText => VinhKhanh.App.Resources.Strings.AppResources.PoiEmptyList;
+	public string ReloadButtonText => VinhKhanh.App.Resources.Strings.AppResources.PoiReloadButton;
 	[ObservableProperty] private string _statusMessage = "";
 	[ObservableProperty] private string _nearestLabel = "";
 	[ObservableProperty] private bool _isTracking;
 	[ObservableProperty] private double _userLatitude = 10.7535;
 	[ObservableProperty] private double _userLongitude = 106.6783;
 	[ObservableProperty] private int _nearestPoiId;
+	[ObservableProperty] private TourSnapshot? _selectedTour;
+
+	[RelayCommand]
+	private void ClearTour()
+	{
+		SelectedTour = null;
+	}
 
 	partial void OnSelectedLanguageChanged(string value)
-		=> Microsoft.Maui.Storage.Preferences.Set(AppPreferences.UiLanguage, value);
+	{
+		Microsoft.Maui.Storage.Preferences.Set(AppPreferences.UiLanguage, value);
+		
+		// Ép tệp tài nguyên hệ thống nạp lại theo ngôn ngữ mới
+		VinhKhanh.App.Resources.Strings.AppResources.Culture = new System.Globalization.CultureInfo(value);
+		
+		// Kích hoạt cập nhật lại các thuộc tính hiển thị (DisplayName, DisplayDescription) cho toàn bộ danh sách
+		foreach (var p in Pois)
+		{
+			p.RefreshTranslations();
+		}
+
+		// Thông báo cho Shell cập nhật lại các Tab
+		WeakReferenceMessenger.Default.Send(new LanguageChangedMessage(value));
+	}
 
 	[RelayCommand]
 	private async Task SyncPoisAsync()
 	{
-		StatusMessage = "Dang dong bo POI...";
+		StatusMessage = VinhKhanh.App.Resources.Strings.AppResources.SyncStatusSyncing;
 		try
 		{
 			var remote = await _api.GetPoisAsync(SelectedLanguage);
-			if (remote.Count > 0)
-			{
-				await _cache.SavePoisAsync(remote);
-				ReplacePois(remote);
-				StatusMessage = $"Da dong bo {remote.Count} POI.";
-			}
-			else
-			{
-				var local = await _cache.LoadPoisAsync();
-				ReplacePois(local);
-				StatusMessage = local.Count > 0
-					? $"Offline: {local.Count} POI trong cache."
-					: "Khong co du lieu. Kiem tra API.";
-			}
+			
+			// Luôn lưu và cập nhật danh sách (kể cả khi trống) để đảm bảo đồng bộ IsActive từ Server
+			await _cache.SavePoisAsync(remote);
+			ReplacePois(remote);
+			
+			StatusMessage = string.Format(VinhKhanh.App.Resources.Strings.AppResources.SyncStatusSuccess, remote.Count);
 
 			await _api.PostHistoryLogAsync(new AppHistoryLogDto(_session.SessionId, "SYNC_POI",
 				LanguageCode: SelectedLanguage, Payload: $"count={Pois.Count}"));
@@ -89,7 +112,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		}
 		catch (Exception ex)
 		{
-			StatusMessage = "Loi mang - dang doc cache.";
+			StatusMessage = VinhKhanh.App.Resources.Strings.AppResources.SyncStatusNetworkError;
 			Debug.WriteLine(ex);
 			var local = await _cache.LoadPoisAsync();
 			ReplacePois(local);
@@ -110,14 +133,14 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		{
 			await _gps.StopTrackingAsync();
 			IsTracking = false;
-			StatusMessage = "Da tat theo doi.";
+			StatusMessage = VinhKhanh.App.Resources.Strings.AppResources.GpsStatusStopped;
 			await FlushMovementAsync();
 			await FlushOutboxIfNeededAsync(force: true);
 			return;
 		}
 
 		IsTracking = true;
-		StatusMessage = "Dang theo doi GPS qua dich vu nen...";
+		StatusMessage = VinhKhanh.App.Resources.Strings.AppResources.GpsStatusTracking;
 		await _gps.StartTrackingAsync();
 		await FlushOutboxIfNeededAsync(force: true);
 	}
@@ -166,14 +189,12 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		{
 			NearestPoiId = best.Id;
 			NearestLabel = best.Name;
-			// QR playback must remain uninterrupted; defer GPS narration while any audio is playing.
-			if (_narration.IsPlaying)
-				return;
+			_narration.InterruptIfHigherPriority(best.Priority);
 
 			if (!_cooldowns.CanTrigger(best.Id, best.CooldownSeconds))
 				return;
 
-			StatusMessage = $"Thuyet minh: {NearestLabel}";
+			StatusMessage = string.Format(VinhKhanh.App.Resources.Strings.AppResources.PlaybackPoiLabel, NearestLabel);
 			await _narration.EnqueueAsync(best, SelectedLanguage);
 			_cooldowns.MarkTriggered(best.Id);
 

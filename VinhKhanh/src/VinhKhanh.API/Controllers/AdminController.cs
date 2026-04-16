@@ -7,9 +7,9 @@ using VinhKhanh.Infrastructure.Data;
 namespace VinhKhanh.API.Controllers;
 
 [ApiController, Route("api/[controller]")]
+[Authorize(Roles = "Admin")]
 public class AdminController(ApplicationDbContext db) : ControllerBase
 {
-	[Authorize]
 	[HttpGet("summary")]
 	public async Task<IActionResult> Summary(CancellationToken ct = default)
 	{

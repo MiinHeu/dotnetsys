@@ -15,6 +15,7 @@ public class PoiTranslation
 	// Để so sánh khi description gốc thay đổi
 	public string OriginalDescription { get; set; } = string.Empty;
 
+	[System.Text.Json.Serialization.JsonIgnore]
 	public Poi Poi { get; set; } = null!;
 }
 

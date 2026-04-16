@@ -12,7 +12,7 @@ public class ConnectivityService
 	private readonly LocalPoiCacheService _cache;
 	private readonly ApiClientService _api;
 	private static readonly string PrefsLastSync = "vk_last_sync_timestamp";
-    private static readonly string PrefsKnownVersions = "vk_known_versions";
+	private static readonly string PrefsKnownVersions = "vk_known_versions";
 
 	public ConnectivityService(LocalPoiCacheService cache, ApiClientService api)
 	{
@@ -23,7 +23,10 @@ public class ConnectivityService
 
 	private async void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
 	{
-		if (e.NetworkAccess != NetworkAccess.Internet)
+		// On Emulators, network often reports as Local or ConstrainedInternet
+		if (e.NetworkAccess != NetworkAccess.Internet && 
+		    e.NetworkAccess != NetworkAccess.Local && 
+		    e.NetworkAccess != NetworkAccess.ConstrainedInternet)
 			return;
 
 		var lang = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "vi");

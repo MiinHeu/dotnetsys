@@ -122,18 +122,37 @@ public class TourController(
 		tour.EstimatedMinutes = dto.EstimatedMinutes;
 		tour.UpdatedAt = DateTime.UtcNow;
 
-		db.TourStops.RemoveRange(tour.Stops);
-		tour.Stops.Clear();
-
-		foreach (var stop in dto.Stops.OrderBy(s => s.StopOrder))
+		// Merge logic: Dong bo danh sach TourStops
+		// 1. Xoa cac stop khong con trong danh sach moi
+		var newPoiIds = dto.Stops.Select(s => s.PoiId).ToList();
+		var toRemove = tour.Stops.Where(old => !newPoiIds.Contains(old.PoiId)).ToList();
+		foreach (var r in toRemove)
 		{
-			tour.Stops.Add(new TourStop
+			db.TourStops.Remove(r);
+		}
+
+		// 2. Cap nhat cac stop hien co hoac them moi
+		foreach (var stopDto in dto.Stops.OrderBy(s => s.StopOrder))
+		{
+			var existing = tour.Stops.FirstOrDefault(s => s.PoiId == stopDto.PoiId);
+			if (existing != null)
 			{
-				PoiId = stop.PoiId,
-				StopOrder = stop.StopOrder,
-				StayMinutes = stop.StayMinutes,
-				Note = string.IsNullOrWhiteSpace(stop.Note) ? null : stop.Note.Trim()
-			});
+				// Cap nhat thong tin stop hien co
+				existing.StopOrder = stopDto.StopOrder;
+				existing.StayMinutes = stopDto.StayMinutes;
+				existing.Note = string.IsNullOrWhiteSpace(stopDto.Note) ? null : stopDto.Note.Trim();
+			}
+			else
+			{
+				// Them moi neu chua co
+				tour.Stops.Add(new TourStop
+				{
+					PoiId = stopDto.PoiId,
+					StopOrder = stopDto.StopOrder,
+					StayMinutes = stopDto.StayMinutes,
+					Note = string.IsNullOrWhiteSpace(stopDto.Note) ? null : stopDto.Note.Trim()
+				});
+			}
 		}
 
 		await db.SaveChangesAsync(ct);
@@ -250,12 +269,23 @@ public class TourController(
 			return false;
 		}
 
+		// Kiem tra trung lap thu tu (StopOrder)
 		var duplicateOrder = dto.Stops
 			.GroupBy(s => s.StopOrder)
 			.FirstOrDefault(g => g.Count() > 1);
 		if (duplicateOrder != null)
 		{
-			error = $"StopOrder bi trung: {duplicateOrder.Key}.";
+			error = $"Thu tu diem dung (StopOrder) bi trung: {duplicateOrder.Key}.";
+			return false;
+		}
+
+		// Kiem tra trung lap dia diem (PoiId) - Vi (TourId, PoiId) la Primary Key
+		var duplicatePoi = dto.Stops
+			.GroupBy(s => s.PoiId)
+			.FirstOrDefault(g => g.Count() > 1);
+		if (duplicatePoi != null)
+		{
+			error = $"Dia diem (POI) bi trung: ID {duplicatePoi.Key}. Moi quan chi duoc xuat hien 1 lan trong tour.";
 			return false;
 		}
 

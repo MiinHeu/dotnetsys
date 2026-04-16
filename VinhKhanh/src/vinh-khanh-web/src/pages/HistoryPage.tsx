@@ -26,17 +26,13 @@ export function HistoryPage() {
   })
 
   return (
-    <div className="vk-page">
-      <section className="vk-page-header">
-        <h2 className="vk-page-title">Lịch sử sự kiện ứng dụng</h2>
-        <p className="vk-page-subtitle">Theo dõi hành vi sử dụng để giám sát chất lượng vận hành.</p>
-      </section>
-
-      {q.isLoading && <p className="text-sm text-slate-500">Đang tải nhật ký…</p>}
-      <p className="text-sm text-slate-600">Tổng sự kiện: <strong>{q.data?.total ?? '—'}</strong></p>
-      <div className="vk-card overflow-x-auto">
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold">Lịch sử sự kiện app</h2>
+      {q.isLoading && <p>Đang tải…</p>}
+      <p className="text-sm text-stone-500">Tổng: {q.data?.total ?? '—'}</p>
+      <div className="overflow-x-auto rounded-lg border border-stone-200 dark:border-stone-700">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50">
+          <thead className="bg-stone-100 dark:bg-stone-800">
             <tr>
               <th className="p-2">Thời gian</th>
               <th className="p-2">Loại</th>
@@ -47,7 +43,7 @@ export function HistoryPage() {
           </thead>
           <tbody>
             {q.data?.items.map((r) => (
-              <tr key={r.id} className="border-t border-slate-100">
+              <tr key={r.id} className="border-t border-stone-200 dark:border-stone-700">
                 <td className="p-2 whitespace-nowrap">{new Date(r.createdAt).toLocaleString()}</td>
                 <td className="p-2">{r.eventType}</td>
                 <td className="p-2 font-mono text-xs">{r.sessionId.slice(0, 12)}…</td>

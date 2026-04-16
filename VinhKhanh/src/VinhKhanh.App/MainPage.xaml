@@ -1,9 +1,10 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
+             xmlns:res="clr-namespace:VinhKhanh.App.Resources.Strings"
              x:Class="VinhKhanh.App.MainPage"
-             Title="Ban do Vinh Khanh"
+             Title="{x:Static res:AppResources.MapTitle}"
              BackgroundColor="#F8FAFC">
 
     <Grid>
@@ -22,14 +23,14 @@
 
                 <HorizontalStackLayout Spacing="12">
                     <Picker x:Name="LangPicker"
-                            Title="Ngon ngu"
+                            Title="{x:Static res:AppResources.LanguagePickerTitle}"
                             WidthRequest="140"
                             TextColor="#0F172A"
                             TitleColor="#64748B"
                             FontAttributes="Bold"
                             SelectedIndexChanged="OnLangChanged" />
 
-                    <Button x:Name="SyncBtn" Text="Dong bo"
+                    <Button x:Name="SyncBtn" Text="{x:Static res:AppResources.SyncButton}"
                             Clicked="OnSyncClicked"
                             BackgroundColor="#0F172A"
                             TextColor="#FFFFFF"
@@ -39,10 +40,29 @@
                             HeightRequest="40"/>
                 </HorizontalStackLayout>
             </Border>
+            
+            <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                    IsVisible="{Binding SelectedTour, Converter={StaticResource IsNotNullConverter}}"
+                    Stroke="#EA580C" StrokeThickness="1"
+                    Background="#FFF7ED"
+                    StrokeShape="RoundRectangle 24"
+                    Padding="16,8"
+                    Margin="0,12,0,0"
+                    HorizontalOptions="Center" VerticalOptions="Start"
+                    Shadow="{Shadow Brush=#EA580C, Offset='0,4', Opacity=0.2, Radius=8}">
+                <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
+                    <Label Text="📍" FontSize="16" VerticalOptions="Center"/>
+                    <Label Text="{Binding SelectedTour.Name}" FontSize="14" FontAttributes="Bold" TextColor="#9A3412" VerticalOptions="Center"/>
+                    <Button Text="✕" Command="{Binding ClearTourCommand}"
+                            BackgroundColor="Transparent" TextColor="#EA580C"
+                            FontAttributes="Bold" FontSize="18"
+                            Padding="0" WidthRequest="32" HeightRequest="32" />
+                </HorizontalStackLayout>
+            </Border>
 
             <Button x:Name="TrackBtn"
                     Grid.Row="1" Grid.Column="1"
-                    Text="Bat GPS"
+                    Text="{x:Static res:AppResources.GpsButtonOn}"
                     Clicked="OnTrackClicked"
                     VerticalOptions="End"
                     Margin="0,0,0,16"
@@ -75,11 +95,11 @@
                         Shadow="{Shadow Brush=#000000, Offset='0,8', Opacity=0.15, Radius=16}">
 
                     <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="*, Auto" RowSpacing="6">
-                        <Label Text="DIEM GAN NHAT" FontSize="12" TextColor="#EA580C" FontAttributes="Bold" Grid.Row="0" Grid.Column="0" />
+                        <Label Text="{x:Static res:AppResources.PoiDetailNearestLabel}" FontSize="12" TextColor="#EA580C" FontAttributes="Bold" Grid.Row="0" Grid.Column="0" />
                         <Label x:Name="PoiTitleLabel" FontSize="22" FontAttributes="Bold" TextColor="#0F172A" Grid.Row="1" Grid.Column="0" />
                         <Label x:Name="PoiDescLabel" FontSize="15" TextColor="#475569" LineBreakMode="WordWrap" MaxLines="3" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"/>
 
-                        <Button Text="Doc am thanh"
+                        <Button Text="{x:Static res:AppResources.PoiDetailReadAudio}"
                                 BackgroundColor="#0F172A"
                                 TextColor="#FFFFFF"
                                 FontAttributes="Bold"

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="LanguageSelectionTitle" xml:space="preserve"><value>选择语言</value></data>
+  <data name="LanguageSelectionDesc" xml:space="preserve"><value>请选择您的首选语言</value></data>
+  <data name="LanguageSelectionContinue" xml:space="preserve"><value>继续</value></data>
+  <data name="TabMap" xml:space="preserve"><value>地图</value></data>
+  <data name="TabTours" xml:space="preserve"><value>路线</value></data>
+  <data name="TabChat" xml:space="preserve"><value>聊天</value></data>
+  <data name="TabScan" xml:space="preserve"><value>扫码</value></data>
+  <data name="TabSettings" xml:space="preserve"><value>设置</value></data>
+  <data name="MapTitle" xml:space="preserve"><value>永庆地图</value></data>
+  <data name="LanguagePickerTitle" xml:space="preserve"><value>语言</value></data>
+  <data name="SyncButton" xml:space="preserve"><value>同步</value></data>
+  <data name="GpsButtonOn" xml:space="preserve"><value>开启GPS</value></data>
+  <data name="GpsButtonOff" xml:space="preserve"><value>关闭GPS</value></data>
+  <data name="StatusNearestPoiDefault" xml:space="preserve"><value>正在寻找最近地点...</value></data>
+  <data name="PoiDetailNearestLabel" xml:space="preserve"><value>最近地点</value></data>
+  <data name="PoiDetailReadAudio" xml:space="preserve"><value>播放音频</value></data>
+  <data name="SyncStatusSyncing" xml:space="preserve"><value>同步POI...</value></data>
+  <data name="SyncStatusSuccess" xml:space="preserve"><value>已同步 {0} POI.</value></data>
+  <data name="SyncStatusOffline" xml:space="preserve"><value>离线: 缓存中 {0} POI.</value></data>
+  <data name="SyncStatusNoData" xml:space="preserve"><value>没有数据，请检查API.</value></data>
+  <data name="SyncStatusNetworkError" xml:space="preserve"><value>网络错误 - 正在读取缓存.</value></data>
+  <data name="GpsStatusTracking" xml:space="preserve"><value>在后台追踪GPS...</value></data>
+  <data name="GpsStatusStopped" xml:space="preserve"><value>已停止追踪.</value></data>
+  <data name="GpsStatusWait" xml:space="preserve"><value>等待位置...</value></data>
+  <data name="NarrationStatusPlaying" xml:space="preserve"><value>正在播放: {0}</value></data>
+  <data name="NarrationStatusFinished" xml:space="preserve"><value>已播放结束 ({0}s): {1}</value></data>
+  <data name="NarrationStatusError" xml:space="preserve"><value>音频错误: {0}</value></data>
+  <data name="NarrationStatusNoPoi" xml:space="preserve"><value>没有POI播放.</value></data>
+  <data name="ToursHeader" xml:space="preserve"><value>探索</value></data>
+  <data name="ToursTitle" xml:space="preserve"><value>路线详情</value></data>
+  <data name="ToursSubtitle" xml:space="preserve"><value>美食推荐路线</value></data>
+  <data name="ToursItemStopsCount" xml:space="preserve"><value>停靠点: {0}</value></data>
+  <data name="ToursItemMinutes" xml:space="preserve"><value>时长: {0} 分钟</value></data>
+  <data name="ToursEmptyTitle" xml:space="preserve"><value>没有找到路线.</value></data>
+  <data name="ToursEmptySubtitle" xml:space="preserve"><value>测试再次同步或检查API连接.</value></data>
+  <data name="ToursSyncError" xml:space="preserve"><value>加载路线错误.</value></data>
+  <data name="ChatSendButton" xml:space="preserve"><value>发送</value></data>
+  <data name="QrScanHint" xml:space="preserve"><value>将相机对准QR码 (vk-poi-123 或带 /poi/123 的 URL)</value></data>
+  <data name="QrPlaceholder" xml:space="preserve"><value>手动输入POI代码</value></data>
+  <data name="QrSubmitButton" xml:space="preserve"><value>处理</value></data>
+  <data name="QrFoundSatus" xml:space="preserve"><value>参观: {0}</value></data>
+  <data name="QrNotFoundStatus" xml:space="preserve"><value>未找到此QR码的POI.</value></data>
+  <data name="SettingsApiUrlLabel" xml:space="preserve"><value>API URL (结尾有无 / 均可)</value></data>
+  <data name="SettingsGeofenceRadiusLabel" xml:space="preserve"><value>地理围栏半径乘数 (1 = 默认)</value></data>
+  <data name="SettingsMockGpsLabel" xml:space="preserve"><value>启用GPS模拟 (.NET Mock)</value></data>
+  <data name="SettingsMockGpsDesc" xml:space="preserve"><value>开启：蓝点自动循环经过各POI.</value></data>
+  <data name="SettingsSaveButton" xml:space="preserve"><value>保存</value></data>
+  <data name="SettingsApiHint" xml:space="preserve"><value>Android模拟器：10.0.2.2代替localhost。真实设备：PC的LAN IP.</value></data>
+  <data name="SettingsSavedSuccess" xml:space="preserve"><value>设置成功保存.</value></data>
+  <data name="MapLoadingError" xml:space="preserve"><value>地图加载错误.</value></data>
+  <data name="NearestLabelFormat" xml:space="preserve"><value>最近: {0}</value></data>
+  <data name="PlaybackPoiLabel" xml:space="preserve"><value>讲解: {0}</value></data>
+  <data name="TabPois" xml:space="preserve"><value>餐厅</value></data>
+  <data name="PoiSearchPlaceholder" xml:space="preserve"><value>搜索餐厅...</value></data>
+  <data name="PoiEmptyList" xml:space="preserve"><value>未找到餐厅</value></data>
+  <data name="PoiReloadButton" xml:space="preserve"><value>重新加载数据</value></data>
+  <data name="PlayNarration" xml:space="preserve"><value>播放解说</value></data>
+  <data name="StopNarration" xml:space="preserve"><value>停止解说</value></data>
+</root>

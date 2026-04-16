@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:res="clr-namespace:VinhKhanh.App.Resources.Strings"
+             x:Class="VinhKhanh.App.LanguageSelectionPage"
+             BackgroundColor="#F8FAFC">
+
+    <Grid Padding="32" RowDefinitions="Auto,*,Auto" RowSpacing="24">
+        
+        <VerticalStackLayout Grid.Row="0" Spacing="8" Margin="0,48,0,0">
+            <Image Source="appicon.png" WidthRequest="100" HeightRequest="100" HorizontalOptions="Center" />
+            <Label Text="{x:Static res:AppResources.LanguageSelectionTitle}" 
+                   FontSize="28" FontAttributes="Bold" TextColor="#0F172A" HorizontalOptions="Center"/>
+            <Label Text="{x:Static res:AppResources.LanguageSelectionDesc}" 
+                   FontSize="16" TextColor="#475569" HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+        
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="16" VerticalOptions="Center">
+                <Button Text="English" 
+                        Clicked="OnLangSelected" 
+                        CommandParameter="en"
+                        Style="{StaticResource DefaultLangButtonStyle}"/>
+                <Button Text="Tiếng Việt" 
+                        Clicked="OnLangSelected" 
+                        CommandParameter="vi"
+                        Style="{StaticResource DefaultLangButtonStyle}"/>
+                <Button Text="中文" 
+                        Clicked="OnLangSelected" 
+                        CommandParameter="zh"
+                        Style="{StaticResource DefaultLangButtonStyle}"/>
+                <Button Text="한국어" 
+                        Clicked="OnLangSelected" 
+                        CommandParameter="ko"
+                        Style="{StaticResource DefaultLangButtonStyle}"/>
+                <Button Text="日本語" 
+                        Clicked="OnLangSelected" 
+                        CommandParameter="ja"
+                        Style="{StaticResource DefaultLangButtonStyle}"/>
+            </VerticalStackLayout>
+        </ScrollView>
+        
+    </Grid>
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Style x:Key="DefaultLangButtonStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#E2E8F0" />
+                <Setter Property="TextColor" Value="#0F172A" />
+                <Setter Property="CornerRadius" Value="12" />
+                <Setter Property="HeightRequest" Value="60" />
+                <Setter Property="FontSize" Value="18" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="BorderWidth" Value="0" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+</ContentPage>

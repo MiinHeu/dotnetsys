@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router'
-import { useEffect, useState } from 'react'
-import type { AxiosError } from 'axios'
+import React, { useEffect, useState } from 'react'
 import { api, type Poi } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 
@@ -70,7 +69,7 @@ function upsertTranslation(
           ? {
               ...item,
               ...patch,
-              ...(originalDescription !== undefined ? { originalDescription } : {}),
+              originalDescription: originalDescription ?? item.originalDescription ?? form.description,
             }
           : item,
       ),
@@ -133,7 +132,7 @@ async function geocodeAddress(address: string): Promise<GeoPoint> {
   throw new Error('Không tìm thấy tọa độ từ địa chỉ này. Hãy nhập rõ hơn, ví dụ kèm Quận 4.')
 }
 
-async function translateDescription(text: string, language: TtsLanguage): Promise<string> {
+async function translateText(text: string, language: TtsLanguage): Promise<string> {
   if (language.code === 'vi') return text
 
   const { data } = await api.post<{ translatedText?: string }>('/api/translation/text', {
@@ -148,15 +147,6 @@ async function translateDescription(text: string, language: TtsLanguage): Promis
   }
 
   return translated
-}
-
-function extractApiErrorMessage(err: unknown, fallback: string): string {
-  if (err instanceof Error && err.message) {
-    const maybeAxios = err as AxiosError<{ message?: string }>
-    const apiMessage = maybeAxios.response?.data?.message
-    if (apiMessage && apiMessage.trim()) return apiMessage.trim()
-  }
-  return fallback
 }
 
 export function PoiEditor() {
@@ -174,18 +164,11 @@ export function PoiEditor() {
   const [audioBusy, setAudioBusy] = useState(false)
   const [previewBusy, setPreviewBusy] = useState(false)
   const [ttsLangCode, setTtsLangCode] = useState('vi')
-  const [ownerMessage, setOwnerMessage] = useState('')
 
   const poiQ = useQuery({
     queryKey: ['poi', id],
     enabled: !isNew && id !== 'new' && !!id,
     queryFn: async () => (await api.get<Poi>(`/api/poi/${id}`)).data,
-  })
-
-  const ownersQ = useQuery({
-    queryKey: ['owners'],
-    enabled: role === 'Admin',
-    queryFn: async () => (await api.get<{ id: number; username: string }[]>('/api/auth/owners')).data,
   })
 
   useEffect(() => {
@@ -200,16 +183,6 @@ export function PoiEditor() {
       setGeoMessage(`Địa chỉ hiện tại: ${poiQ.data.ownerInfo}`)
     }
   }, [poiQ.data])
-
-  useEffect(() => {
-    if (role !== 'Admin') return
-    if (!ownersQ.data || ownersQ.data.length === 0) return
-
-    setForm((current) => {
-      if (current.ownerUserId != null) return current
-      return { ...current, ownerUserId: ownersQ.data[0].id }
-    })
-  }, [ownersQ.data, role])
 
   const resolveAddressToCoordinates = async () => {
     const address = form.ownerInfo?.trim() ?? ''
@@ -238,18 +211,6 @@ export function PoiEditor() {
         if (!address) throw new Error('Vui lòng nhập địa chỉ / số nhà trước khi lưu.')
 
         let payload = form
-        if (role === 'Admin') {
-          if ((ownersQ.data?.length ?? 0) === 0) {
-            setOwnerMessage('Chưa có tài khoản chủ quán. Hãy tạo Owner trước khi lưu POI.')
-            throw new Error('Chưa có tài khoản chủ quán. Hãy tạo Owner trước khi lưu POI.')
-          }
-          if (!payload.ownerUserId) {
-            setOwnerMessage('Vui lòng chọn chủ quán trước khi lưu.')
-            throw new Error('Vui lòng chọn chủ quán trước khi lưu.')
-          }
-          setOwnerMessage('')
-        }
-
         if (!Number.isFinite(form.latitude) || !Number.isFinite(form.longitude) || !address) {
           const point = await geocodeAddress(address)
           payload = {
@@ -269,19 +230,17 @@ export function PoiEditor() {
         }
       } catch (err) {
         console.error('POI save error:', err)
-        throw new Error(extractApiErrorMessage(err, 'Không lưu được POI. Vui lòng kiểm tra dữ liệu.'))
+        throw err
       }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pois'] })
       navigate('/pois')
     },
-    onError: (err) => {
+    onError: (err: any) => {
       console.error('Mutation error:', err)
-      const message = err instanceof Error ? err.message : ''
-      if (message.toLowerCase().includes('chủ quán') || message.toLowerCase().includes('owner')) {
-        setOwnerMessage(message)
-      }
+      const message = err.response?.data?.message || 'Có lỗi xảy ra khi lưu dữ liệu.'
+      alert(message)
     },
   })
 
@@ -304,10 +263,11 @@ export function PoiEditor() {
       } else {
         // Description thay đổi hoặc chưa có bản dịch → dịch lại
         setTtsMessage(`Đang dịch mô tả sang ${language.label}...`)
-        text = await translateDescription(sourceText, language)
+        text = await translateText(sourceText, language)
+        const translatedName = await translateText(form.name.trim() || 'POI', language)
         setForm((current) =>
           upsertTranslation(current, language.code, {
-            name: current.name,
+            name: translatedName,
             description: text,
           }, sourceText), // Lưu originalDescription để so sánh sau
         )
@@ -398,10 +358,88 @@ export function PoiEditor() {
     }
   }
 
+  const generateVoiceForAllLangs = async () => {
+    setTtsBusy(true)
+    setTtsMessage('Bắt đầu dịch và tạo audio cho tất cả các ngôn ngữ...')
+    try {
+      const sourceText = form.description.trim()
+      const sourceName = form.name.trim() || 'POI'
+      if (!sourceText) throw new Error('Vui lòng nhập mô tả Tiếng Việt trước.')
+
+      let currentForm = form
+      for (const language of ttsLanguages) {
+        setTtsMessage(`Đang xử lý ${language.label}...`)
+        
+        // 1. Translate
+        let text = sourceText
+        let name = sourceName
+        if (language.code !== 'vi') {
+          text = await translateText(sourceText, language)
+          name = await translateText(sourceName, language)
+        }
+
+        // 2. Generate Audio
+        setTtsMessage(`Đang tạo audio ${language.label}...`)
+        const { data } = await api.post<{ url?: string; filename?: string }>('/api/audio/generate-tts', {
+          text,
+          lang: language.code,
+          voice: language.voice,
+        })
+
+        if (!data?.url) {
+          throw new Error(`Đã xảy ra lỗi lấy audio từ backend cho ${language.code}.`)
+        }
+
+        // 3. Update Form
+        if (language.code === 'vi') {
+          currentForm = { ...currentForm, audioViUrl: data.url }
+        } else {
+          currentForm = upsertTranslation(currentForm, language.code, {
+            name: name,
+            description: text,
+            audioUrl: data.url,
+          }, sourceText)
+        }
+      }
+
+      setForm(currentForm)
+      setTtsMessage('Đã hoàn tất! Các dòng text và Audio URL của tất cả ngôn ngữ đã sẵn sàng.')
+    } catch (err: unknown) {
+      setTtsMessage('Lỗi khi tạo hàng loạt: ' + (err instanceof Error ? err.message : 'Unknown error'))
+    } finally {
+      setTtsBusy(false)
+    }
+  }
+
+  const [imageBusy, setImageBusy] = useState(false)
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImageBusy(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const { data } = await api.post<{ url: string }>('/api/upload/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+
+      if (data?.url) {
+        setForm((prev) => ({ ...prev, imageUrl: data.url }))
+      }
+    } catch (err) {
+      console.error('Image upload error:', err)
+      alert('Không upload được ảnh. Vui lòng thử lại.')
+    } finally {
+      setImageBusy(false)
+    }
+  }
+
   if (!isNew && poiQ.isLoading) return <p>Đang tải...</p>
 
-  const hasOwner = role !== 'Admin' || (!!form.ownerUserId && (ownersQ.data?.length ?? 0) > 0)
-  const isFormValid = form.name.trim().length > 0 && (form.ownerInfo?.trim().length ?? 0) > 0 && hasOwner
+  const isFormValid = form.name.trim().length > 0 && (form.ownerInfo?.trim().length ?? 0) > 0
   const currentLanguage = ttsLanguages.find((item) => item.code === ttsLangCode) ?? ttsLanguages[0]
   const currentAudioUrl =
     ttsLangCode === 'vi' ? form.audioViUrl : (findTranslation(form, ttsLangCode)?.audioUrl ?? null)
@@ -426,37 +464,6 @@ export function PoiEditor() {
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
         </label>
-
-        {role === 'Admin' && (
-          <label className="text-sm">
-            Chủ quán
-            <select
-              className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
-              value={form.ownerUserId?.toString() ?? ''}
-              onChange={(e) => {
-                const value = e.target.value ? Number(e.target.value) : null
-                setForm({ ...form, ownerUserId: value })
-                setOwnerMessage('')
-              }}
-            >
-              <option value="">-- Chọn chủ quán --</option>
-              {(ownersQ.data ?? []).map((owner) => (
-                <option key={owner.id} value={owner.id}>
-                  {owner.username}
-                </option>
-              ))}
-            </select>
-            <div className="mt-1 text-xs text-stone-500">
-              Mỗi quán phải thuộc về đúng một chủ quán để quản trị QR và nội dung riêng.
-            </div>
-            {(ownersQ.data?.length ?? 0) === 0 && (
-              <div className="mt-1 text-xs text-red-600">
-                Chưa có owner nào trong hệ thống. Vui lòng tạo tài khoản chủ quán trước.
-              </div>
-            )}
-            {ownerMessage && <div className="mt-1 text-xs text-red-600">{ownerMessage}</div>}
-          </label>
-        )}
 
         <label className="text-sm">
           Mô tả
@@ -523,6 +530,19 @@ export function PoiEditor() {
             </div>
           </div>
 
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+             <button
+                type="button"
+                className="flex-1 rounded-lg border border-blue-500 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                onClick={async () => {
+                  generateVoiceForAllLangs()
+                }}
+                disabled={previewBusy || ttsBusy || save.isPending || audioBusy}
+              >
+                ⚡ Dịch & Trích xuất MP3 Tự động All Language
+              </button>
+          </div>
+
           <div className="mt-3 rounded-md bg-stone-50 p-3 text-sm text-stone-700">
             {ttsMessage || 'Chưa nghe thử hoặc xuất file mp3 từ mô tả.'}
           </div>
@@ -584,41 +604,15 @@ export function PoiEditor() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-stone-200 p-4">
-          <h3 className="text-sm font-semibold text-stone-800">Mã QR (bus / điểm dừng)</h3>
-          <p className="mt-1 text-xs text-stone-500">
-            Có thể nhập mã tùy chỉnh, hoặc để trống để hệ thống tự sinh mã QR riêng cho quán này khi lưu.
-          </p>
+        <label className="text-sm">
+          Mã QR (bus / điểm dừng, ví dụ <span className="font-mono">VK-POI-001</span>)
           <input
-            className="mt-2 w-full rounded border px-2 py-1 font-mono dark:border-stone-600 dark:bg-stone-800"
-            placeholder="Để trống để hệ thống tự sinh mã"
+            className="mt-1 w-full rounded border px-2 py-1 font-mono dark:border-stone-600 dark:bg-stone-800"
+            placeholder="Để trống nếu không dùng QR"
             value={form.qrCode ?? ''}
             onChange={(e) => setForm({ ...form, qrCode: e.target.value.trim() || null })}
           />
-          {!isNew && form.qrCode && (
-            <div className="mt-3 flex flex-col items-start gap-3">
-              <img
-                src={`/api/poi/${id}/qrcode`}
-                alt={`QR code cho ${form.name}`}
-                className="h-40 w-40 rounded border border-stone-200 bg-white p-1"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-              />
-              <a
-                href={`/api/poi/${id}/qrcode`}
-                download={`QR-${form.qrCode ?? id}.png`}
-                className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
-              >
-                Tải ảnh QR về in
-              </a>
-            </div>
-          )}
-          {!isNew && !form.qrCode && (
-            <p className="mt-2 text-xs text-stone-400">Chưa có mã QR. Lưu lại để hệ thống tự tạo mã riêng.</p>
-          )}
-          {isNew && (
-            <p className="mt-2 text-xs text-stone-400">Lưu POI trước, sau đó quay lại để xem ảnh QR.</p>
-          )}
-        </div>
+        </label>
 
         <div className="rounded-lg border border-stone-200 p-4">
           <h3 className="text-sm font-semibold text-stone-800">Hiển thị trên bản đồ nội bộ</h3>
@@ -675,14 +669,32 @@ export function PoiEditor() {
           />
         </label>
 
-        <label className="text-sm">
-          Ảnh URL
-          <input
-            className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
-            value={form.imageUrl ?? ''}
-            onChange={(e) => setForm({ ...form, imageUrl: e.target.value || null })}
-          />
-        </label>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold">Hình ảnh Quán ăn</label>
+          <div className="flex items-center gap-4">
+            {form.imageUrl && (
+              <div className="relative h-20 w-20 overflow-hidden rounded-lg border">
+                <img src={form.imageUrl} className="h-full w-full object-cover" />
+              </div>
+            )}
+            <div className="flex-1">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                id="image-upload"
+              />
+              <label
+                htmlFor="image-upload"
+                className="inline-block cursor-pointer rounded-lg bg-orange-100 px-4 py-2 text-sm font-medium text-orange-700 hover:bg-orange-200"
+              >
+                {imageBusy ? 'Đang tải lên...' : 'Chọn ảnh từ máy'}
+              </label>
+              <p className="mt-1 text-xs text-stone-500">Hỗ trợ: JPG, PNG, WEBP. Tối đa 10MB.</p>
+            </div>
+          </div>
+        </div>
 
         <label className="text-sm">
           Audio VI URL
@@ -742,8 +754,7 @@ export function PoiEditor() {
 
       {!isFormValid && (
         <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-700 dark:border-yellow-700 dark:bg-yellow-900/20">
-          Vui lòng điền <strong>Tên</strong>, <strong>Địa chỉ</strong>
-          {role === 'Admin' ? ' và chọn chủ quán' : ''} cho POI.
+          Vui lòng điền <strong>Tên</strong> và <strong>Địa chỉ</strong> POI.
         </div>
       )}
 

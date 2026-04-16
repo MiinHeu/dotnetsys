@@ -157,6 +157,7 @@ body {
     radial-gradient(circle at 15% 20%, rgba(251, 146, 60, 0.16), transparent 32%),
     radial-gradient(circle at 85% 8%, rgba(59, 130, 246, 0.12), transparent 28%),
     linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(180deg, #fff8f3 0%, #fff3e6 100%);
   font-weight: 400;
 }
 
@@ -165,6 +166,7 @@ body {
     radial-gradient(circle at 15% 20%, rgba(251, 146, 60, 0.22), transparent 30%),
     radial-gradient(circle at 85% 8%, rgba(14, 165, 233, 0.2), transparent 25%),
     linear-gradient(180deg, #0b1220 0%, #111827 100%);
+  background: linear-gradient(180deg, #1b1410 0%, #291c14 100%);
 }
 
 h1,

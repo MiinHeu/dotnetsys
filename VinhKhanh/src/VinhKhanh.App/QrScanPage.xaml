@@ -1,39 +1,27 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.Maui.Controls"
+             xmlns:res="clr-namespace:VinhKhanh.App.Resources.Strings"
              x:Class="VinhKhanh.App.QrScanPage"
-             Title="Quet QR POI">
-    <Grid RowDefinitions="Auto,*,Auto" Padding="12" RowSpacing="10" BackgroundColor="#F8FAFC">
-        <Border Grid.Row="0"
-                Stroke="#E2E8F0"
-                Background="#FFFFFF"
-                StrokeShape="RoundRectangle 14"
-                Padding="12">
-            <Label x:Name="StatusLabel"
-                   TextColor="#334155"
-                   Text="Hướng camera vào mã QR để phát thuyết minh ngay, không cần GPS." />
-        </Border>
+             Title="{x:Static res:AppResources.TabScan}">
+    <Grid RowDefinitions="Auto,*,Auto" Padding="0">
+        <Label x:Name="StatusLabel"
+               Padding="12"
+               Text="{x:Static res:AppResources.QrScanHint}" />
 
         <zxing:CameraBarcodeReaderView x:Name="Scanner"
                                        Grid.Row="1"
-                                       Margin="0,0,0,2"
                                        IsDetecting="True"
                                        BarcodesDetected="OnBarcodesDetected" />
 
-        <Border Grid.Row="2"
-                Stroke="#E2E8F0"
-                Background="#FFFFFF"
-                StrokeShape="RoundRectangle 14"
-                Padding="12">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <Entry x:Name="ManualCodeEntry"
-                       Placeholder="Nhập mã QR nếu camera không khả dụng"
-                       ReturnType="Done"
-                       Completed="OnManualSubmit"
-                       ClearButtonVisibility="WhileEditing" />
-                <Button Grid.Column="1" Text="Xử lý" Clicked="OnManualSubmit" CornerRadius="12" />
-            </Grid>
-        </Border>
+        <Grid Grid.Row="2" Padding="12" ColumnDefinitions="*,Auto" ColumnSpacing="8" BackgroundColor="#FFFFFF">
+            <Entry x:Name="ManualCodeEntry"
+                   Placeholder="{x:Static res:AppResources.QrPlaceholder}"
+                   ReturnType="Done"
+                   Completed="OnManualSubmit"
+                   ClearButtonVisibility="WhileEditing" />
+            <Button Grid.Column="1" Text="{x:Static res:AppResources.QrSubmitButton}" Clicked="OnManualSubmit" />
+        </Grid>
     </Grid>
 </ContentPage>

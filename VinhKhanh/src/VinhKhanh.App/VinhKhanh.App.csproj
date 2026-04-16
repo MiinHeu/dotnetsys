@@ -60,6 +60,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<EmbeddedResource Update="Resources\Strings\AppResources.resx">
+			<Generator>PublicResXFileCodeGenerator</Generator>
+			<LastGenOutput>AppResources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
 		<MauiXaml Update="App.xaml" />
 		<MauiXaml Update="AppShell.xaml" />
 		<MauiXaml Update="MainPage.xaml" />
@@ -73,6 +80,7 @@
 		<PackageReference Include="CommunityToolkit.Maui" Version="14.0.1" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.5" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.6" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.6" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.41" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
@@ -85,6 +93,14 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\VinhKhanh.Shared\VinhKhanh.Shared.csproj" />
 	  <ProjectReference Include="..\VinhKhanh.Infrastructure\VinhKhanh.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Resources\Strings\AppResources.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>AppResources.resx</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 </Project>

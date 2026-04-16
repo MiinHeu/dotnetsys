@@ -56,7 +56,7 @@ export function OwnerForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-amber-50 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-amber-50 p-6">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-10">
         <button
           onClick={() => navigate('/owner-login', { replace: true })}

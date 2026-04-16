@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="LanguageSelectionTitle" xml:space="preserve"><value>Chọn Ngôn Ngữ</value></data>
+  <data name="LanguageSelectionDesc" xml:space="preserve"><value>Vui lòng chọn ngôn ngữ của bạn</value></data>
+  <data name="LanguageSelectionContinue" xml:space="preserve"><value>Tiếp tục</value></data>
+  <data name="TabMap" xml:space="preserve"><value>Bản đồ</value></data>
+  <data name="TabTours" xml:space="preserve"><value>Lộ trình</value></data>
+  <data name="TabChat" xml:space="preserve"><value>Chatbot</value></data>
+  <data name="TabScan" xml:space="preserve"><value>Quét QR</value></data>
+  <data name="TabSettings" xml:space="preserve"><value>Cài đặt</value></data>
+  <data name="MapTitle" xml:space="preserve"><value>Bản đồ Vinh Khánh</value></data>
+  <data name="LanguagePickerTitle" xml:space="preserve"><value>Ngôn ngữ</value></data>
+  <data name="SyncButton" xml:space="preserve"><value>Đồng bộ</value></data>
+  <data name="GpsButtonOn" xml:space="preserve"><value>Bật GPS</value></data>
+  <data name="GpsButtonOff" xml:space="preserve"><value>Tắt GPS</value></data>
+  <data name="StatusNearestPoiDefault" xml:space="preserve"><value>Đang tìm quán gần nhất...</value></data>
+  <data name="PoiDetailNearestLabel" xml:space="preserve"><value>QUÁN GẦN NHẤT</value></data>
+  <data name="PoiDetailReadAudio" xml:space="preserve"><value>Nghe thuyết minh</value></data>
+  <data name="SyncStatusSyncing" xml:space="preserve"><value>Đang đồng bộ dữ liệu...</value></data>
+  <data name="SyncStatusSuccess" xml:space="preserve"><value>Đã đồng bộ {0} quán.</value></data>
+  <data name="SyncStatusOffline" xml:space="preserve"><value>Offline: Có {0} quán trong bộ nhớ.</value></data>
+  <data name="SyncStatusNoData" xml:space="preserve"><value>Không có dữ liệu.</value></data>
+  <data name="SyncStatusNetworkError" xml:space="preserve"><value>Lỗi mạng - Đang dùng dữ liệu cũ.</value></data>
+  <data name="GpsStatusTracking" xml:space="preserve"><value>Đang theo dõi vị trí...</value></data>
+  <data name="GpsStatusStopped" xml:space="preserve"><value>Đã dừng theo dõi.</value></data>
+  <data name="GpsStatusWait" xml:space="preserve"><value>Đang chờ tín hiệu GPS...</value></data>
+  <data name="NarrationStatusPlaying" xml:space="preserve"><value>Đang phát: {0}</value></data>
+  <data name="NarrationStatusFinished" xml:space="preserve"><value>Đã nghe xong: {0}</value></data>
+  <data name="NarrationStatusError" xml:space="preserve"><value>Lỗi âm thanh: {0}</value></data>
+  <data name="NarrationStatusNoPoi" xml:space="preserve"><value>Không có gì để phát.</value></data>
+  <data name="ToursHeader" xml:space="preserve"><value>Khám phá</value></data>
+  <data name="ToursTitle" xml:space="preserve"><value>Chi tiết lộ trình</value></data>
+  <data name="ToursSubtitle" xml:space="preserve"><value>Gợi ý hành trình cho bạn</value></data>
+  <data name="ToursItemStopsCount" xml:space="preserve"><value>Số điểm dừng: {0}</value></data>
+  <data name="ToursItemMinutes" xml:space="preserve"><value>Thời gian: {0} phút</value></data>
+  <data name="ToursEmptyTitle" xml:space="preserve"><value>Không tìm thấy lộ trình nào.</value></data>
+  <data name="ToursEmptySubtitle" xml:space="preserve"><value>Hãy thử đồng bộ lại dữ liệu.</value></data>
+  <data name="ToursSyncError" xml:space="preserve"><value>Lỗi tải dữ liệu lộ trình.</value></data>
+  <data name="ChatSendButton" xml:space="preserve"><value>Gửi</value></data>
+  <data name="QrScanHint" xml:space="preserve"><value>Hãy đưa camera về phía mã QR tại quán</value></data>
+  <data name="QrPlaceholder" xml:space="preserve"><value>Nhập mã quán bằng tay</value></data>
+  <data name="QrSubmitButton" xml:space="preserve"><value>Xử lý</value></data>
+  <data name="QrFoundSatus" xml:space="preserve"><value>Bạn đã ghé thăm: {0}</value></data>
+  <data name="QrNotFoundStatus" xml:space="preserve"><value>Không tìm thấy quán này.</value></data>
+  <data name="SettingsApiUrlLabel" xml:space="preserve"><value>Địa chỉ máy chủ (API URL)</value></data>
+  <data name="SettingsGeofenceRadiusLabel" xml:space="preserve"><value>Bán kính kích hoạt (Mặc định là 1)</value></data>
+  <data name="SettingsMockGpsLabel" xml:space="preserve"><value>Giả lập vị trí GPS</value></data>
+  <data name="SettingsMockGpsDesc" xml:space="preserve"><value>Bật để App tự di chuyển qua các quán (Dùng để test).</value></data>
+  <data name="SettingsSaveButton" xml:space="preserve"><value>Lưu cài đặt</value></data>
+  <data name="SettingsApiHint" xml:space="preserve"><value>Sử dụng 10.0.2.2 cho giả lập hoặc IP máy tính cho máy thật.</value></data>
+  <data name="SettingsSavedSuccess" xml:space="preserve"><value>Đã lưu cài đặt thành công.</value></data>
+  <data name="MapLoadingError" xml:space="preserve"><value>Lỗi tải bản đồ.</value></data>
+  <data name="NearestLabelFormat" xml:space="preserve"><value>Gần nhất: {0}</value></data>
+  <data name="PlaybackPoiLabel" xml:space="preserve"><value>Thuyết minh: {0}</value></data>
+  <data name="TabPois" xml:space="preserve"><value>Quán ăn</value></data>
+  <data name="PoiSearchPlaceholder" xml:space="preserve"><value>Tìm quán ăn...</value></data>
+  <data name="PoiEmptyList" xml:space="preserve"><value>Không tìm thấy quán ăn nào</value></data>
+  <data name="PoiReloadButton" xml:space="preserve"><value>Tải lại dữ liệu</value></data>
+  <data name="PlayNarration" xml:space="preserve"><value>Nghe thuyết minh</value></data>
+  <data name="StopNarration" xml:space="preserve"><value>Dừng thuyết minh</value></data>
+</root>

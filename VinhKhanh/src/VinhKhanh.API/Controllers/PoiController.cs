@@ -14,8 +14,12 @@ namespace VinhKhanh.API.Controllers;
 [ApiController, Route("api/[controller]")]
 public class PoiController(
 	ApplicationDbContext db,
-	IHubContext<VinhKhanhHub> hub) : ControllerBase
+	IHubContext<VinhKhanhHub> hub,
+	VinhKhanh.API.Services.ITranslationService translator,
+	ILogger<PoiController> logger) : ControllerBase
 {
+	private readonly VinhKhanh.API.Services.ITranslationService _translator = translator;
+	private readonly ILogger<PoiController> _logger = logger;
 	private static string? NormalizeQr(string? code)
 	{
 		if (string.IsNullOrWhiteSpace(code))
@@ -68,25 +72,28 @@ public class PoiController(
 		if (AuthClaims.IsAdmin(HttpContext.User)) return true;
 		if (!IsOwnerRole) return true; // public read
 		var uid = CurrentUserId;
-		return uid != null && poi.OwnerUserId == uid;
+		return uid == null || poi.OwnerUserId == null || poi.OwnerUserId == uid;
 	}
 
 	[HttpGet]
+	[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 	public async Task<IActionResult> GetAll([FromQuery] string lang = "vi", CancellationToken ct = default)
 	{
 		_ = NormalizeLang(lang);
 
 		var query = db.Pois
+			.Where(p => p.IsActive)
 			.Include(p => p.Translations)
-			.AsNoTracking()
-			.AsQueryable();
+			.AsNoTracking();
 
-		if (IsOwnerRole)
+		// Nếu là Owner (và không phải Admin), chỉ cho phép thấy POI của chính mình quản lý
+		if (IsOwnerRole && !AuthClaims.IsAdmin(HttpContext.User))
 		{
 			var uid = CurrentUserId;
-			if (uid == null)
-				return Forbid();
-			query = query.Where(p => p.OwnerUserId == uid);
+			if (uid.HasValue)
+			{
+				query = query.Where(p => p.OwnerUserId == uid.Value);
+			}
 		}
 
 		var pois = await query
@@ -98,6 +105,7 @@ public class PoiController(
 	}
 
 	[HttpGet("{id:int}")]
+	[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 	public async Task<IActionResult> GetById(int id, CancellationToken ct = default)
 	{
 		var poi = await db.Pois
@@ -119,15 +127,12 @@ public class PoiController(
 		if (string.IsNullOrEmpty(key))
 			return BadRequest(new { message = "Ma QR khong hop le." });
 
-		// Dùng IgnoreQueryFilters để phân biệt "không tồn tại" vs "đã bị vô hiệu hoá"
 		var poi = await db.Pois
-			.IgnoreQueryFilters()
 			.Include(p => p.Translations)
 			.AsNoTracking()
 			.FirstOrDefaultAsync(p => p.QrCode == key, ct);
 
-		if (poi == null) return NotFound(new { message = "Ma QR khong ton tai trong he thong." });
-		if (!poi.IsActive) return NotFound(new { message = "Diem tham quan nay hien khong hoat dong." });
+		if (poi == null) return NotFound();
 		if (!CanAccessPoi(poi)) return Forbid();
 
 		return Ok(poi);
@@ -165,6 +170,7 @@ public class PoiController(
 			return BadRequest(new { message = "Toa do khong hop le." });
 
 		var pois = await db.Pois
+			.Where(p => p.IsActive)
 			.Include(p => p.Translations)
 			.AsNoTracking()
 			.ToListAsync(ct);
@@ -192,6 +198,9 @@ public class PoiController(
 		if (!TryValidatePoi(poi, out var error))
 			return BadRequest(new { message = error });
 
+		if (!ModelState.IsValid)
+			return BadRequest(ModelState);
+
 		// Owner: tự động gán OwnerUserId
 		if (IsOwnerRole)
 		{
@@ -218,6 +227,7 @@ public class PoiController(
 		}
 
 		poi.QrCode = await EnsureQrCodeAsync(poi.QrCode, excludingPoiId: null, ct);
+		poi.QrCode = NormalizeQr(poi.QrCode);
 		if (!string.IsNullOrEmpty(poi.QrCode)
 		    && await db.Pois.IgnoreQueryFilters().AnyAsync(p => p.QrCode == poi.QrCode, ct))
 		{
@@ -307,8 +317,31 @@ public class PoiController(
 			|| poi.Priority != updated.Priority
 			|| poi.CooldownSeconds != updated.CooldownSeconds
 			|| poi.Category != updated.Category
-			|| poi.IsActive != updated.IsActive
-			|| poi.OwnerUserId != updated.OwnerUserId;
+			|| poi.IsActive != updated.IsActive;
+
+		// Chỉ Admin mới có quyền chuyển nhượng POI cho người khác
+		if (AuthClaims.IsAdmin(HttpContext.User))
+		{
+			contentChanged = contentChanged || poi.OwnerUserId != updated.OwnerUserId;
+			poi.OwnerUserId = updated.OwnerUserId;
+		}
+
+		var translationsChanged = false;
+		if (updated.Translations != null)
+		{
+			foreach (var upt in updated.Translations)
+			{
+				var existingT = poi.Translations.FirstOrDefault(t => t.LanguageCode == upt.LanguageCode);
+				if (existingT == null || 
+				    existingT.Name != upt.Name || 
+				    existingT.Description != upt.Description || 
+				    existingT.AudioUrl != upt.AudioUrl)
+				{
+					translationsChanged = true;
+					break;
+				}
+			}
+		}
 
 		poi.Name = updated.Name;
 		poi.Description = updated.Description;
@@ -325,10 +358,38 @@ public class PoiController(
 		poi.AudioViUrl = updated.AudioViUrl;
 		poi.ImageUrl = updated.ImageUrl;
 		poi.QrCode = newQr;
-		poi.OwnerUserId = updated.OwnerUserId;
-		if (contentChanged) poi.ContentVersion++;
+
+		if (contentChanged || translationsChanged) poi.ContentVersion++;
 
 		poi.UpdatedAt = DateTime.UtcNow;
+
+		// Sync translations
+		if (updated.Translations != null)
+		{
+			foreach (var upt in updated.Translations)
+			{
+				var existingT = poi.Translations.FirstOrDefault(t => t.LanguageCode == upt.LanguageCode);
+				if (existingT != null)
+				{
+					existingT.Name = upt.Name;
+					existingT.Description = upt.Description;
+					existingT.AudioUrl = upt.AudioUrl;
+					existingT.OriginalDescription = upt.OriginalDescription;
+				}
+				else
+				{
+					poi.Translations.Add(new PoiTranslation
+					{
+						LanguageCode = upt.LanguageCode,
+						Name = upt.Name,
+						Description = upt.Description,
+						AudioUrl = upt.AudioUrl,
+						OriginalDescription = upt.OriginalDescription
+					});
+				}
+			}
+		}
+
 		NormalizeTranslations(poi.Translations, poi.Description);
 
 		await db.SaveChangesAsync(ct);
@@ -489,5 +550,76 @@ public class PoiController(
 			if (string.IsNullOrWhiteSpace(t.OriginalDescription))
 				t.OriginalDescription = baseDescription;
 		}
+	}
+	[HttpPost("bulk-translate")]
+	[Authorize(Roles = "Admin")]
+	public async Task<IActionResult> BulkTranslate([FromQuery] bool overwrite = false, CancellationToken ct = default)
+	{
+		var targetLangs = new[] { "en", "ja", "ko", "zh" };
+		var pois = await db.Pois.Include(p => p.Translations).ToListAsync(ct);
+		var count = 0;
+
+		Console.WriteLine("\n=== BAT DAU TIEN TRINH DICH THUAT HANG LOAT ===");
+		_logger.LogInformation("Starting bulk translation for {Count} POIs", pois.Count);
+
+		foreach (var poi in pois)
+		{
+			Console.WriteLine($"> Dang xu ly: {poi.Name} (ID: {poi.Id})");
+			
+			foreach (var lang in targetLangs)
+			{
+				var existing = poi.Translations.FirstOrDefault(t => t.LanguageCode == lang);
+				if (existing != null && !overwrite && !string.IsNullOrWhiteSpace(existing.Description))
+				{
+					continue;
+				}
+
+				Console.WriteLine($"  - Dang dich sang [{lang.ToUpper()}]...");
+				
+				try
+				{
+					var translatedDesc = await _translator.TranslateAsync(poi.Description, "vi", lang, ct);
+					if (!string.IsNullOrWhiteSpace(translatedDesc))
+					{
+						// Giữ nguyên tên gốc, chỉ dịch mô tả
+						var translatedName = poi.Name;
+
+						if (existing != null)
+						{
+							existing.Name = translatedName;
+							existing.Description = translatedDesc;
+							existing.OriginalDescription = poi.Description;
+						}
+						else
+						{
+							poi.Translations.Add(new PoiTranslation
+							{
+								LanguageCode = lang,
+								Name = translatedName,
+								Description = translatedDesc,
+								OriginalDescription = poi.Description
+							});
+						}
+
+						Console.WriteLine($"    [OK] Xong: {translatedName}");
+						count++;
+					}
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"    [LOI] {lang}: {ex.Message}");
+				}
+			}
+
+			if (count > 0)
+			{
+				poi.ContentVersion++;
+				poi.UpdatedAt = DateTime.UtcNow;
+				await db.SaveChangesAsync(ct);
+			}
+		}
+
+		Console.WriteLine($"\n=== DA HOAN TAT: {count} ban dich moi ===");
+		return Ok(new { message = "Bulk translation finished", totalNewTranslations = count });
 	}
 }

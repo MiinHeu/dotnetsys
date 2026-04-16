@@ -17,25 +17,22 @@ export function ToursAdmin() {
   })
 
   return (
-    <div className="vk-page">
-      <div className="vk-page-header flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="vk-page-title">Lộ trình trải nghiệm</h2>
-          <p className="vk-page-subtitle">Thiết kế hành trình tham quan ẩm thực cho khách theo từng chủ đề.</p>
-        </div>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-lg font-semibold">Tour</h2>
         {role === 'Admin' && (
-          <Link to="/tours/new" className="vk-btn-primary text-sm">
+          <Link to="/tours/new" className="rounded-lg bg-orange-600 px-3 py-1.5 text-sm text-white">
             + Tour mới
           </Link>
         )}
       </div>
-      {q.isLoading && <p className="text-sm text-slate-500">Đang tải lộ trình…</p>}
-      <ul className="vk-card divide-y divide-slate-100">
+      {q.isLoading && <p>Đang tải…</p>}
+      <ul className="divide-y divide-stone-200 rounded-lg border border-stone-200 dark:divide-stone-700 dark:border-stone-700">
         {q.data?.map((t) => (
-          <li key={t.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-4">
+          <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-3">
             <div>
-              <div className="font-semibold text-slate-900">{t.name}</div>
-              <div className="text-sm text-slate-500">
+              <div className="font-medium">{t.name}</div>
+              <div className="text-sm text-stone-500">
                 {t.estimatedMinutes} phút · {t.stops?.length ?? 0} điểm
               </div>
             </div>
@@ -44,13 +41,13 @@ export function ToursAdmin() {
                 <>
                   <Link
                     to={`/tours/${t.id}`}
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:border-slate-300"
+                    className="text-sm text-orange-700 underline dark:text-orange-400"
                   >
                     Sửa
                   </Link>
                   <button
                     type="button"
-                    className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-700"
+                    className="text-sm text-red-600"
                     onClick={() => del.mutate(t.id)}
                   >
                     Ẩn

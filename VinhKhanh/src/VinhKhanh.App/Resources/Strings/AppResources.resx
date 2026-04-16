@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="LanguageSelectionTitle" xml:space="preserve"><value>Select Language</value></data>
+  <data name="LanguageSelectionDesc" xml:space="preserve"><value>Please select your preferred language</value></data>
+  <data name="LanguageSelectionContinue" xml:space="preserve"><value>Continue</value></data>
+  <data name="TabMap" xml:space="preserve"><value>Map</value></data>
+  <data name="TabTours" xml:space="preserve"><value>Tours</value></data>
+  <data name="TabChat" xml:space="preserve"><value>Chatbot</value></data>
+  <data name="TabScan" xml:space="preserve"><value>Scan QR</value></data>
+  <data name="TabSettings" xml:space="preserve"><value>Settings</value></data>
+  <data name="MapTitle" xml:space="preserve"><value>Vinh Khanh Map</value></data>
+  <data name="LanguagePickerTitle" xml:space="preserve"><value>Language</value></data>
+  <data name="SyncButton" xml:space="preserve"><value>Sync</value></data>
+  <data name="GpsButtonOn" xml:space="preserve"><value>Turn On GPS</value></data>
+  <data name="GpsButtonOff" xml:space="preserve"><value>Turn Off GPS</value></data>
+  <data name="StatusNearestPoiDefault" xml:space="preserve"><value>Finding nearest location...</value></data>
+  <data name="PoiDetailNearestLabel" xml:space="preserve"><value>NEAREST LOCATION</value></data>
+  <data name="PoiDetailReadAudio" xml:space="preserve"><value>Play Audio</value></data>
+  <data name="SyncStatusSyncing" xml:space="preserve"><value>Syncing POIs...</value></data>
+  <data name="SyncStatusSuccess" xml:space="preserve"><value>Synced {0} POIs.</value></data>
+  <data name="SyncStatusOffline" xml:space="preserve"><value>Offline: {0} POIs in cache.</value></data>
+  <data name="SyncStatusNoData" xml:space="preserve"><value>No data. Check API.</value></data>
+  <data name="SyncStatusNetworkError" xml:space="preserve"><value>Network error - reading cache.</value></data>
+  <data name="GpsStatusTracking" xml:space="preserve"><value>Tracking GPS in background...</value></data>
+  <data name="GpsStatusStopped" xml:space="preserve"><value>Tracking stopped.</value></data>
+  <data name="GpsStatusWait" xml:space="preserve"><value>Waiting for location...</value></data>
+  <data name="NarrationStatusPlaying" xml:space="preserve"><value>Playing: {0}</value></data>
+  <data name="NarrationStatusFinished" xml:space="preserve"><value>Finished ({0}s): {1}</value></data>
+  <data name="NarrationStatusError" xml:space="preserve"><value>Audio error: {0}</value></data>
+  <data name="NarrationStatusNoPoi" xml:space="preserve"><value>No POI to play.</value></data>
+  <data name="ToursHeader" xml:space="preserve"><value>Explore</value></data>
+  <data name="ToursTitle" xml:space="preserve"><value>Tours Details</value></data>
+  <data name="ToursSubtitle" xml:space="preserve"><value>Food tour recommendations</value></data>
+  <data name="ToursItemStopsCount" xml:space="preserve"><value>Stops: {0}</value></data>
+  <data name="ToursItemMinutes" xml:space="preserve"><value>Duration: {0} mins</value></data>
+  <data name="ToursEmptyTitle" xml:space="preserve"><value>No tours found.</value></data>
+  <data name="ToursEmptySubtitle" xml:space="preserve"><value>Try syncing again or check API connection.</value></data>
+  <data name="ToursSyncError" xml:space="preserve"><value>Error loading tours.</value></data>
+  <data name="ChatSendButton" xml:space="preserve"><value>Send</value></data>
+  <data name="QrScanHint" xml:space="preserve"><value>Point camera at QR code (vk-poi-123 or URL with /poi/123)</value></data>
+  <data name="QrPlaceholder" xml:space="preserve"><value>Enter POI code manually</value></data>
+  <data name="QrSubmitButton" xml:space="preserve"><value>Process</value></data>
+  <data name="QrFoundSatus" xml:space="preserve"><value>Visited: {0}</value></data>
+  <data name="QrNotFoundStatus" xml:space="preserve"><value>No POI found for this QR code.</value></data>
+  <data name="SettingsApiUrlLabel" xml:space="preserve"><value>API URL (with or without trailing /)</value></data>
+  <data name="SettingsGeofenceRadiusLabel" xml:space="preserve"><value>Geofence radius multiplier (1 = default)</value></data>
+  <data name="SettingsMockGpsLabel" xml:space="preserve"><value>Enable GPS Simulation (.NET Mock)</value></data>
+  <data name="SettingsMockGpsDesc" xml:space="preserve"><value>On: blue-dot automatically loops through POIs.</value></data>
+  <data name="SettingsSaveButton" xml:space="preserve"><value>Save</value></data>
+  <data name="SettingsApiHint" xml:space="preserve"><value>Android emulator: 10.0.2.2 instead of localhost. Real device: PC's LAN IP.</value></data>
+  <data name="SettingsSavedSuccess" xml:space="preserve"><value>Settings saved successfully.</value></data>
+  <data name="MapLoadingError" xml:space="preserve"><value>Error loading map.</value></data>
+  <data name="NearestLabelFormat" xml:space="preserve"><value>Nearest: {0}</value></data>
+  <data name="PlaybackPoiLabel" xml:space="preserve"><value>Playback: {0}</value></data>
+  <data name="TabPois" xml:space="preserve"><value>Restaurants</value></data>
+  <data name="PoiSearchPlaceholder" xml:space="preserve"><value>Search restaurants...</value></data>
+  <data name="PoiEmptyList" xml:space="preserve"><value>No restaurants found</value></data>
+  <data name="PoiReloadButton" xml:space="preserve"><value>Reload data</value></data>
+  <data name="PlayNarration" xml:space="preserve"><value>Play Narration</value></data>
+  <data name="StopNarration" xml:space="preserve"><value>Stop Narration</value></data>
+</root>

@@ -1,8 +1,14 @@
 using System.Collections.Specialized;
 using Mapsui;
 using Mapsui.Projections;
-using Mapsui.Tiling;
 using Mapsui.UI.Maui;
+using Mapsui.Layers;
+using Mapsui.Providers;
+using Mapsui.Styles;
+using Mapsui.Tiling;
+using Mapsui.Nts;
+using NetTopologySuite.Geometries;
+using Position = Mapsui.UI.Maui.Position;
 using VinhKhanh.App.Models;
 using VinhKhanh.App.Services;
 using VinhKhanh.App.ViewModels;
@@ -17,6 +23,7 @@ public partial class MainPage : ContentPage
 	private readonly NarrationService _narration;
 	private PoiSnapshot? _selectedPoi;
 	private bool _centerOnNextLocation = true;
+	private MemoryLayer? _tourLayer;
 
 	public MainPage()
 	{
@@ -36,20 +43,22 @@ public partial class MainPage : ContentPage
 				Dispatcher.Dispatch(() => StatusLabel.Text = _vm.StatusMessage);
 			if (e.PropertyName == nameof(MainViewModel.NearestLabel))
 				Dispatcher.Dispatch(() => NearestLabel.Text = string.IsNullOrWhiteSpace(_vm.NearestLabel)
-					? "Đang tìm điểm gần nhất..."
-					: $"Gần nhất: {_vm.NearestLabel}");
+					? VinhKhanh.App.Resources.Strings.AppResources.StatusNearestPoiDefault
+					: string.Format(VinhKhanh.App.Resources.Strings.AppResources.NearestLabelFormat, _vm.NearestLabel));
 			if (e.PropertyName == nameof(MainViewModel.NearestPoiId))
 				Dispatcher.Dispatch(UpdatePins);
 			if (e.PropertyName is nameof(MainViewModel.UserLatitude) or nameof(MainViewModel.UserLongitude))
 				Dispatcher.Dispatch(UpdateMapUser);
 			if (e.PropertyName == nameof(MainViewModel.IsTracking))
 				Dispatcher.Dispatch(() =>
-					TrackBtn.Text = _vm.IsTracking ? "Tắt GPS" : "Bật GPS");
+					TrackBtn.Text = _vm.IsTracking ? VinhKhanh.App.Resources.Strings.AppResources.GpsButtonOff : VinhKhanh.App.Resources.Strings.AppResources.GpsButtonOn);
+			if (e.PropertyName == nameof(MainViewModel.SelectedTour))
+				Dispatcher.Dispatch(UpdateTourPath);
 		};
 
 		_vm.Pois.CollectionChanged += OnPoisChanged;
 		StatusLabel.Text = _vm.StatusMessage;
-		NearestLabel.Text = "Đang tìm điểm gần nhất...";
+		NearestLabel.Text = VinhKhanh.App.Resources.Strings.AppResources.StatusNearestPoiDefault;
 
 		Loaded += async (_, _) =>
 		{
@@ -61,7 +70,7 @@ public partial class MainPage : ContentPage
 			}
 			catch (Exception ex)
 			{
-				StatusLabel.Text = "Lỗi tải bản đồ.";
+				StatusLabel.Text = VinhKhanh.App.Resources.Strings.AppResources.MapLoadingError;
 				System.Diagnostics.Debug.WriteLine($"MainPage Loaded error: {ex}");
 			}
 		};
@@ -87,10 +96,18 @@ public partial class MainPage : ContentPage
 
 	private void OnLangChanged(object? sender, EventArgs e)
 	{
-		if (LangPicker.SelectedItem is string lang)
+		if (LangPicker.SelectedItem is string lang && _vm.SelectedLanguage != lang)
 		{
 			_vm.SelectedLanguage = lang;
-			UpdatePins();
+			Microsoft.Maui.Storage.Preferences.Set(AppPreferences.UiLanguage, lang);
+			
+			var culture = new System.Globalization.CultureInfo(lang);
+			System.Globalization.CultureInfo.CurrentCulture = culture;
+			System.Globalization.CultureInfo.CurrentUICulture = culture;
+			System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
+			System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
+			
+			Application.Current!.MainPage = new AppShell();
 		}
 	}
 
@@ -202,21 +219,89 @@ public partial class MainPage : ContentPage
 		var poi = _selectedPoi ?? _vm.Pois.FirstOrDefault(x => x.Id == _vm.NearestPoiId);
 		if (poi == null)
 		{
-			StatusLabel.Text = "Chưa có POI để phát.";
+			StatusLabel.Text = VinhKhanh.App.Resources.Strings.AppResources.NarrationStatusNoPoi;
 			System.Diagnostics.Debug.WriteLine("[MainPage] No POI selected for playback");
 			return;
 		}
 
 		try
 		{
-			StatusLabel.Text = $"Đang phát: {poi.ResolveName(_vm.SelectedLanguage)}";
+			StatusLabel.Text = string.Format(VinhKhanh.App.Resources.Strings.AppResources.NarrationStatusPlaying, poi.ResolveName(_vm.SelectedLanguage));
 			var heardSeconds = await _narration.PlayPoiAsync(poi, _vm.SelectedLanguage, _vm.ApiRootForAudio);
-			StatusLabel.Text = $"Đã phát xong ({heardSeconds}s): {poi.ResolveName(_vm.SelectedLanguage)}";
+			StatusLabel.Text = string.Format(VinhKhanh.App.Resources.Strings.AppResources.NarrationStatusFinished, heardSeconds, poi.ResolveName(_vm.SelectedLanguage));
 		}
 		catch (Exception ex)
 		{
-			StatusLabel.Text = $"Lỗi phát audio: {ex.Message}";
+			StatusLabel.Text = string.Format(VinhKhanh.App.Resources.Strings.AppResources.NarrationStatusError, ex.Message);
 			System.Diagnostics.Debug.WriteLine($"[MainPage] Playback error: {ex}");
+		}
+	}
+
+	private void UpdateTourPath()
+	{
+		// 1. Don dep Layer cu
+		if (_tourLayer != null)
+		{
+			StreetMap.Map.Layers.Remove(_tourLayer);
+			_tourLayer = null;
+		}
+
+		var tour = _vm.SelectedTour;
+		if (tour == null || tour.Stops == null || tour.Stops.Count < 2)
+		{
+			StreetMap.RefreshGraphics();
+			return;
+		}
+
+		// 2. Tao LineString tu danh sach stops (NTS style)
+		var coordinates = new List<Coordinate>();
+		var points = new List<Mapsui.MPoint>();
+		
+		foreach (var stop in tour.Stops.OrderBy(s => s.StopOrder))
+		{
+			if (stop.Poi == null) continue;
+			var sm = SphericalMercator.FromLonLat(stop.Poi.Longitude, stop.Poi.Latitude);
+			coordinates.Add(new Coordinate(sm.x, sm.y));
+			points.Add(new Mapsui.MPoint(sm.x, sm.y));
+		}
+
+		if (coordinates.Count < 2) return;
+		var lineString = new NetTopologySuite.Geometries.LineString(coordinates.ToArray());
+
+		// 3. Tao Layer moi voi Style mau cam
+		var feature = new GeometryFeature { Geometry = lineString };
+		_tourLayer = new MemoryLayer
+		{
+			Name = "SelectedTourPath",
+			Features = new[] { feature },
+			Style = new VectorStyle
+			{
+				Line = new Pen
+				{
+					Color = Mapsui.Styles.Color.Orange,
+					Width = 4,
+					PenStyle = PenStyle.Solid,
+					PenStrokeCap = PenStrokeCap.Round
+				}
+			}
+		};
+
+		StreetMap.Map.Layers.Add(_tourLayer);
+		StreetMap.RefreshGraphics();
+
+		// 4. Tu dong Zoom de thay tron ven lo trinh
+		if (points.Count > 0)
+		{
+			var minX = points.Min(p => p.X);
+			var minY = points.Min(p => p.Y);
+			var maxX = points.Max(p => p.X);
+			var maxY = points.Max(p => p.Y);
+			
+			// Them padding 10%
+			var dx = (maxX - minX) * 0.2;
+			var dy = (maxY - minY) * 0.2;
+			
+			StreetMap.Map.Navigator.ZoomToBox(new Mapsui.MRect(minX - dx, minY - dy, maxX + dx, maxY + dy));
 		}
 	}
 }

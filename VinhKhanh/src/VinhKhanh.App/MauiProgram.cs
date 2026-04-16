@@ -62,6 +62,8 @@ public static class MauiProgram
 		builder.Services.AddTransient<ChatPage>();
 		builder.Services.AddTransient<SettingsPage>();
 		builder.Services.AddTransient<ToursPage>();
+		builder.Services.AddTransient<PoiListPage>();
+		builder.Services.AddTransient<PoiDetailPage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:VinhKhanh.App.ViewModels"
+             xmlns:models="clr-namespace:VinhKhanh.App.Models"
+             xmlns:res="clr-namespace:VinhKhanh.App.Resources.Strings"
+             x:Class="VinhKhanh.App.PoiListPage"
+             x:DataType="vm:MainViewModel"
+             Title="{Binding PageTitle}"
+             BackgroundColor="White">
+
+    <Grid RowDefinitions="Auto, *">
+        <!-- Header / Search -->
+        <Frame Grid.Row="0" Margin="10" Padding="0" HasShadow="False" CornerRadius="8" BorderColor="#E5E7EB">
+            <SearchBar x:Name="PoiSearchBar" 
+                       Placeholder="{Binding SearchPlaceholder}"
+                       TextChanged="OnSearchTextChanged"
+                       CancelButtonColor="#FF5A1F" />
+        </Frame>
+
+        <!-- List -->
+        <RefreshView Grid.Row="1" x:Name="PoiRefreshView" RefreshColor="#FF5A1F" Command="{Binding RefreshCommand}">
+            <CollectionView x:Name="PoiCollectionView"
+                            Margin="10,0">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="12" />
+                </CollectionView.ItemsLayout>
+                
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:PoiSnapshot">
+                        <Frame HasShadow="True" Padding="0" CornerRadius="12" BorderColor="Transparent" HeightRequest="110">
+                            <!-- Gesture Recognizer trực tiếp trên Frame -->
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPoiTapped" CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
+                            
+                            <Grid ColumnDefinitions="110, *">
+                                <!-- Image -->
+                                <Image Grid.Column="0" 
+                                       Source="{Binding ImageUrl, TargetNullValue='icon_restaurant_placeholder.png'}" 
+                                       Aspect="AspectFill" />
+                                
+                                <!-- Info -->
+                                <StackLayout Grid.Column="1" Padding="12" Spacing="4" VerticalOptions="Center">
+                                    <Label Text="{Binding DisplayName}" 
+                                           FontSize="16" 
+                                           FontAttributes="Bold" 
+                                           TextColor="#111827" 
+                                           MaxLines="1" 
+                                           LineBreakMode="TailTruncation" />
+                                    
+                                    <Label Text="{Binding Category}" 
+                                           FontSize="13" 
+                                           TextColor="#FF5A1F" 
+                                           FontAttributes="Italic" />
+                                    
+                                    <Label Text="{Binding DisplayDescription}" 
+                                           FontSize="12" 
+                                           TextColor="#6B7280" 
+                                           MaxLines="2" 
+                                           LineBreakMode="TailTruncation" />
+                                </StackLayout>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
+                        <Label Text="{Binding BindingContext.EmptyListText, Source={x:Reference PoiCollectionView}}" 
+                               FontSize="16" 
+                               HorizontalOptions="Center" 
+                               TextColor="#9CA3AF" />
+                        <Button Text="{Binding BindingContext.ReloadButtonText, Source={x:Reference PoiCollectionView}}" Clicked="OnReloadClicked" 
+                                BackgroundColor="#FF5A1F" 
+                                CornerRadius="20" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

@@ -237,6 +237,21 @@ public sealed class NarrationService(IAudioManager audioManager, ILogger<Narrati
 							await TextToSpeech.Default.SpeakAsync(textToSpeak, cancelToken: ct);
 						}
 					});
+					if (locale != null)
+					{
+						var options = new SpeechOptions
+						{
+							Locale = locale,
+							Volume = 1f,
+							Pitch = 1f,
+							Rate = 0.92f
+						};
+						await TextToSpeech.Default.SpeakAsync(textToSpeak, options);
+					}
+					else
+					{
+						await TextToSpeech.Default.SpeakAsync(textToSpeak);
+					}
 
 					logger.LogInformation("TTS completed successfully");
 					return ElapsedListenSeconds(sw);

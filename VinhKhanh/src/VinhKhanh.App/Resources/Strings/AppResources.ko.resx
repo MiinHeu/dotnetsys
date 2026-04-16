@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="LanguageSelectionTitle" xml:space="preserve"><value>언어 선택</value></data>
+  <data name="LanguageSelectionDesc" xml:space="preserve"><value>선호하는 언어를 선택하세요</value></data>
+  <data name="LanguageSelectionContinue" xml:space="preserve"><value>계속</value></data>
+  <data name="TabMap" xml:space="preserve"><value>지도</value></data>
+  <data name="TabTours" xml:space="preserve"><value>투어</value></data>
+  <data name="TabChat" xml:space="preserve"><value>채팅</value></data>
+  <data name="TabScan" xml:space="preserve"><value>QR 스캔</value></data>
+  <data name="TabSettings" xml:space="preserve"><value>설정</value></data>
+  <data name="MapTitle" xml:space="preserve"><value>빈칸 지도</value></data>
+  <data name="LanguagePickerTitle" xml:space="preserve"><value>언어</value></data>
+  <data name="SyncButton" xml:space="preserve"><value>동기화</value></data>
+  <data name="GpsButtonOn" xml:space="preserve"><value>GPS 켜기</value></data>
+  <data name="GpsButtonOff" xml:space="preserve"><value>GPS 끄기</value></data>
+  <data name="StatusNearestPoiDefault" xml:space="preserve"><value>가장 가까운 장소 찾는 중...</value></data>
+  <data name="PoiDetailNearestLabel" xml:space="preserve"><value>가장 가까운 장소</value></data>
+  <data name="PoiDetailReadAudio" xml:space="preserve"><value>오디오 재생</value></data>
+  <data name="SyncStatusSyncing" xml:space="preserve"><value>POI 동기화 중...</value></data>
+  <data name="SyncStatusSuccess" xml:space="preserve"><value>{0} POI 동기화 됨.</value></data>
+  <data name="SyncStatusOffline" xml:space="preserve"><value>오프라인: 캐시에 {0} POI.</value></data>
+  <data name="SyncStatusNoData" xml:space="preserve"><value>데이터 없음. API 확인.</value></data>
+  <data name="SyncStatusNetworkError" xml:space="preserve"><value>네트워크 오류 - 캐시 읽기 중.</value></data>
+  <data name="GpsStatusTracking" xml:space="preserve"><value>백그라운드에서 GPS 추적 중...</value></data>
+  <data name="GpsStatusStopped" xml:space="preserve"><value>추적 중지 됨.</value></data>
+  <data name="GpsStatusWait" xml:space="preserve"><value>위치 대기 중...</value></data>
+  <data name="NarrationStatusPlaying" xml:space="preserve"><value>재생 중: {0}</value></data>
+  <data name="NarrationStatusFinished" xml:space="preserve"><value>재생 완료 ({0}s): {1}</value></data>
+  <data name="NarrationStatusError" xml:space="preserve"><value>오디오 오류: {0}</value></data>
+  <data name="NarrationStatusNoPoi" xml:space="preserve"><value>재생할 POI 없음.</value></data>
+  <data name="ToursHeader" xml:space="preserve"><value>탐험</value></data>
+  <data name="ToursTitle" xml:space="preserve"><value>투어 세부 정보</value></data>
+  <data name="ToursSubtitle" xml:space="preserve"><value>음식 투어 추천</value></data>
+  <data name="ToursItemStopsCount" xml:space="preserve"><value>경유지: {0}</value></data>
+  <data name="ToursItemMinutes" xml:space="preserve"><value>소요 시간: {0} 분</value></data>
+  <data name="ToursEmptyTitle" xml:space="preserve"><value>투어를 찾을 수 없음.</value></data>
+  <data name="ToursEmptySubtitle" xml:space="preserve"><value>다시 동기화 하거나 API 연결 확인.</value></data>
+  <data name="ToursSyncError" xml:space="preserve"><value>투어 불러오기 오류.</value></data>
+  <data name="ChatSendButton" xml:space="preserve"><value>보내기</value></data>
+  <data name="QrScanHint" xml:space="preserve"><value>카메라를 QR 코드에 맞추세요 (vk-poi-123 hoặc URL kết nối /poi/123)</value></data>
+  <data name="QrPlaceholder" xml:space="preserve"><value>수동으로 POI 코드 입력</value></data>
+  <data name="QrSubmitButton" xml:space="preserve"><value>처리</value></data>
+  <data name="QrFoundSatus" xml:space="preserve"><value>도착: {0}</value></data>
+  <data name="QrNotFoundStatus" xml:space="preserve"><value>이 QR 코드에 해당하는 POI를 찾을 수 없음.</value></data>
+  <data name="SettingsApiUrlLabel" xml:space="preserve"><value>API URL (끝에 / 포함 여부 관계 없음)</value></data>
+  <data name="SettingsGeofenceRadiusLabel" xml:space="preserve"><value>지오펜스 반경 배수 (1 = 기본)</value></data>
+  <data name="SettingsMockGpsLabel" xml:space="preserve"><value>GPS 시뮬레이션 활성화 (.NET Mock)</value></data>
+  <data name="SettingsMockGpsDesc" xml:space="preserve"><value>켜짐: 블루닷이 các POI를 tự động 통과합니다.</value></data>
+  <data name="SettingsSaveButton" xml:space="preserve"><value>저장</value></data>
+  <data name="SettingsApiHint" xml:space="preserve"><value>안드로이드 에뮬레이터: localhost thay vì 10.0.2.2. Thiết bị thực: IP LAN của PC.</value></data>
+  <data name="SettingsSavedSuccess" xml:space="preserve"><value>설정 저장 완료.</value></data>
+  <data name="MapLoadingError" xml:space="preserve"><value>지도 로딩 오류.</value></data>
+  <data name="NearestLabelFormat" xml:space="preserve"><value>가장 가까운 곳: {0}</value></data>
+  <data name="PlaybackPoiLabel" xml:space="preserve"><value>해설: {0}</value></data>
+  <data name="TabPois" xml:space="preserve"><value>식당</value></data>
+  <data name="PoiSearchPlaceholder" xml:space="preserve"><value>식당 검색...</value></data>
+  <data name="PoiEmptyList" xml:space="preserve"><value>식당을 찾을 수 없습니다</value></data>
+  <data name="PoiReloadButton" xml:space="preserve"><value>데이터 다시 불러오기</value></data>
+  <data name="PlayNarration" xml:space="preserve"><value>내레이션 재생</value></data>
+  <data name="StopNarration" xml:space="preserve"><value>내레이션 중지</value></data>
+</root>

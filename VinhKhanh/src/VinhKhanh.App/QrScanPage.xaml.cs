@@ -1,6 +1,5 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
-using VinhKhanh.App.Models;
 using VinhKhanh.App.Services;
 using VinhKhanh.Shared.DTOs;
 using ZXing.Net.Maui;
@@ -13,9 +12,6 @@ public partial class QrScanPage : ContentPage
 	private readonly NarrationService _narration;
 	private readonly SessionService _session;
 	private readonly IOutboxService _outbox;
-
-	// Dùng SemaphoreSlim thay DateTime để tránh race condition hoàn toàn
-	private readonly SemaphoreSlim _processingLock = new(1, 1);
 	private DateTime _lastHandled = DateTime.MinValue;
 
 	public QrScanPage()
@@ -29,8 +25,7 @@ public partial class QrScanPage : ContentPage
 		Scanner.Options = new BarcodeReaderOptions
 		{
 			Formats = BarcodeFormats.TwoDimensional | BarcodeFormats.OneDimensional,
-			AutoRotate = true,
-			Multiple = false,
+			AutoRotate = true
 		};
 	}
 
@@ -42,9 +37,7 @@ public partial class QrScanPage : ContentPage
 
 	protected override void OnDisappearing()
 	{
-		// Dừng scanner khi rời tab để tiết kiệm pin và tránh callback rác
 		Scanner.IsDetecting = false;
-		Scanner.IsVisible = false;
 		base.OnDisappearing();
 	}
 
@@ -83,23 +76,13 @@ public partial class QrScanPage : ContentPage
 			Scanner.IsVisible = false;
 			Scanner.IsDetecting = false;
 			StatusLabel.Text = $"Khong khoi tao duoc camera: {ex.Message}";
-			System.Diagnostics.Debug.WriteLine($"[QrScanPage] PrepareCameraAsync error: {ex}");
 		}
 	}
 
-	private void OnBarcodesDetected(object? sender, BarcodeDetectionEventArgs e)
+	private async void OnBarcodesDetected(object? sender, BarcodeDetectionEventArgs e)
 	{
 		var text = e.Results?.FirstOrDefault()?.Value;
-		if (string.IsNullOrWhiteSpace(text)) return;
-
-		// Kiểm tra cooldown sớm trước khi dispatch để tránh queue nhiều lần
-		if ((DateTime.UtcNow - _lastHandled).TotalSeconds < 3) return;
-
-		// ZXing fires this on a camera background thread — dispatch to main thread
-		MainThread.BeginInvokeOnMainThread(async () =>
-		{
-			await HandleQrValueAsync(text);
-		});
+		await HandleQrValueAsync(text);
 	}
 
 	private async void OnManualSubmit(object? sender, EventArgs e)
@@ -109,54 +92,42 @@ public partial class QrScanPage : ContentPage
 
 	private async Task HandleQrValueAsync(string? raw)
 	{
-		if (string.IsNullOrWhiteSpace(raw)) return;
+		if ((DateTime.UtcNow - _lastHandled).TotalSeconds < 2)
+			return;
 
-		// Dùng semaphore để đảm bảo chỉ 1 luồng xử lý tại một thời điểm
-		if (!_processingLock.Wait(0)) return;
+		if (string.IsNullOrWhiteSpace(raw))
+			return;
+
+		_lastHandled = DateTime.UtcNow;
+		StatusLabel.Text = "Dang xu ly ma QR...";
 
 		try
 		{
-			// Double-check cooldown sau khi acquire lock
-			if ((DateTime.UtcNow - _lastHandled).TotalSeconds < 3) return;
-			_lastHandled = DateTime.UtcNow;
-
-			StatusLabel.Text = "Dang xu ly ma QR...";
-
 			var lang = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "vi");
-			var apiRoot = Microsoft.Maui.Storage.Preferences.Get(
-				AppPreferences.ApiBaseUrl,
-				ApiClientService.GetDefaultApiBase()).TrimEnd('/');
+			var apiRoot = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, ApiClientService.GetDefaultApiBase()).TrimEnd('/');
 
-			// Dừng scanner ngay để tránh quét lại trong khi đang xử lý
-			Scanner.IsDetecting = false;
-
-			PoiSnapshot? poi = await _api.GetPoiByQrCodeAsync(raw.Trim());
-
+			var key = raw.Trim();
+			var poi = await _api.GetPoiByQrCodeAsync(key);
 			if (poi == null)
 			{
 				var id = TryParsePoiId(raw);
 				if (id == null)
 				{
-					StatusLabel.Text = "Khong nhan dang duoc ma QR. Vui long thu lai.";
+					StatusLabel.Text = "Khong nhan dang duoc ma (dung VK-POI-xxx hoac ID).";
 					return;
 				}
 
-				StatusLabel.Text = "Dang tai thong tin...";
+				StatusLabel.Text = $"Dang tai POI #{id}...";
 				poi = await _api.GetPoiAsync(id.Value);
 			}
 
 			if (poi == null)
 			{
-				StatusLabel.Text = "Khong tim thay diem tham quan nay.";
+				StatusLabel.Text = VinhKhanh.App.Resources.Strings.AppResources.QrNotFoundStatus;
 				return;
 			}
 
-			StatusLabel.Text = $"Dang phat: {poi.ResolveName(lang)}";
-
-			// PlayPoiAsync xử lý audio/TTS — await trực tiếp, MainThread được handle bên trong
 			var heard = await _narration.PlayPoiAsync(poi, lang, apiRoot);
-
-			// Analytics — fire and forget với outbox fallback
 			var visit = new VisitLogDto(poi.Id, _session.SessionId, lang, "QR", heard);
 			if (!await _api.TryPostAnalyticsVisitAsync(visit))
 				await _outbox.EnqueueVisitAsync(visit);
@@ -166,23 +137,12 @@ public partial class QrScanPage : ContentPage
 			if (!await _api.TryPostHistoryLogAsync(history))
 				await _outbox.EnqueueHistoryAsync(history);
 
-			StatusLabel.Text = $"Da phat xong: {poi.ResolveName(lang)}";
+			StatusLabel.Text = string.Format(VinhKhanh.App.Resources.Strings.AppResources.QrFoundSatus, poi.ResolveName(lang));
 			ManualCodeEntry.Text = string.Empty;
 		}
 		catch (Exception ex)
 		{
-			StatusLabel.Text = "Co loi xay ra. Vui long thu lai.";
-			System.Diagnostics.Debug.WriteLine($"[QrScanPage] HandleQrValueAsync error: {ex}");
-			// Reset cooldown để user có thể thử lại ngay
-			_lastHandled = DateTime.MinValue;
-		}
-		finally
-		{
-			// Bật lại scanner sau khi xử lý xong
-			if (Scanner.IsVisible)
-				Scanner.IsDetecting = true;
-
-			_processingLock.Release();
+			StatusLabel.Text = $"Loi: {ex.Message}";
 		}
 	}
 
