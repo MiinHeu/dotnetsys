@@ -15,10 +15,20 @@ public partial class PoiDetailViewModel(
 	SessionService session,
 	IOutboxService outbox) : ObservableObject
 {
-	[ObservableProperty] 
-	[NotifyPropertyChangedFor(nameof(DisplayName))]
-	[NotifyPropertyChangedFor(nameof(DisplayDescription))]
 	private PoiSnapshot? _poiDetail;
+	public PoiSnapshot? PoiDetail
+	{
+		get => _poiDetail;
+		set
+		{
+			if (SetProperty(ref _poiDetail, value))
+			{
+				OnPoiDetailChanged(value);
+				OnPropertyChanged(nameof(DisplayName));
+				OnPropertyChanged(nameof(DisplayDescription));
+			}
+		}
+	}
 
 	[ObservableProperty] private int _poiId;
 	[ObservableProperty] private bool _autoPlay;
@@ -65,7 +75,7 @@ public partial class PoiDetailViewModel(
 	public string StopNarrationText => VinhKhanh.App.Resources.Strings.AppResources.StopNarration;
 	public string PlaybackLabel => VinhKhanh.App.Resources.Strings.AppResources.PlaybackPoiLabel;
 
-	partial void OnPoiDetailChanged(PoiSnapshot? value)
+	private void OnPoiDetailChanged(PoiSnapshot? value)
 	{
 		SelectedLanguage = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "vi");
 
