@@ -59,6 +59,7 @@ public class PoiController(
 		var query = db.Pois
 			.Where(p => p.IsActive)
 			.Include(p => p.Translations)
+			.Include(p => p.Owner)
 			.AsNoTracking();
 
 		// Nếu là Owner (và không phải Admin), chỉ cho phép thấy POI của chính mình quản lý

@@ -9,7 +9,7 @@ const adminNav = [
   { to: '/pois', label: 'Quán Ăn', icon: MapPin },
   { to: '/map', label: 'Bản Đồ', icon: Globe },
   { to: '/tours', label: 'Lộ Trình', icon: Route },
-  { to: '/audio', label: 'Giọng Đọc', icon: Mic2 },
+  { to: '/audio', label: 'Quản lý Audio', icon: Mic2 },
   { to: '/analytics', label: 'Thống Kê', icon: BarChart2 },
   { to: '/history', label: 'Lịch Sử', icon: Activity },
   { to: '/users', label: 'Tài Khoản', icon: Users },
@@ -21,7 +21,7 @@ const ownerNav = [
   { to: '/pois', label: 'Quán Ăn Của Tôi', icon: MapPin },
   { to: '/map', label: 'Bản Đồ', icon: Globe },
   { to: '/tours', label: 'Lộ Trình', icon: Route },
-  { to: '/audio', label: 'Giọng Đọc', icon: Mic2 },
+  { to: '/audio', label: 'Quản lý Audio', icon: Mic2 },
   { to: '/change-password', label: 'Đổi Mật Khẩu', icon: KeyRound },
 ]
 

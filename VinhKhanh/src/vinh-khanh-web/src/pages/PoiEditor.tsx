@@ -331,15 +331,13 @@ export function PoiEditor() {
             }),
       )
 
-      setTtsMessage(`Đã xuất audio ${language.label}: ${data.filename ?? data.url}. Đang phát ngay trên web...`)
-
+      setTtsMessage(`Đã xuất audio ${language.label}. Tệp đã được gán cho quán ăn này và có thể quản lý tại mục "Quản lý Audio".`)
       try {
         setAudioBusy(true)
         const audio = new Audio(data.url)
         await audio.play()
-        setTtsMessage(`Đã xuất audio ${language.label}: ${data.filename ?? data.url}. Đang phát ngay trên web.`)
       } catch {
-        setTtsMessage(`Đã xuất audio ${language.label}: ${data.filename ?? data.url}. Bạn có thể bấm phát ngay bên dưới.`)
+        // Silent
       } finally {
         setAudioBusy(false)
       }
@@ -403,7 +401,7 @@ export function PoiEditor() {
       }
 
       setForm(currentForm)
-      setTtsMessage('Đã hoàn tất! Các dòng text và Audio URL của tất cả ngôn ngữ đã sẵn sàng.')
+      setTtsMessage('Đã hoàn tất! Toàn bộ audio đa ngôn ngữ đã được cập nhật và sẵn sàng trong trang Quản lý Audio.')
     } catch (err: unknown) {
       setTtsMessage('Lỗi khi tạo hàng loạt: ' + (err instanceof Error ? err.message : 'Unknown error'))
     } finally {
