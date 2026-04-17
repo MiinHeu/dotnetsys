@@ -12,6 +12,7 @@ public partial class QrScanPage : ContentPage
 	private readonly NarrationService _narration;
 	private readonly SessionService _session;
 	private readonly IOutboxService _outbox;
+	private bool _isProcessing = false;
 	private DateTime _lastHandled = DateTime.MinValue;
 
 	public QrScanPage()
@@ -31,6 +32,7 @@ public partial class QrScanPage : ContentPage
 
 	protected override async void OnAppearing()
 	{
+		_isProcessing = false; // Reset trạng thái khi quay lại trang
 		base.OnAppearing();
 		await PrepareCameraAsync();
 	}
@@ -92,14 +94,24 @@ public partial class QrScanPage : ContentPage
 
 	private async Task HandleQrValueAsync(string? raw)
 	{
+		if (string.IsNullOrWhiteSpace(raw) || _isProcessing)
+			return;
+
 		if ((DateTime.UtcNow - _lastHandled).TotalSeconds < 2)
 			return;
 
-		if (string.IsNullOrWhiteSpace(raw))
-			return;
-
+		_isProcessing = true; // Bắt đầu xử lý
 		_lastHandled = DateTime.UtcNow;
-		StatusLabel.Text = "Dang xu ly ma QR...";
+
+		// Ép Camera dừng đồng bộ và đợi cho đến khi hoàn tất
+		await MainThread.InvokeOnMainThreadAsync(() => 
+		{
+			Scanner.IsDetecting = false; // Dừng quét ngay lập tức
+			StatusLabel.Text = "Dang xu ly ma QR...";
+		});
+
+		// Bước đệm an toàn: Đợi một chút để driver camera Android ổn định luồng xử lý
+		await Task.Delay(150);
 
 		try
 		{
@@ -113,36 +125,39 @@ public partial class QrScanPage : ContentPage
 				var id = TryParsePoiId(raw);
 				if (id == null)
 				{
-					StatusLabel.Text = "Khong nhan dang duoc ma (dung VK-POI-xxx hoac ID).";
+					MainThread.BeginInvokeOnMainThread(() => StatusLabel.Text = "Khong nhan dang duoc ma (dung VK-POI-xxx hoac ID).");
 					return;
 				}
 
-				StatusLabel.Text = $"Dang tai POI #{id}...";
+				MainThread.BeginInvokeOnMainThread(() => StatusLabel.Text = $"Dang tai POI #{id}...");
 				poi = await _api.GetPoiAsync(id.Value);
 			}
 
 			if (poi == null)
 			{
-				StatusLabel.Text = VinhKhanh.App.Resources.Strings.AppResources.QrNotFoundStatus;
+				MainThread.BeginInvokeOnMainThread(() => StatusLabel.Text = VinhKhanh.App.Resources.Strings.AppResources.QrNotFoundStatus);
 				return;
 			}
 
-			var heard = await _narration.PlayPoiAsync(poi, lang, apiRoot);
-			var visit = new VisitLogDto(poi.Id, _session.SessionId, lang, "QR", heard);
-			if (!await _api.TryPostAnalyticsVisitAsync(visit))
-				await _outbox.EnqueueVisitAsync(visit);
+			MainThread.BeginInvokeOnMainThread(async () =>
+			{
+				StatusLabel.Text = string.Format(VinhKhanh.App.Resources.Strings.AppResources.QrFoundSatus, poi.ResolveName(lang));
+				ManualCodeEntry.Text = string.Empty;
 
-			var history = new AppHistoryLogDto(_session.SessionId, "QR_SCAN",
-				PoiId: poi.Id, LanguageCode: lang);
-			if (!await _api.TryPostHistoryLogAsync(history))
-				await _outbox.EnqueueHistoryAsync(history);
-
-			StatusLabel.Text = string.Format(VinhKhanh.App.Resources.Strings.AppResources.QrFoundSatus, poi.ResolveName(lang));
-			ManualCodeEntry.Text = string.Empty;
+				// Tự động chuyển sang Tab Quán ăn và mở trang Chi tiết
+				// Chỉ truyền ID để tránh lỗi ép kiểu (IConvertible) trên Android
+				var navigationParameter = new Dictionary<string, object>
+				{
+					{ "PoiId", poi.Id },
+					{ "AutoPlay", true },
+					{ "TriggerType", "QR" }
+				};
+				await Shell.Current.GoToAsync($"//PoiListPage/{nameof(PoiDetailPage)}", navigationParameter);
+			});
 		}
 		catch (Exception ex)
 		{
-			StatusLabel.Text = $"Loi: {ex.Message}";
+			MainThread.BeginInvokeOnMainThread(() => StatusLabel.Text = $"Loi: {ex.Message}");
 		}
 	}
 

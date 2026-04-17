@@ -11,6 +11,7 @@ using VinhKhanh.API.Services;
 using VinhKhanh.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls("https://0.0.0.0:7016", "http://0.0.0.0:5283");
 
 // Keep logging portable across local/dev/test environments
 // and avoid hard dependency on Windows EventLog permissions.
@@ -88,20 +89,11 @@ builder.Services.AddCors(options =>
 		}
 		else if (builder.Environment.IsDevelopment())
 		{
-			// Dev convenience: web (localhost) + Android emulator (10.0.2.2)
+			// Dev convenience: Allow everything related to your local network and emulators
 			policy
-				.SetIsOriginAllowed(origin =>
-				{
-					if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
-						return false;
-
-					return uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
-					       || uri.Host.Equals("127.0.0.1")
-					       || uri.Host.Equals("10.0.2.2");
-				})
+				.AllowAnyOrigin()
 				.AllowAnyMethod()
-				.AllowAnyHeader()
-				.AllowCredentials();
+				.AllowAnyHeader();
 		}
 		else
 		{

@@ -34,7 +34,7 @@ public sealed class ApiClientService
 		}
 
 		// Với máy thật, ưu tiên lấy IP đã cấu hình trong Preferences
-		return Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, "http://NHAP-IP-CUA-BAN:5283/");
+		return Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, "http://localhost:5283/");
 	}
 
 	public async Task<IReadOnlyList<PoiSnapshot>> GetPoisAsync(string lang, CancellationToken ct = default)
@@ -129,6 +129,11 @@ public sealed class ApiClientService
 		using var http = CreateClient();
 		var res = await http.PostAsJsonAsync("api/ai/chat", req, ct);
 		res.EnsureSuccessStatusCode();
+		var audio = await res.Content.ReadAsByteArrayAsync();
+		if (audio.Length < 2000)
+		{
+			return null;
+		}
 		var json = await res.Content.ReadAsStringAsync(ct);
 		using var doc = JsonDocument.Parse(json);
 		return doc.RootElement.TryGetProperty("reply", out var r) ? r.GetString() : null;

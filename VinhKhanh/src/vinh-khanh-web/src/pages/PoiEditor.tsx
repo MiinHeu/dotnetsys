@@ -606,13 +606,45 @@ export function PoiEditor() {
 
         <label className="text-sm">
           Mã QR (bus / điểm dừng, ví dụ <span className="font-mono">VK-POI-001</span>)
+          <div className="mt-1 text-xs text-stone-500">
+            Hệ thống sẽ tự động sinh mã dạng <strong>VK-POI-[ID]</strong> nếu bạn để trống.
+          </div>
           <input
             className="mt-1 w-full rounded border px-2 py-1 font-mono dark:border-stone-600 dark:bg-stone-800"
-            placeholder="Để trống nếu không dùng QR"
+            placeholder="Để trống để tự động sinh mã"
             value={form.qrCode ?? ''}
             onChange={(e) => setForm({ ...form, qrCode: e.target.value.trim() || null })}
           />
         </label>
+
+        {!isNew && form.qrCode && (
+          <div className="rounded-lg border border-stone-200 p-4">
+            <h3 className="text-sm font-semibold text-stone-800">Hình ảnh Mã QR</h3>
+            <div className="mt-3 flex items-start gap-4">
+              <div className="h-32 w-32 items-center justify-center overflow-hidden rounded border bg-white">
+                <img
+                  src={`/api/poi/${id}/qrcode?t=${new Date().getTime()}`}
+                  alt="POI QR Code"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-stone-500">
+                  Mã định danh: <span className="font-mono font-bold text-blue-600">{form.qrCode}</span>
+                </p>
+                <button
+                  type="button"
+                  className="mt-3 rounded-lg bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
+                  onClick={() => {
+                    window.open(`/api/poi/${id}/qrcode`, '_blank')
+                  }}
+                >
+                  📥 Tải mã QR (Mở Tab mới để in)
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="rounded-lg border border-stone-200 p-4">
           <h3 className="text-sm font-semibold text-stone-800">Hiển thị trên bản đồ nội bộ</h3>

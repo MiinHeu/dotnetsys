@@ -77,9 +77,9 @@ public class VoiceRssTtsService(
 			}
 
 			var audio = await res.Content.ReadAsByteArrayAsync();
-			if (audio.Length == 0)
+			if (audio.Length < 2000)
 			{
-				logger.LogWarning("Voice RSS returned empty audio payload.");
+				logger.LogWarning("Voice RSS returned too small payload ({Size} bytes), possibly an error message. Ignoring.", audio.Length);
 				return Array.Empty<byte>();
 			}
 
