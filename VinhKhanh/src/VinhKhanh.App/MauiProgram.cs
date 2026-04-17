@@ -31,6 +31,7 @@ public static class MauiProgram
 
 		// ── Services ──────────────────────────────────────────────────────────
 		builder.Services.AddSingleton<ApiClientService>();
+		builder.Services.AddSingleton<AudioCacheService>();
 		builder.Services.AddSingleton<LocalPoiCacheService>();       // cache cũ — giữ nguyên
 		builder.Services.AddSingleton<ILocalDbService, LocalDbService>(); // FIX #1: LocalTour
 		builder.Services.AddSingleton<SessionService>();

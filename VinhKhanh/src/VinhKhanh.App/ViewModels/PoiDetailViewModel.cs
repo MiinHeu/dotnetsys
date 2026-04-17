@@ -33,6 +33,10 @@ public partial class PoiDetailViewModel(
 		MainThread.BeginInvokeOnMainThread(async () =>
 		{
 			PoiDetail = await api.GetPoiAsync(value);
+			if (PoiDetail != null)
+			{
+				_ = narration.PreFetchAsync(PoiDetail, SelectedLanguage);
+			}
 		});
 	}
 
@@ -44,6 +48,14 @@ public partial class PoiDetailViewModel(
 	[NotifyPropertyChangedFor(nameof(StopNarrationText))]
 	[NotifyPropertyChangedFor(nameof(PlaybackLabel))]
 	private string _selectedLanguage = "vi";
+
+	partial void OnSelectedLanguageChanged(string value)
+	{
+		if (PoiDetail != null)
+		{
+			_ = narration.PreFetchAsync(PoiDetail, value);
+		}
+	}
 
 	public string DisplayName => PoiDetail?.ResolveName(SelectedLanguage) ?? "";
 	public string DisplayDescription => PoiDetail?.ResolveDescription(SelectedLanguage) ?? "";
