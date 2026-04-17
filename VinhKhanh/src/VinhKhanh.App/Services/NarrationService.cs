@@ -209,27 +209,33 @@ public sealed class NarrationService(
 
 			if (lang == "vi")
 			{
-				// Vietnamese: use original text
 				textToSpeak = originalText;
 			}
-			else if (!string.IsNullOrWhiteSpace(originalText))
+			else 
 			{
-				// Need to translate from Vietnamese to target language
-				logger.LogInformation("Translating from 'vi' to '{Lang}' via API...", lang);
-				var translated = await TranslateTextAsync(originalText, "vi", lang, apiRootTrimmed, ct);
-				if (!string.IsNullOrWhiteSpace(translated))
+				// 1. Kiểm tra xem đã có bản dịch sẵn trong dữ liệu POI chưa
+				var translatedDescription = poi.ResolveDescription(lang);
+				
+				// Nếu bản dịch khác với bản gốc tiếng Việt (nghĩa là đã được dịch)
+				if (translatedDescription != originalText && !string.IsNullOrWhiteSpace(translatedDescription))
 				{
-					textToSpeak = translated;
-					logger.LogInformation("Translation successful: {Text}", translated);
+					textToSpeak = translatedDescription;
+					logger.LogInformation("Using pre-translated text from POI data: {Lang}", lang);
 				}
-				else
+				else if (!string.IsNullOrWhiteSpace(originalText))
 				{
-					logger.LogWarning("Translation failed for POI {PoiId} to {Lang}", poi.Id, lang);
-					// Optionally fallback to Vietnamese TTS
-					if (audioUrl == null) // Only if we don't have audio to fallback
+					// 2. Chỉ gọi API dịch thuật như một giải pháp cuối cùng nếu chưa có bản dịch
+					logger.LogInformation("No pre-translation found. Translating from 'vi' to '{Lang}' via API (Slow path)...", lang);
+					var translated = await TranslateTextAsync(originalText, "vi", lang, apiRootTrimmed, ct);
+					if (!string.IsNullOrWhiteSpace(translated))
 					{
+						textToSpeak = translated;
+						logger.LogInformation("API Translation successful: {Text}", translated);
+					}
+					else
+					{
+						logger.LogWarning("Translation failed for POI {PoiId} to {Lang}, falling back to original", poi.Id, lang);
 						textToSpeak = originalText;
-						logger.LogInformation("Falling back to Vietnamese TTS");
 					}
 				}
 			}
