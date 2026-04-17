@@ -1,14 +1,21 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { api } from '@/lib/api'
-import { KeyRound, AlertCircle, CheckCircle } from 'lucide-react'
+import { KeyRound, AlertCircle, CheckCircle, User as UserIcon, ShieldCheck } from 'lucide-react'
 
 export function ChangePassword() {
+  const [profile, setProfile] = useState<any>(null)
   const [current, setCurrent] = useState('')
   const [newPw, setNewPw] = useState('')
   const [confirm, setConfirm] = useState('')
   const [err, setErr] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    api.get('/api/auth/profile')
+      .then(res => setProfile(res.data))
+      .catch(err => console.error('Lỗi lấy profile:', err))
+  }, [])
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -61,7 +68,45 @@ export function ChangePassword() {
         </div>
       )}
 
+      {/* Thông tin cá nhân */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 mb-8">
+        <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
+          <UserIcon size={18} className="text-slate-500" />
+          <h2 className="text-lg font-bold text-slate-800">Thông tin cá nhân</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Mã định danh (ID)</label>
+            <div className="flex items-center gap-2 text-slate-900 font-bold">
+              <span className="bg-slate-100 px-2 py-1 rounded text-orange-700 font-mono text-sm border border-slate-200">
+                {profile?.displayId || 'OW----'}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tên tài khoản</label>
+            <div className="text-slate-900 font-medium">{profile?.username || '---'}</div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tên chủ quán</label>
+            <div className="text-slate-900 font-medium">{profile?.fullName || '---'}</div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Email liên hệ</label>
+            <div className="text-slate-900 font-medium">{profile?.email || '---'}</div>
+          </div>
+        </div>
+      </div>
+
       <form onSubmit={onSubmit} className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-5">
+        <div className="flex items-center gap-2 mb-2">
+          <ShieldCheck size={18} className="text-slate-500" />
+          <h2 className="text-lg font-bold text-slate-800">Thay đổi mật khẩu</h2>
+        </div>
         <div className="space-y-2">
           <label className="block text-sm font-bold text-slate-700">Mật khẩu hiện tại</label>
           <input

@@ -52,7 +52,7 @@ public class GpsForegroundService : Service
 			{
 				await Task.Delay(1000, ct).ConfigureAwait(false);
 			}
-			await Task.Delay(3000, ct).ConfigureAwait(false);
+			await Task.Delay(1500, ct).ConfigureAwait(false);
 		}
 	}
 

@@ -30,12 +30,24 @@ api.interceptors.response.use(
   }
 )
 
+export interface User {
+  id: number
+  username: string
+  displayId?: string
+  fullName?: string
+  email?: string
+  role: 'Admin' | 'Owner'
+  isActive: boolean
+  createdAt: string
+}
+
 export type Poi = {
   id: number
   name: string
   description: string
   ownerInfo?: string | null
   ownerUserId?: number | null
+  owner?: User | null
   latitude: number
   longitude: number
   mapX: number

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { api, type Poi } from '@/lib/api'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Search, Music, Play, Pause, Upload, Loader2, User } from 'lucide-react'
@@ -12,10 +12,24 @@ export function AudioPage() {
   const qc = useQueryClient()
 
   const [searchTerm, setSearchTerm] = useState('')
-  const [ownerSearch, setOwnerSearch] = useState('')
+  const [ownerFilter, setOwnerFilter] = useState<number | 'all'>('all')
+  const [owners, setOwners] = useState<any[]>([])
   const [playingUrl, setPlayingUrl] = useState<string | null>(null)
   const [audioObj, setAudioObj] = useState<HTMLAudioElement | null>(null)
-  
+
+  useEffect(() => {
+    if (isAdmin) {
+      api.get('/api/auth/owners')
+        .then(res => setOwners(res.data))
+        .catch(err => console.error('Lỗi tải owner:', err))
+    }
+    
+    // Dọn dẹp audio khi rời trang
+    return () => {
+      audioObj?.pause()
+    }
+  }, [isAdmin, audioObj])
+
   const [uploadingPoiId, setUploadingPoiId] = useState<number | null>(null)
   const [uploadingLang, setUploadingLang] = useState<string | null>(null)
 
@@ -24,10 +38,10 @@ export function AudioPage() {
     queryFn: async () => (await api.get<Poi[]>('/api/poi')).data,
   })
 
-  // Tìm kiếm cục bộ
+  // Lọc quán ăn
   const filteredPois = pois.filter(p => {
     const matchName = p.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchOwner = !ownerSearch || (p.owner?.userName || p.owner?.email || '').toLowerCase().includes(ownerSearch.toLowerCase())
+    const matchOwner = ownerFilter === 'all' || p.ownerUserId === ownerFilter
     return matchName && matchOwner
   })
 
@@ -57,27 +71,27 @@ export function AudioPage() {
       const fd = new FormData()
       fd.append('file', file)
       fd.append('lang', lang)
-      
+
       // Upload file
       const { data } = await api.post('/api/audio/upload', fd)
       const audioUrl = data.url ?? data.filename
 
       // Gán URL vào POI thông qua API (sử dụng endpoint /api/poi/{id} hoặc tạo endpoint riêng)
       // Để đơn giản và nhanh, ta lợi dụng endpoint update POI hiện có
-      const targetPoi = pois.find(p => p.Id === poiId || p.id === poiId)
+      const targetPoi = pois.find(p => p.id === poiId)
       if (!targetPoi) return
 
       if (lang === 'vi') {
         await api.put(`/api/poi/${poiId}`, { ...targetPoi, audioViUrl: audioUrl })
       } else {
         const trans = targetPoi.translations?.find(t => t.languageCode === lang)
-        const updatedTranslations = trans 
+        const updatedTranslations = trans
           ? targetPoi.translations?.map(t => t.languageCode === lang ? { ...t, audioUrl } : t)
           : [...(targetPoi.translations ?? []), { languageCode: lang, name: targetPoi.name, description: targetPoi.description, audioUrl }]
-        
+
         await api.put(`/api/poi/${poiId}`, { ...targetPoi, translations: updatedTranslations })
       }
-      
+
       qc.invalidateQueries({ queryKey: ['pois-audio'] })
       alert(`Đã cập nhật audio ${lang} cho quán ${targetPoi.name}`)
     } catch (err) {
@@ -128,13 +142,18 @@ export function AudioPage() {
         {isAdmin && (
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input
-              type="text"
-              placeholder="Tìm theo chủ quán (Email/Username)..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all shadow-sm"
-              value={ownerSearch}
-              onChange={(e) => setOwnerSearch(e.target.value)}
-            />
+            <select
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all shadow-sm appearance-none bg-white"
+              value={ownerFilter}
+              onChange={(e) => setOwnerFilter(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+            >
+              <option value="all">Tất cả chủ quán</option>
+              {owners.map(o => (
+                <option key={o.id} value={o.id}>
+                  [{o.displayId || '---'}] {o.fullName || o.username}
+                </option>
+              ))}
+            </select>
           </div>
         )}
       </div>
@@ -160,15 +179,16 @@ export function AudioPage() {
                   </td>
                   {isAdmin && (
                     <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-slate-700">{p.owner?.userName || '---'}</div>
-                      <div className="text-xs text-slate-500">{p.owner?.email}</div>
+                      <div className="text-sm font-bold text-orange-700 font-mono italic">
+                        {p.owner?.displayId || '---'}
+                      </div>
                     </td>
                   )}
                   {langs.map(l => {
-                    const url = l.code === 'vi' 
-                      ? p.audioViUrl 
+                    const url = l.code === 'vi'
+                      ? p.audioViUrl
                       : p.translations?.find(t => t.languageCode === l.code)?.audioUrl
-                    
+
                     const isUploading = uploadingPoiId === p.id && uploadingLang === l.code
 
                     return (
@@ -177,9 +197,8 @@ export function AudioPage() {
                           {url ? (
                             <button
                               onClick={() => togglePlay(url)}
-                              className={`p-2 rounded-full transition-all ${
-                                playingUrl === url ? 'bg-orange-600 text-white shadow-md scale-110' : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
-                              }`}
+                              className={`p-2 rounded-full transition-all ${playingUrl === url ? 'bg-orange-600 text-white shadow-md scale-110' : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
+                                }`}
                               title="Nghe thử"
                             >
                               {playingUrl === url ? <Pause size={16} /> : <Play size={16} />}
@@ -189,7 +208,7 @@ export function AudioPage() {
                               <Music size={14} />
                             </div>
                           )}
-                          
+
                           <label className={`cursor-pointer p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-orange-600 transition-colors ${isUploading ? 'animate-pulse' : ''}`}>
                             <input
                               type="file"

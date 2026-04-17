@@ -5,6 +5,8 @@ import { UserPlus, AlertCircle, ArrowLeft, Store, CheckCircle } from 'lucide-rea
 
 export function OwnerRegister() {
   const [u, setU] = useState('')
+  const [fn, setFn] = useState('')
+  const [em, setEm] = useState('')
   const [p, setP] = useState('')
   const [p2, setP2] = useState('')
   const [err, setErr] = useState<string | null>(null)
@@ -23,7 +25,12 @@ export function OwnerRegister() {
 
     setLoading(true)
     try {
-      await api.post('/api/auth/register-owner', { username: u, password: p })
+      await api.post('/api/auth/register-owner', { 
+        username: u, 
+        password: p,
+        fullName: fn,
+        email: em
+      })
       setSuccess(true)
     } catch (error: any) {
       const msg = error?.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.'
@@ -90,6 +97,28 @@ export function OwnerRegister() {
               value={u}
               onChange={(e) => setU(e.target.value)}
               placeholder="Ít nhất 3 ký tự"
+              className="w-full px-4 py-3.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-slate-700">Họ và Tên chủ quán</label>
+            <input
+              type="text"
+              value={fn}
+              onChange={(e) => setFn(e.target.value)}
+              placeholder="Ví dụ: Nguyễn Văn A"
+              className="w-full px-4 py-3.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-slate-700">Địa chỉ Email</label>
+            <input
+              type="email"
+              value={em}
+              onChange={(e) => setEm(e.target.value)}
+              placeholder="email@example.com"
               className="w-full px-4 py-3.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow"
             />
           </div>

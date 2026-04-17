@@ -67,10 +67,10 @@ function upsertTranslation(
       translations: current.map((item) =>
         item.languageCode === languageCode
           ? {
-              ...item,
-              ...patch,
-              originalDescription: originalDescription ?? item.originalDescription ?? form.description,
-            }
+            ...item,
+            ...patch,
+            originalDescription: originalDescription ?? item.originalDescription ?? form.description,
+          }
           : item,
       ),
     }
@@ -164,6 +164,17 @@ export function PoiEditor() {
   const [audioBusy, setAudioBusy] = useState(false)
   const [previewBusy, setPreviewBusy] = useState(false)
   const [ttsLangCode, setTtsLangCode] = useState('vi')
+  const [owners, setOwners] = useState<any[]>([])
+
+  const isAdmin = role === 'Admin'
+
+  useEffect(() => {
+    if (isAdmin) {
+      api.get('/api/auth/owners')
+        .then(res => setOwners(res.data))
+        .catch(err => console.error('Lỗi tải danh sách chủ quán:', err))
+    }
+  }, [isAdmin])
 
   const poiQ = useQuery({
     queryKey: ['poi', id],
@@ -282,7 +293,7 @@ export function PoiEditor() {
     try {
       const { language, text } = await prepareNarrationText()
       setTtsMessage(`Đang lấy giọng đọc ${language.label} từ VoiceRSS...`)
-      
+
       const response = await api.post('/api/tts/synthesize', {
         text,
         lang: language.code,
@@ -292,7 +303,7 @@ export function PoiEditor() {
       const blob = new Blob([response.data], { type: 'audio/mpeg' })
       const url = window.URL.createObjectURL(blob)
       const audio = new Audio(url)
-      
+
       setTtsMessage(`Đang nghe thử ${language.label} (VoiceRSS)...`)
       await audio.play()
       setTtsMessage(`Đã nghe thử ${language.label}. Nếu ổn, bạn có thể bấm Xuất mp3.`)
@@ -325,10 +336,10 @@ export function PoiEditor() {
         language.code === 'vi'
           ? { ...current, audioViUrl: data.url }
           : upsertTranslation(current, language.code, {
-              name: current.name,
-              description: findTranslation(current, language.code)?.description ?? text,
-              audioUrl: data.url,
-            }),
+            name: current.name,
+            description: findTranslation(current, language.code)?.description ?? text,
+            audioUrl: data.url,
+          }),
       )
 
       setTtsMessage(`Đã xuất audio ${language.label}. Tệp đã được gán cho quán ăn này và có thể quản lý tại mục "Quản lý Audio".`)
@@ -344,9 +355,9 @@ export function PoiEditor() {
     } catch (err: unknown) {
       const message =
         typeof err === 'object' &&
-        err !== null &&
-        'response' in err &&
-        typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === 'string'
+          err !== null &&
+          'response' in err &&
+          typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === 'string'
           ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
           : (err as Error).message || 'Không xuất được voice từ mô tả.'
       setTtsMessage(message)
@@ -367,7 +378,7 @@ export function PoiEditor() {
       let currentForm = form
       for (const language of ttsLanguages) {
         setTtsMessage(`Đang xử lý ${language.label}...`)
-        
+
         // 1. Translate
         let text = sourceText
         let name = sourceName
@@ -463,6 +474,24 @@ export function PoiEditor() {
           />
         </label>
 
+        {isAdmin && (
+          <label className="text-sm">
+            Chủ sở hữu (Dành cho Admin)
+            <select
+              className="mt-1 w-full rounded border px-2 py-2 dark:border-stone-600 dark:bg-stone-800"
+              value={form.ownerUserId ?? ''}
+              onChange={(e) => setForm({ ...form, ownerUserId: e.target.value ? parseInt(e.target.value) : null })}
+            >
+              <option value="">-- Không có chủ sở hữu --</option>
+              {owners.map(o => (
+                <option key={o.id} value={o.id}>
+                  [{o.displayId || '---'}] {o.fullName || o.username} ({o.username})
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
         <label className="text-sm">
           Mô tả
           <textarea
@@ -529,16 +558,16 @@ export function PoiEditor() {
           </div>
 
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-             <button
-                type="button"
-                className="flex-1 rounded-lg border border-blue-500 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
-                onClick={async () => {
-                  generateVoiceForAllLangs()
-                }}
-                disabled={previewBusy || ttsBusy || save.isPending || audioBusy}
-              >
-                ⚡ Dịch & Trích xuất MP3 Tự động All Language
-              </button>
+            <button
+              type="button"
+              className="flex-1 rounded-lg border border-blue-500 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+              onClick={async () => {
+                generateVoiceForAllLangs()
+              }}
+              disabled={previewBusy || ttsBusy || save.isPending || audioBusy}
+            >
+              ⚡ Dịch & Trích xuất MP3 Tự động All Language
+            </button>
           </div>
 
           <div className="mt-3 rounded-md bg-stone-50 p-3 text-sm text-stone-700">
