@@ -90,6 +90,13 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 
 		// Thông báo cho Shell cập nhật lại các Tab
 		WeakReferenceMessenger.Default.Send(new LanguageChangedMessage(value));
+
+		// Tự động tải audio cho ngôn ngữ vừa chọn (ưu tiên)
+		_ = Task.Run(async () => {
+			StatusMessage = "Đang ưu tiên tải dữ liệu âm thanh offline...";
+			await _narration.PreFetchAllAsync(Pois, value);
+			StatusMessage = "Đã hoàn tất tải dữ liệu âm thanh offline.";
+		});
 	}
 
 	[RelayCommand]
@@ -105,6 +112,13 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 			ReplacePois(remote);
 			
 			StatusMessage = string.Format(VinhKhanh.App.Resources.Strings.AppResources.SyncStatusSuccess, remote.Count);
+
+			// Tự động tải audio sau khi Sync metadata xong
+			_ = Task.Run(async () => {
+				StatusMessage = $"Đang tải audio ({SelectedLanguage})...";
+				await _narration.PreFetchAllAsync(remote, SelectedLanguage);
+				StatusMessage = $"Đã tải xong toàn bộ dữ liệu offline ({SelectedLanguage}).";
+			});
 
 			await _api.PostHistoryLogAsync(new AppHistoryLogDto(_session.SessionId, "SYNC_POI",
 				LanguageCode: SelectedLanguage, Payload: $"count={Pois.Count}"));

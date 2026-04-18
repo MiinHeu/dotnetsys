@@ -145,6 +145,16 @@ public sealed class NarrationService(
 		await audioCache.PreFetchAsync(abs);
 	}
 
+	public async Task PreFetchAllAsync(IEnumerable<PoiSnapshot> pois, string language)
+	{
+		if (pois == null) return;
+		
+		logger.LogInformation("Starting bulk pre-fetch for language: {Lang}", language);
+		var tasks = pois.Select(p => PreFetchAsync(p, language)).ToList();
+		await Task.WhenAll(tasks);
+		logger.LogInformation("Completed bulk pre-fetch for language: {Lang}", language);
+	}
+
 	/// <summary>Phat thuyet minh; tra ve thoi luong nghe uoc tinh (giay) cho analytics.</summary>
 	public async Task<int> PlayPoiAsync(PoiSnapshot poi, string lang, string apiRootTrimmed, CancellationToken ct = default)
 	{
@@ -171,30 +181,16 @@ public sealed class NarrationService(
 				{
 					logger.LogInformation("Attempting to play audio from URL: {Url}", abs);
 					
-					// SỬ DỤNG CACHE ĐỂ PHÁT NGAY LẬP TỨC
-					var localPath = await audioCache.GetAudioPathAsync(abs, ct);
-					if (!string.IsNullOrEmpty(localPath))
+					// SỬ DỤNG CACHE ĐỂ PHÁT NGAY LẬP TỨC (Ưu tiên cao hơn việc tải ngầm)
+					var localPath = await audioCache.GetAudioPathAsync(abs, highPriority: true, ct);
+					if (!string.IsNullOrEmpty(localPath) && File.Exists(localPath))
 					{
-						logger.LogInformation("Playing from local cache: {Path}", localPath);
-						_playbackStream = new MemoryStream(await File.ReadAllBytesAsync(localPath, ct));
+						logger.LogInformation("Playing from local file (Streaming): {Path}", localPath);
+						
+						// Mở trực tiếp stream từ file để phát ngay lập tức, không đợi load hết vào RAM
+						var fs = new FileStream(localPath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true);
+						_playbackStream = fs;
 						_player = audioManager.CreatePlayer(_playbackStream);
-						_player.Play();
-					}
-					else
-					{
-						// Fallback download trực tiếp nếu cache lỗi (hiếm khi xảy ra)
-						var bytes = await _httpClient.GetByteArrayAsync(abs, ct);
-						_playbackStream = new MemoryStream(bytes);
-						_player = audioManager.CreatePlayer(_playbackStream);
-						_player.Play();
-					}
-
-					int waitCount = 0;
-					while (_player.IsPlaying && !ct.IsCancellationRequested)
-					{
-						await Task.Delay(150, ct);
-						waitCount++;
-					}
 					return ElapsedListenSeconds(sw);
 				}
 				catch (Exception ex)
@@ -282,6 +278,17 @@ public sealed class NarrationService(
 		{
 			_gate.Release();
 		}
+
+		// Sau khi đã bắt đầu phát (trong trường hợp file âm thanh), 
+		// chúng ta chờ cho đến khi phát xong mới kết thúc hàm (nhưng khóa _gate đã được nhả cho bài khác)
+		if (_player != null)
+		{
+			while (_player.IsPlaying && !ct.IsCancellationRequested)
+			{
+				await Task.Delay(150, ct);
+			}
+		}
+		return ElapsedListenSeconds(sw);
 	}
 
 	private static int ElapsedListenSeconds(Stopwatch sw)

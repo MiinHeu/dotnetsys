@@ -17,6 +17,7 @@ import { HistoryPage } from "./pages/HistoryPage";
 import { AudioPage } from "./pages/AudioPage";
 import { ChangePassword } from "./pages/ChangePassword";
 import { UserManagement } from "./pages/UserManagement";
+import { DownloadPage } from "./pages/DownloadPage";
 
 export default function App() {
   const token = useAuthStore((s) => s.token);
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="/tours" element={<ToursAdmin />} />
         <Route path="/tours/:id" element={<TourEditor />} />
         <Route path="/audio" element={<AudioPage />} />
+        <Route path="/download" element={<DownloadPage />} />
         <Route path="/change-password" element={<ChangePassword />} />
 
         {/* Admin-only routes */}

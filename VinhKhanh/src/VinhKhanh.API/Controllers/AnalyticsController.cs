@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VinhKhanh.Infrastructure.Data;
 using VinhKhanh.Shared.DTOs;
@@ -36,8 +36,15 @@ public class AnalyticsController(ApplicationDbContext db) : ControllerBase
 			VisitedAt = DateTime.UtcNow
 		});
 
-		await db.SaveChangesAsync(ct);
-		return Ok(new { message = "Logged" });
+		try
+		{
+			await db.SaveChangesAsync(ct);
+			return Ok(new { message = "Logged" });
+		}
+		catch (OperationCanceledException)
+		{
+			return NoContent();
+		}
 	}
 
 	[HttpGet("top")]
@@ -46,38 +53,45 @@ public class AnalyticsController(ApplicationDbContext db) : ControllerBase
 		days = Math.Clamp(days, 1, 365);
 		var since = DateTime.UtcNow.AddDays(-days);
 
-		var top = await db.PoiVisitLogs
-			.Where(v => v.VisitedAt >= since)
-			.GroupBy(v => v.PoiId)
-			.Select(g => new
-			{
-				PoiId = g.Key,
-				Count = g.Count(),
-				AvgDuration = g.Average(v => v.ListenDurationSeconds)
-			})
-			.OrderByDescending(x => x.Count)
-			.ThenBy(x => x.PoiId)
-			.Take(20)
-			.ToListAsync(ct);
-
-		if (top.Count == 0)
-			return Ok(Array.Empty<object>());
-
-		var poiIds = top.Select(x => x.PoiId).Distinct().ToList();
-		var names = await db.Pois.IgnoreQueryFilters()
-			.Where(p => poiIds.Contains(p.Id))
-			.Select(p => new { p.Id, p.Name })
-			.ToDictionaryAsync(x => x.Id, x => x.Name, ct);
-
-		var result = top.Select(x => new
+		try
 		{
-			x.PoiId,
-			PoiName = names.TryGetValue(x.PoiId, out var n) ? n : null,
-			x.Count,
-			x.AvgDuration
-		});
+			var top = await db.PoiVisitLogs
+				.Where(v => v.VisitedAt >= since)
+				.GroupBy(v => v.PoiId)
+				.Select(g => new
+				{
+					PoiId = g.Key,
+					Count = g.Count(),
+					AvgDuration = g.Average(v => v.ListenDurationSeconds)
+				})
+				.OrderByDescending(x => x.Count)
+				.ThenBy(x => x.PoiId)
+				.Take(20)
+				.ToListAsync(ct);
 
-		return Ok(result);
+			if (top.Count == 0)
+				return Ok(Array.Empty<object>());
+
+			var poiIds = top.Select(x => x.PoiId).Distinct().ToList();
+			var names = await db.Pois.IgnoreQueryFilters()
+				.Where(p => poiIds.Contains(p.Id))
+				.Select(p => new { p.Id, p.Name })
+				.ToDictionaryAsync(x => x.Id, x => x.Name, ct);
+
+			var result = top.Select(x => new
+			{
+				x.PoiId,
+				PoiName = names.TryGetValue(x.PoiId, out var n) ? n : null,
+				x.Count,
+				x.AvgDuration
+			});
+
+			return Ok(result);
+		}
+		catch (OperationCanceledException)
+		{
+			return NoContent();
+		}
 	}
 
 	[HttpGet("heatmap")]
@@ -86,11 +100,18 @@ public class AnalyticsController(ApplicationDbContext db) : ControllerBase
 		hours = Math.Clamp(hours, 1, 24 * 30);
 		var since = DateTime.UtcNow.AddHours(-hours);
 
-		var points = await db.MovementLogs
-			.Where(m => m.RecordedAt >= since)
-			.Select(m => new { m.Latitude, m.Longitude })
-			.ToListAsync(ct);
+		try
+		{
+			var points = await db.MovementLogs
+				.Where(m => m.RecordedAt >= since)
+				.Select(m => new { m.Latitude, m.Longitude })
+				.ToListAsync(ct);
 
-		return Ok(points);
+			return Ok(points);
+		}
+		catch (OperationCanceledException)
+		{
+			return NoContent();
+		}
 	}
 }

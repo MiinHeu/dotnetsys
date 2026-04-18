@@ -6,6 +6,7 @@ namespace VinhKhanh.API.Services;
 /// This prevents hard dependency on a single provider.
 /// </summary>
 public class ResilientTranslationService(
+	GeminiTranslationService gemini,
 	OllamaTranslationService ollama,
 	LibreTranslateService libre,
 	MicrosoftTranslatorService microsoft,
@@ -37,16 +38,19 @@ public class ResilientTranslationService(
 
 	private IEnumerable<Func<string, string, string, CancellationToken, Task<string?>>> BuildProviderChain()
 	{
+		var hasGemini = !string.IsNullOrWhiteSpace(cfg["Gemini:ApiKey"]);
 		var hasOllama = !string.IsNullOrWhiteSpace(cfg["Ollama:BaseUrl"]);
 		var hasLibre = !string.IsNullOrWhiteSpace(cfg["LibreTranslate:BaseUrl"]);
 		var hasMicrosoft = !string.IsNullOrWhiteSpace(cfg["Translator:Key"]);
 
-		// Prefer local/offline-first when available.
+		// Prefer high-quality cloud/local options first.
+		if (hasGemini) yield return gemini.TranslateAsync;
 		if (hasOllama) yield return ollama.TranslateAsync;
 		if (hasLibre) yield return libre.TranslateAsync;
 		if (hasMicrosoft) yield return microsoft.TranslateAsync;
 
 		// Last safety net: try all providers even if config flags are missing.
+		yield return gemini.TranslateAsync;
 		yield return ollama.TranslateAsync;
 		yield return libre.TranslateAsync;
 		yield return microsoft.TranslateAsync;
