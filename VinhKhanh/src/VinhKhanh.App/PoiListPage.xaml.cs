@@ -66,37 +66,9 @@ public partial class PoiListPage : ContentPage
 	{
 		if (e.Parameter is PoiSnapshot selected)
 		{
-			// Chuyển đổi sang Poi object để phù hợp với ViewModel của trang chi tiết
-			var poi = new VinhKhanh.Infrastructure.Data.Poi
-			{
-				Id = selected.Id,
-				Name = selected.Name,
-				Description = selected.Description,
-				Latitude = selected.Latitude,
-				Longitude = selected.Longitude,
-				MapX = selected.MapX,
-				MapY = selected.MapY,
-				TriggerRadiusMeters = selected.TriggerRadiusMeters,
-				CooldownSeconds = selected.CooldownSeconds,
-				Priority = selected.Priority,
-				ImageUrl = selected.ImageUrl,
-				AudioViUrl = selected.AudioViUrl,
-				Category = Enum.TryParse<VinhKhanh.Infrastructure.Data.PoiCategory>(selected.Category, out var cat) ? cat : VinhKhanh.Infrastructure.Data.PoiCategory.ComTam,
-				Translations = selected.Translations?.Select(t => new VinhKhanh.Infrastructure.Data.PoiTranslation
-				{
-					Id = t.Id,
-					PoiId = t.PoiId,
-					LanguageCode = t.LanguageCode,
-					Name = t.Name,
-					Description = t.Description,
-					AudioUrl = t.AudioUrl,
-					OriginalDescription = t.OriginalDescription
-				}).ToList()
-			};
-
 			var navigationParameter = new Dictionary<string, object>
 			{
-				{ "Poi", poi }
+				{ "PoiId", selected.Id }
 			};
 
 			await Shell.Current.GoToAsync(nameof(PoiDetailPage), navigationParameter);

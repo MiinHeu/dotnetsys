@@ -16,7 +16,7 @@
     <Grid RowDefinitions="300, *">
         <!-- Banner Image -->
         <Grid Grid.Row="0">
-            <Image Source="{Binding Poi.ImageUrl, TargetNullValue='icon_restaurant_placeholder.png'}" 
+            <Image Source="{Binding PoiDetail.ImageUrl, TargetNullValue='icon_restaurant_placeholder.png'}" 
                    Aspect="AspectFill" />
             
             <!-- Gradient Overlay for better contrast -->
@@ -52,7 +52,7 @@
                                FontAttributes="Bold" 
                                TextColor="#111827" />
                         
-                        <Label Text="{Binding Poi.Category}" 
+                        <Label Text="{Binding PoiDetail.Category}" 
                                TextColor="#FF5A1F" 
                                FontSize="16" 
                                FontAttributes="Italic" />
