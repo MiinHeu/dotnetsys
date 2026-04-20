@@ -1,17 +1,22 @@
 using Microsoft.AspNetCore.SignalR;
+using VinhKhanh.API.Services;
 
 namespace VinhKhanh.API.Hubs;
 
-public class VinhKhanhHub : Hub
+public class VinhKhanhHub(IConnectionTracker tracker) : Hub
 {
-	// Events:
-	// - PoiCreated(poi), PoiUpdated(poi)
-	// - TourCreated(tour), TourUpdated(tour)
 	public override Task OnConnectedAsync()
 	{
-		// Helpful for debugging SignalR connectivity.
-		Console.WriteLine($"SignalR connected: {Context.ConnectionId}");
+		tracker.AddConnection(Context.ConnectionId);
+		Console.WriteLine($"SignalR connected: {Context.ConnectionId}. Total: {tracker.GetConnectionCount()}");
 		return base.OnConnectedAsync();
+	}
+
+	public override async Task OnDisconnectedAsync(Exception? exception)
+	{
+		tracker.RemoveConnection(Context.ConnectionId);
+		Console.WriteLine($"SignalR disconnected: {Context.ConnectionId}. Total: {tracker.GetConnectionCount()}");
+		await base.OnDisconnectedAsync(exception);
 	}
 }
 

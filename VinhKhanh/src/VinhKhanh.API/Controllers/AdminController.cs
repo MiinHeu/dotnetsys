@@ -8,7 +8,7 @@ namespace VinhKhanh.API.Controllers;
 
 [ApiController, Route("api/[controller]")]
 [Authorize(Roles = "Admin")]
-public class AdminController(ApplicationDbContext db) : ControllerBase
+public class AdminController(ApplicationDbContext db, IConnectionTracker tracker) : ControllerBase
 {
 	[HttpGet("summary")]
 	public async Task<IActionResult> Summary(CancellationToken ct = default)
@@ -17,6 +17,7 @@ public class AdminController(ApplicationDbContext db) : ControllerBase
 		var totalTours = await db.Tours.AsNoTracking().CountAsync(ct);
 		var totalUsers = await db.AppUsers.AsNoTracking().CountAsync(ct);
 		var totalVisits = await db.PoiVisitLogs.AsNoTracking().CountAsync(ct);
+		var activeUsers = tracker.GetConnectionCount();
 
 		var ownerStats = await db.Pois.AsNoTracking()
 			.Where(p => p.OwnerUserId.HasValue)
@@ -24,7 +25,7 @@ public class AdminController(ApplicationDbContext db) : ControllerBase
 			.Select(g => new { OwnerId = g.Key, PoiCount = g.Count() })
 			.ToListAsync(ct);
 
-		return Ok(new { totalPois, totalTours, totalUsers, totalVisits, ownerStats });
+		return Ok(new { totalPois, totalTours, totalUsers, totalVisits, activeUsers, ownerStats });
 	}
 
 	[Authorize(Roles = "Admin")]

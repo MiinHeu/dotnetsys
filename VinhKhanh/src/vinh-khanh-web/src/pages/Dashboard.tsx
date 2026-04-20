@@ -27,7 +27,7 @@ export function Dashboard() {
   const summary = useQuery({
     queryKey: ['admin', 'summary'],
     queryFn: async () =>
-      (await api.get<{ totalPois: number; totalTours: number; totalUsers: number; totalVisits: number; ownerStats?: { ownerId: number; poiCount: number }[] }>('/api/admin/summary')).data,
+      (await api.get<{ totalPois: number; totalTours: number; totalUsers: number; totalVisits: number; activeUsers: number; ownerStats?: { ownerId: number; poiCount: number }[] }>('/api/admin/summary')).data,
   })
 
   const ownersQ = useQuery({
@@ -63,20 +63,20 @@ export function Dashboard() {
       bg: 'bg-blue-600',
     },
     {
+      label: 'Khách trực tuyến',
+      value: summary.isLoading ? '...' : (summary.data?.activeUsers ?? 0),
+      sub: 'Đang kết nối',
+      desc: 'Số lượng kết nối thời gian thực hiện tại',
+      icon: TrendingUp,
+      bg: 'bg-emerald-600',
+    },
+    {
       label: 'Khách tham quan',
       value: summary.isLoading ? '...' : (summary.data?.totalUsers ?? '—'),
       sub: 'Tổng lượt đăng ký',
       desc: 'Lượt du khách sử dụng ứng dụng',
       icon: Users,
       bg: 'bg-teal-600',
-    },
-    {
-      label: 'Lượt nghe TTS',
-      value: analyticsTop.isLoading ? '...' : (summary.isLoading ? (analyticsTop.data?.reduce((a, b) => a + b.count, 0) ?? 0) : (summary.data?.totalVisits ?? analyticsTop.data?.reduce((a, b) => a + b.count, 0) ?? 0)),
-      sub: 'Số lần phát',
-      desc: 'Lượt thuyết minh tự động đã phát',
-      icon: TrendingUp,
-      bg: 'bg-rose-600',
     },
   ]
 

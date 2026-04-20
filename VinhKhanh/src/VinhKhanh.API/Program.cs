@@ -47,6 +47,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddSignalR();
 
 builder.Services.AddHttpClient();
+builder.Services.AddSingleton<IConnectionTracker, ConnectionTracker>();
 builder.Services.AddScoped<GeminiTranslationService>();
 builder.Services.AddScoped<OllamaTranslationService>();
 builder.Services.AddScoped<LibreTranslateService>();

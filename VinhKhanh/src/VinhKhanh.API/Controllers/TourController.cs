@@ -16,35 +16,49 @@ public class TourController(
 	[HttpGet]
 	public async Task<IActionResult> GetAll([FromQuery] string lang = "vi", CancellationToken ct = default)
 	{
-		_ = NormalizeLang(lang);
+		try
+		{
+			_ = NormalizeLang(lang);
 
-		var tours = await db.Tours
-			.Where(t => t.IsActive)
-			.Include(t => t.Translations)
-			.Include(t => t.Stops.OrderBy(s => s.StopOrder))
-				.ThenInclude(s => s.Poi)
-					.ThenInclude(p => p.Translations)
-			.AsNoTracking()
-			.ToListAsync(ct);
+			var tours = await db.Tours
+				.Where(t => t.IsActive)
+				.Include(t => t.Translations)
+				.Include(t => t.Stops.OrderBy(s => s.StopOrder))
+					.ThenInclude(s => s.Poi)
+						.ThenInclude(p => p.Translations)
+				.AsNoTracking()
+				.ToListAsync(ct);
 
-		return Ok(tours);
+			return Ok(tours);
+		}
+		catch (OperationCanceledException)
+		{
+			return NoContent();
+		}
 	}
 
 	[HttpGet("{id:int}")]
 	public async Task<IActionResult> GetById(int id, [FromQuery] string lang = "vi", CancellationToken ct = default)
 	{
-		_ = NormalizeLang(lang);
+		try
+		{
+			_ = NormalizeLang(lang);
 
-		var tour = await db.Tours
-			.Where(t => t.IsActive)
-			.Include(t => t.Translations)
-			.Include(t => t.Stops.OrderBy(s => s.StopOrder))
-				.ThenInclude(s => s.Poi)
-					.ThenInclude(p => p.Translations)
-			.AsNoTracking()
-			.FirstOrDefaultAsync(t => t.Id == id, ct);
+			var tour = await db.Tours
+				.Where(t => t.IsActive)
+				.Include(t => t.Translations)
+				.Include(t => t.Stops.OrderBy(s => s.StopOrder))
+					.ThenInclude(s => s.Poi)
+						.ThenInclude(p => p.Translations)
+				.AsNoTracking()
+				.FirstOrDefaultAsync(t => t.Id == id, ct);
 
-		return tour == null ? NotFound() : Ok(tour);
+			return tour == null ? NotFound() : Ok(tour);
+		}
+		catch (OperationCanceledException)
+		{
+			return NoContent();
+		}
 	}
 
 	[HttpPost]
