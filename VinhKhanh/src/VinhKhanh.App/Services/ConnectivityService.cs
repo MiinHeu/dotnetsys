@@ -11,13 +11,15 @@ public class ConnectivityService
 {
 	private readonly LocalPoiCacheService _cache;
 	private readonly ApiClientService _api;
+	private readonly INarrationService _narration;
 	private static readonly string PrefsLastSync = "vk_last_sync_timestamp";
 	private static readonly string PrefsKnownVersions = "vk_known_versions";
 
-	public ConnectivityService(LocalPoiCacheService cache, ApiClientService api)
+	public ConnectivityService(LocalPoiCacheService cache, ApiClientService api, INarrationService narration)
 	{
 		_cache = cache;
 		_api = api;
+		_narration = narration;
 		Connectivity.ConnectivityChanged += OnConnectivityChanged;
 	}
 
@@ -71,6 +73,9 @@ public class ConnectivityService
 			knownVersions = remoteById.ToDictionary(x => x.Key, x => x.Value.ContentVersion >= 1 ? x.Value.ContentVersion : 1);
 			Microsoft.Maui.Storage.Preferences.Set(PrefsLastSync, DateTime.UtcNow.Ticks);
 			SaveKnownVersions(knownVersions);
+
+			// Tải audio ngầm định cho ngôn ngữ hiện tại
+			_ = _narration.PreFetchAllAsync(remote, lang);
 		}
 		catch { /* retry next reconnect */ }
 	}

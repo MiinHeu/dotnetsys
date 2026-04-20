@@ -34,7 +34,7 @@ public sealed class ApiClientService
 		}
 
 		// Với máy thật, ưu tiên lấy IP đã cấu hình trong Preferences
-		return Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, "http://localhost:5283/");
+		return Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, "http://192.168.31.79:5283/");
 	}
 
 	public async Task<IReadOnlyList<PoiSnapshot>> GetPoisAsync(string lang, CancellationToken ct = default)

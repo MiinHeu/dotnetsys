@@ -97,12 +97,20 @@ public class PoiController(
 			}
 		}
 
-		var pois = await query
-			.OrderByDescending(p => p.Priority)
-			.ThenBy(p => p.Name)
-			.ToListAsync(ct);
+		try
+		{
+			var pois = await query
+				.OrderByDescending(p => p.Priority)
+				.ThenBy(p => p.Name)
+				.ToListAsync(ct);
 
-		return Ok(pois);
+			return Ok(pois);
+		}
+		catch (OperationCanceledException)
+		{
+			// Xảy ra khi client ngắt kết nối đột ngột
+			return NoContent();
+		}
 	}
 
 	[HttpGet("{id:int}")]
@@ -170,25 +178,32 @@ public class PoiController(
 		if (!IsValidCoordinate(loc.Lat, loc.Lon))
 			return BadRequest(new { message = "Toa do khong hop le." });
 
-		var pois = await db.Pois
-			.Where(p => p.IsActive)
-			.Include(p => p.Translations)
-			.AsNoTracking()
-			.ToListAsync(ct);
+		try
+		{
+			var pois = await db.Pois
+				.Where(p => p.IsActive)
+				.Include(p => p.Translations)
+				.AsNoTracking()
+				.ToListAsync(ct);
 
-		var items = pois
-			.Select(p => new
-			{
-				Poi = p,
-				Dist = GeoMath.Haversine(loc.Lat, loc.Lon, p.Latitude, p.Longitude)
-			})
-			.Where(x => x.Poi.TriggerRadiusMeters > 0 && x.Dist <= x.Poi.TriggerRadiusMeters)
-			.OrderByDescending(x => x.Poi.Priority)
-			.ThenBy(x => x.Dist)
-			.Select(x => x.Poi)
-			.ToList();
+			var items = pois
+				.Select(p => new
+				{
+					Poi = p,
+					Dist = GeoMath.Haversine(loc.Lat, loc.Lon, p.Latitude, p.Longitude)
+				})
+				.Where(x => x.Poi.TriggerRadiusMeters > 0 && x.Dist <= x.Poi.TriggerRadiusMeters)
+				.OrderByDescending(x => x.Poi.Priority)
+				.ThenBy(x => x.Dist)
+				.Select(x => x.Poi)
+				.ToList();
 
-		return Ok(items);
+			return Ok(items);
+		}
+		catch (OperationCanceledException)
+		{
+			return NoContent();
+		}
 	}
 
 	[HttpPost]

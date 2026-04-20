@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:VinhKhanh.App.ViewModels"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:res="clr-namespace:VinhKhanh.App.Resources.Strings"
              x:Class="VinhKhanh.App.PoiDetailPage"
              x:DataType="vm:PoiDetailViewModel"
              Title="{Binding PageTitle}"

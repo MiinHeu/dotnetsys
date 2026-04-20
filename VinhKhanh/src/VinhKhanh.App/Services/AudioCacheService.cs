@@ -11,7 +11,8 @@ namespace VinhKhanh.App.Services;
 public sealed class AudioCacheService
 {
     private static readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(60) };
-    private readonly string _cacheDir = Path.Combine(FileSystem.CacheDirectory, "AudioCache");
+    private readonly string _cacheDir = Path.Combine(FileSystem.AppDataDirectory, "AudioCache");
+    private readonly SemaphoreSlim _downloadSemaphore = new(3, 3); // Chỉ cho phép 3 lượt tải cùng lúc
 
     public AudioCacheService()
     {
@@ -24,7 +25,7 @@ public sealed class AudioCacheService
     /// <summary>
     /// Lấy đường dẫn tệp âm thanh cục bộ. Nếu chưa có, sẽ tải về máy.
     /// </summary>
-    public async Task<string?> GetAudioPathAsync(string url, CancellationToken ct = default)
+    public async Task<string?> GetAudioPathAsync(string url, bool highPriority = false, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(url)) return null;
 
@@ -34,14 +35,18 @@ public sealed class AudioCacheService
         // 1. Kiểm tra xem tệp đã tồn tại trong máy chưa
         if (File.Exists(localPath))
         {
-            Debug.WriteLine($"[AudioCache] Cache hit: {localPath}");
+            Debug.WriteLine($"[AudioCache] Hit: {localPath}");
             return localPath;
         }
 
-        // 2. Nếu chưa có, thực hiện tải về
+        // 2. Nếu chưa có, thực hiện tải về (Dùng semaphore để tránh làm nghẽn mạng, trừ khi là ưu tiên cao)
+        if (!highPriority) await _downloadSemaphore.WaitAsync(ct);
         try
         {
-            Debug.WriteLine($"[AudioCache] Cache miss, downloading: {url}");
+            // Kiểm tra lại lần nữa sau khi qua semaphore nhỡ đâu file vừa được tải xong bởi thread khác
+            if (File.Exists(localPath)) return localPath;
+
+            Debug.WriteLine($"[AudioCache] Downloading: {url}");
             var bytes = await _httpClient.GetByteArrayAsync(url, ct);
             await File.WriteAllBytesAsync(localPath, bytes, ct);
             Debug.WriteLine($"[AudioCache] Saved to: {localPath}");
@@ -49,21 +54,23 @@ public sealed class AudioCacheService
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[AudioCache] Download failed: {ex.Message}");
+            Debug.WriteLine($"[AudioCache] Download failed: {url} -> {ex.Message}");
             return null;
+        }
+        finally
+        {
+            if (!highPriority) _downloadSemaphore.Release();
         }
     }
 
-    /// <summary>
-    /// Thực hiện tải trước (Pre-fetch) tệp âm thanh một cách ngầm định.
-    /// </summary>
     public async Task PreFetchAsync(string url)
     {
-        try
-        {
-            _ = await GetAudioPathAsync(url);
-        }
-        catch { /* Bỏ qua lỗi khi tải ngầm */ }
+        if (string.IsNullOrWhiteSpace(url)) return;
+        
+        var fileName = GetHash(url) + ".mp3";
+        if (File.Exists(Path.Combine(_cacheDir, fileName))) return;
+
+        try { _ = await GetAudioPathAsync(url); } catch { }
     }
 
     private static string GetHash(string input)

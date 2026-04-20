@@ -19,5 +19,6 @@ public interface INarrationService
 	void InterruptIfHigherPriority(int newPriority);
 	Task StopCurrentAsync();
 	Task PreFetchAsync(Models.PoiSnapshot poi, string language);
+	Task PreFetchAllAsync(IEnumerable<Models.PoiSnapshot> pois, string language);
 	bool IsPlaying { get; }
 }

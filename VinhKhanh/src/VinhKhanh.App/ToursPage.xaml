@@ -16,9 +16,9 @@
         </Border>
 
         <RefreshView Grid.Row="1" Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
-            <CollectionView x:Name="TourList" ItemsSource="{Binding Tours}" Padding="16,24,16,40">
+            <CollectionView x:Name="TourList" ItemsSource="{Binding Tours}">
                 <CollectionView.ItemsLayout>
-                    <VerticalListLayout Spacing="20"/>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="20"/>
                 </CollectionView.ItemsLayout>
 
                 <CollectionView.ItemTemplate>

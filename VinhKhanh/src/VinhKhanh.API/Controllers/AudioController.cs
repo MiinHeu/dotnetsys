@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VinhKhanh.API.Services;
 using VinhKhanh.Shared.DTOs;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace VinhKhanh.API.Controllers;
 
@@ -83,8 +85,21 @@ public class AudioController(
 			? DefaultVoice(lang)
 			: dto.Voice.Trim();
 
+		// 1. Kiểm tra Cache dựa trên nội dung
+		var cacheKey = $"{dto.Text.Trim()}_{lang}_{voice}";
+		var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(cacheKey))).ToLowerInvariant();
+		var cacheFileName = $"{hash}.mp3";
+		var cacheFilePath = Path.Combine(AudioDir, "cache", cacheFileName);
+
+		if (System.IO.File.Exists(cacheFilePath))
+		{
+			log.LogInformation("TTS Cache hit: {Hash}", hash);
+			return File(System.IO.File.OpenRead(cacheFilePath), "audio/mpeg", "speech.mp3");
+		}
+
 		try
 		{
+			log.LogInformation("TTS Cache miss, synthesizing: {Hash}", hash);
 			var audioBytes = await tts.SynthesizeAsync(dto.Text.Trim(), lang, voice);
 			if (audioBytes.Length == 0)
 			{
@@ -92,10 +107,15 @@ public class AudioController(
 					new { message = "TTS backend chua san sang. Kiem tra cau hinh VoiceRss hoac AzureTTS." });
 			}
 
+			// 2. Lưu vào Cache
+			Directory.CreateDirectory(Path.Combine(AudioDir, "cache"));
+			await System.IO.File.WriteAllBytesAsync(cacheFilePath, audioBytes, ct);
+
 			return File(audioBytes, "audio/mpeg", "speech.mp3");
 		}
 		catch (Exception ex)
 		{
+			log.LogError(ex, "TTS error: {Msg}", ex.Message);
 			return StatusCode(500, new { message = $"TTS error: {ex.Message}" });
 		}
 	}
