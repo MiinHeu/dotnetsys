@@ -8,8 +8,13 @@ using Microsoft.Maui.Media;
 
 namespace VinhKhanh.App.Services;
 
-public sealed class NarrationService(IAudioManager audioManager, ILogger<NarrationService> logger) : INarrationService
+public sealed class NarrationService(
+	IAudioManager audioManager, 
+	ILogger<NarrationService> logger,
+	AudioCacheService audioCache) : INarrationService
 {
+	private static readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(60) };
+	private static readonly Dictionary<string, Locale> _localeCache = [];
 	private IAudioPlayer? _player;
 	private MemoryStream? _playbackStream;
 	private readonly SemaphoreSlim _gate = new(1, 1);
@@ -127,6 +132,19 @@ public sealed class NarrationService(IAudioManager audioManager, ILogger<Narrati
 		}
 	}
 
+	public async Task PreFetchAsync(PoiSnapshot poi, string language)
+	{
+		var audioUrl = poi.ResolveAudioUrl(language);
+		if (string.IsNullOrWhiteSpace(audioUrl)) return;
+
+		var apiRoot = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, ApiClientService.GetDefaultApiBase()).TrimEnd('/');
+		var abs = audioUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+			? FixLocalhostForAndroid(audioUrl)
+			: $"{FixLocalhostForAndroid(apiRoot.TrimEnd('/'))}/{audioUrl.TrimStart('/')}";
+
+		await audioCache.PreFetchAsync(abs);
+	}
+
 	/// <summary>Phat thuyet minh; tra ve thoi luong nghe uoc tinh (giay) cho analytics.</summary>
 	public async Task<int> PlayPoiAsync(PoiSnapshot poi, string lang, string apiRootTrimmed, CancellationToken ct = default)
 	{
@@ -152,24 +170,31 @@ public sealed class NarrationService(IAudioManager audioManager, ILogger<Narrati
 				try
 				{
 					logger.LogInformation("Attempting to play audio from URL: {Url}", abs);
-					using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
-					var bytes = await http.GetByteArrayAsync(abs, ct);
-					logger.LogInformation("Downloaded {Bytes} bytes", bytes.Length);
-					var ext = Path.GetExtension(new Uri(abs).AbsolutePath);
-					if (string.IsNullOrEmpty(ext)) ext = ".mp3";
-					_playbackStream = new MemoryStream(bytes);
-					_player = audioManager.CreatePlayer(_playbackStream);
-					logger.LogInformation("Created audio player, starting playback...");
-					_player.Play();
+					
+					// SỬ DỤNG CACHE ĐỂ PHÁT NGAY LẬP TỨC
+					var localPath = await audioCache.GetAudioPathAsync(abs, ct);
+					if (!string.IsNullOrEmpty(localPath))
+					{
+						logger.LogInformation("Playing from local cache: {Path}", localPath);
+						_playbackStream = new MemoryStream(await File.ReadAllBytesAsync(localPath, ct));
+						_player = audioManager.CreatePlayer(_playbackStream);
+						_player.Play();
+					}
+					else
+					{
+						// Fallback download trực tiếp nếu cache lỗi (hiếm khi xảy ra)
+						var bytes = await _httpClient.GetByteArrayAsync(abs, ct);
+						_playbackStream = new MemoryStream(bytes);
+						_player = audioManager.CreatePlayer(_playbackStream);
+						_player.Play();
+					}
+
 					int waitCount = 0;
 					while (_player.IsPlaying && !ct.IsCancellationRequested)
 					{
 						await Task.Delay(150, ct);
 						waitCount++;
-						if (waitCount % 10 == 0)
-							logger.LogDebug("Still playing... ({Count} iterations)", waitCount);
 					}
-					logger.LogInformation("Audio playback completed");
 					return ElapsedListenSeconds(sw);
 				}
 				catch (Exception ex)
@@ -184,27 +209,33 @@ public sealed class NarrationService(IAudioManager audioManager, ILogger<Narrati
 
 			if (lang == "vi")
 			{
-				// Vietnamese: use original text
 				textToSpeak = originalText;
 			}
-			else if (!string.IsNullOrWhiteSpace(originalText))
+			else 
 			{
-				// Need to translate from Vietnamese to target language
-				logger.LogInformation("Translating from 'vi' to '{Lang}' via API...", lang);
-				var translated = await TranslateTextAsync(originalText, "vi", lang, apiRootTrimmed, ct);
-				if (!string.IsNullOrWhiteSpace(translated))
+				// 1. Kiểm tra xem đã có bản dịch sẵn trong dữ liệu POI chưa
+				var translatedDescription = poi.ResolveDescription(lang);
+				
+				// Nếu bản dịch khác với bản gốc tiếng Việt (nghĩa là đã được dịch)
+				if (translatedDescription != originalText && !string.IsNullOrWhiteSpace(translatedDescription))
 				{
-					textToSpeak = translated;
-					logger.LogInformation("Translation successful: {Text}", translated);
+					textToSpeak = translatedDescription;
+					logger.LogInformation("Using pre-translated text from POI data: {Lang}", lang);
 				}
-				else
+				else if (!string.IsNullOrWhiteSpace(originalText))
 				{
-					logger.LogWarning("Translation failed for POI {PoiId} to {Lang}", poi.Id, lang);
-					// Optionally fallback to Vietnamese TTS
-					if (audioUrl == null) // Only if we don't have audio to fallback
+					// 2. Chỉ gọi API dịch thuật như một giải pháp cuối cùng nếu chưa có bản dịch
+					logger.LogInformation("No pre-translation found. Translating from 'vi' to '{Lang}' via API (Slow path)...", lang);
+					var translated = await TranslateTextAsync(originalText, "vi", lang, apiRootTrimmed, ct);
+					if (!string.IsNullOrWhiteSpace(translated))
 					{
+						textToSpeak = translated;
+						logger.LogInformation("API Translation successful: {Text}", translated);
+					}
+					else
+					{
+						logger.LogWarning("Translation failed for POI {PoiId} to {Lang}, falling back to original", poi.Id, lang);
 						textToSpeak = originalText;
-						logger.LogInformation("Falling back to Vietnamese TTS");
 					}
 				}
 			}
@@ -283,9 +314,13 @@ public sealed class NarrationService(IAudioManager audioManager, ILogger<Narrati
 	{
 		try
 		{
+			if (_localeCache.TryGetValue(lang, out var cachedLocale)) return cachedLocale;
+
 			var locales = await TextToSpeech.Default.GetLocalesAsync();
 			var match = locales.FirstOrDefault(l => l.Language.StartsWith(lang, StringComparison.OrdinalIgnoreCase))
 				?? locales.FirstOrDefault(l => l.Language.StartsWith("vi", StringComparison.OrdinalIgnoreCase));
+			
+			if (match != null) _localeCache[lang] = match;
 			return match;
 		}
 		catch (Exception ex)
@@ -323,8 +358,7 @@ public sealed class NarrationService(IAudioManager audioManager, ILogger<Narrati
 			var url = $"{FixLocalhostForAndroid(apiRoot)}/api/translation/text";
 			var payload = new { text, from = fromLang, to = toLang };
 
-			using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-			var response = await http.PostAsJsonAsync(url, payload, ct);
+			var response = await _httpClient.PostAsJsonAsync(url, payload, ct);
 
 			if (response.IsSuccessStatusCode)
 			{

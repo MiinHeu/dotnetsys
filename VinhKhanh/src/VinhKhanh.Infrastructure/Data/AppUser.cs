@@ -6,6 +6,9 @@ public class AppUser
 	public string Username { get; set; } = string.Empty;
 	public string PasswordHash { get; set; } = string.Empty;
 	public string Role { get; set; } = "Owner"; // Admin, Owner
+	public string? DisplayId { get; set; }
+	public string? FullName { get; set; }
+	public string? Email { get; set; }
 	public bool IsActive { get; set; } = true;
 	public ICollection<Poi> OwnedPois { get; set; } = new List<Poi>();
 	public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

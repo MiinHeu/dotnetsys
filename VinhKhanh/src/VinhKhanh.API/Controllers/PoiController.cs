@@ -84,6 +84,7 @@ public class PoiController(
 		var query = db.Pois
 			.Where(p => p.IsActive)
 			.Include(p => p.Translations)
+			.Include(p => p.Owner)
 			.AsNoTracking();
 
 		// Nếu là Owner (và không phải Admin), chỉ cho phép thấy POI của chính mình quản lý
@@ -228,12 +229,6 @@ public class PoiController(
 
 		poi.QrCode = await EnsureQrCodeAsync(poi.QrCode, excludingPoiId: null, ct);
 		poi.QrCode = NormalizeQr(poi.QrCode);
-		if (!string.IsNullOrEmpty(poi.QrCode)
-		    && await db.Pois.IgnoreQueryFilters().AnyAsync(p => p.QrCode == poi.QrCode, ct))
-		{
-			return Conflict(new { message = $"Ma QR '{poi.QrCode}' da ton tai." });
-		}
-
 		NormalizeTranslations(poi.Translations, poi.Description);
 		poi.CreatedAt = DateTime.UtcNow;
 		poi.UpdatedAt = DateTime.UtcNow;
@@ -242,6 +237,13 @@ public class PoiController(
 
 		db.Pois.Add(poi);
 		await db.SaveChangesAsync(ct);
+
+		// Tự động sinh mã QR nếu để trống (dựa trên ID vừa tạo)
+		if (string.IsNullOrEmpty(poi.QrCode))
+		{
+			poi.QrCode = $"VK-POI-{poi.Id:D3}";
+			await db.SaveChangesAsync(ct);
+		}
 
 		await hub.Clients.All.SendAsync("PoiCreated", poi, ct);
 		return CreatedAtAction(nameof(GetById), new { id = poi.Id }, poi);

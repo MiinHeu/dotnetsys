@@ -46,7 +46,7 @@ export function UserManagement() {
     }
   }
 
-  const filtered = users.filter(u => 
+  const filtered = users.filter(u =>
     u.username.toLowerCase().includes(search.toLowerCase()) ||
     u.role.toLowerCase().includes(search.toLowerCase())
   )
@@ -145,11 +145,10 @@ export function UserManagement() {
                       {u.username !== 'admin' ? (
                         <button
                           onClick={() => toggleStatus(u.id, u.isActive, u.username)}
-                          className={`px-3 py-1.5 rounded text-xs font-bold transition-colors ${
-                            u.isActive 
-                              ? 'bg-rose-100 text-rose-700 hover:bg-rose-200' 
-                              : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                          }`}
+                          className={`px-3 py-1.5 rounded text-xs font-bold transition-colors ${u.isActive
+                            ? 'bg-rose-100 text-rose-700 hover:bg-rose-200'
+                            : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                            }`}
                         >
                           {u.isActive ? 'Khóa' : 'Mở khóa'}
                         </button>

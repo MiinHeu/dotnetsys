@@ -19,7 +19,7 @@ public class AuthController(ApplicationDbContext db, IConfiguration cfg) : Contr
 	{
 		var owners = await db.AppUsers.AsNoTracking()
 			.Where(u => u.Role == "Owner" && u.IsActive)
-			.Select(u => new { u.Id, u.Username })
+			.Select(u => new { u.Id, u.Username, u.DisplayId, u.FullName, u.Email })
 			.ToListAsync(ct);
 		return Ok(owners);
 	}
@@ -85,6 +85,9 @@ public class AuthController(ApplicationDbContext db, IConfiguration cfg) : Contr
 			Username = username,
 			PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
 			Role = role,
+			FullName = req.FullName,
+			Email = req.Email,
+			DisplayId = await GenerateNextDisplayId(role, ct),
 			IsActive = true,
 			CreatedAt = DateTime.UtcNow
 		};
@@ -92,7 +95,7 @@ public class AuthController(ApplicationDbContext db, IConfiguration cfg) : Contr
 		db.AppUsers.Add(user);
 		await db.SaveChangesAsync(ct);
 
-		return Ok(new { message = "Da tao tai khoan", user.Id, user.Username, user.Role });
+		return Ok(new { message = "Da tao tai khoan", user.Id, user.Username, user.Role, user.DisplayId });
 	}
 
 	/// <summary>Owner self-registration (no auth required).</summary>
@@ -118,6 +121,9 @@ public class AuthController(ApplicationDbContext db, IConfiguration cfg) : Contr
 			Username = username,
 			PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
 			Role = "Owner",
+			FullName = req.FullName,
+			Email = req.Email,
+			DisplayId = await GenerateNextDisplayId("Owner", ct),
 			IsActive = true,
 			CreatedAt = DateTime.UtcNow
 		};
@@ -125,7 +131,7 @@ public class AuthController(ApplicationDbContext db, IConfiguration cfg) : Contr
 		db.AppUsers.Add(user);
 		await db.SaveChangesAsync(ct);
 
-		return Ok(new { message = "Da tao tai khoan Owner", user.Id, user.Username, user.Role });
+		return Ok(new { message = "Da tao tai khoan Owner", user.Id, user.Username, user.Role, user.DisplayId });
 	}
 
 	[AllowAnonymous, HttpPost("login")]
@@ -233,5 +239,48 @@ public class AuthController(ApplicationDbContext db, IConfiguration cfg) : Contr
 		await db.SaveChangesAsync(ct);
 
 		return Ok(new { message = "Da dat lai mat khau thanh cong." });
+	}
+
+	[Authorize, HttpGet("profile")]
+	public async Task<IActionResult> GetProfile(CancellationToken ct)
+	{
+		if (!Auth.AuthClaims.TryGetUserId(HttpContext.User, out var userId))
+			return Unauthorized();
+
+		var user = await db.AppUsers.AsNoTracking()
+			.FirstOrDefaultAsync(u => u.Id == userId, ct);
+	
+		if (user == null) return NotFound();
+
+		return Ok(new
+		{
+			user.Id,
+			user.Username,
+			user.DisplayId,
+			user.FullName,
+			user.Email,
+			user.Role
+		});
+	}
+
+	private async Task<string> GenerateNextDisplayId(string role, CancellationToken ct)
+	{
+		var prefix = role == "Admin" ? "ADM" : "OW";
+		var lastUser = await db.AppUsers.AsNoTracking()
+			.Where(u => u.Role == role && u.DisplayId != null && u.DisplayId.StartsWith(prefix + "-"))
+			.OrderByDescending(u => u.DisplayId)
+			.FirstOrDefaultAsync(ct);
+
+		int nextNum = 1;
+		if (lastUser != null && lastUser.DisplayId!.Length > 3)
+		{
+			var numPart = lastUser.DisplayId.Substring(prefix.Length + 1);
+			if (int.TryParse(numPart, out var lastNum))
+			{
+				nextNum = lastNum + 1;
+			}
+		}
+
+		return $"{prefix}-{nextNum:D3}";
 	}
 }

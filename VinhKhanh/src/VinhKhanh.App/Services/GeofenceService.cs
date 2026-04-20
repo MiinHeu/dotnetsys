@@ -9,7 +9,7 @@ public class GeofenceService : IGeofenceService
 	private readonly Dictionary<int, DateTime> _lastTriggered = new();
 	private readonly Dictionary<int, int> _consecutiveHits = new();
 	private readonly HashSet<int> _insidePoiIds = [];
-	private const int RequiredConsecutiveHits = 2;
+	private const int RequiredConsecutiveHits = 1;
 	private const double ExitHysteresisFactor = 1.2;
 
 	public Task<List<Poi>> CheckTriggeredAsync(Location loc, List<Poi> pois)

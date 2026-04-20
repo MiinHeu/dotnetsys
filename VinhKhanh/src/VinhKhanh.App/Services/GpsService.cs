@@ -88,7 +88,7 @@ public class GpsService : IGpsService
 			catch (OperationCanceledException) { break; }
 			catch { /* ignore GPS errors */ }
 
-			await Task.Delay(3000, ct).ConfigureAwait(false);
+			await Task.Delay(1500, ct).ConfigureAwait(false);
 		}
 	}
 
