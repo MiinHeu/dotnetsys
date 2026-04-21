@@ -189,16 +189,4 @@ app.MapHealthChecks("/health");
 
 app.Run();
 
-	await using var histCmd = conn.CreateCommand();
-	histCmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='__EFMigrationsHistory';";
-	var historyCount = Convert.ToInt32(await histCmd.ExecuteScalarAsync());
-	if (historyCount == 0) return true;
-
-	// History table exists but has no rows => still a legacy EnsureCreated DB.
-	await using var rowCmd = conn.CreateCommand();
-	rowCmd.CommandText = "SELECT COUNT(*) FROM __EFMigrationsHistory;";
-	var appliedMigrations = Convert.ToInt32(await rowCmd.ExecuteScalarAsync());
-	return appliedMigrations == 0;
-}
-
 public partial class Program;
