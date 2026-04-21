@@ -165,26 +165,23 @@ public class ApplicationDbContext : DbContext
 		});
 
 		// Seed minimal demo data (refine later).
-		var seedTime = new DateTime(2026, 03, 25, 0, 0, 0, DateTimeKind.Utc);
+		// Seed realistic demo data for Vinh Khanh Food Street.
+		var seedTime = new DateTime(2026, 04, 21, 0, 0, 0, DateTimeKind.Utc);
 		modelBuilder.Entity<Poi>().HasData(
 			new Poi
 			{
 				Id = 1,
-				Name = "Quan Com Tam Ba Ghien",
-				Description = "Com tam dac trung Sai Gon 30 nam.",
-				OwnerInfo = null,
+				Name = "Oc Oanh Vinh Khanh",
+				Description = "Quan oc noi tieng nhat khu vuc voi mon oc huong xot trung muoi.",
 				Latitude = 10.7531,
 				Longitude = 106.6780,
 				MapX = 15,
 				MapY = 40,
-				TriggerRadiusMeters = 15,
-				Priority = 9,
-				CooldownSeconds = 60,
-				Category = PoiCategory.ComTam,
-				ImageUrl = null,
-				AudioViUrl = null,
+				TriggerRadiusMeters = 20,
+				Priority = 10, // VIP Priority
+				CooldownSeconds = 30,
+				Category = PoiCategory.HaiSan,
 				QrCode = "VK-POI-001",
-				ContentVersion = 1,
 				IsActive = true,
 				CreatedAt = seedTime,
 				UpdatedAt = seedTime
@@ -192,21 +189,17 @@ public class ApplicationDbContext : DbContext
 			new Poi
 			{
 				Id = 2,
-				Name = "Banh Canh Cua Ba Suong",
-				Description = "Banh canh cua tuoi boc day, 40 nam.",
-				OwnerInfo = null,
+				Name = "Lau Bo Khu Nha Chay",
+				Description = "Lau bo truyen thong voi nuoc dung dam da, thit bo tuoi ngon.",
 				Latitude = 10.7533,
 				Longitude = 106.6781,
 				MapX = 30,
 				MapY = 40,
 				TriggerRadiusMeters = 15,
-				Priority = 8,
+				Priority = 8, // High Priority
 				CooldownSeconds = 60,
-				Category = PoiCategory.BanhCanh,
-				ImageUrl = null,
-				AudioViUrl = null,
+				Category = PoiCategory.DacSan,
 				QrCode = "VK-POI-002",
-				ContentVersion = 1,
 				IsActive = true,
 				CreatedAt = seedTime,
 				UpdatedAt = seedTime
@@ -214,21 +207,53 @@ public class ApplicationDbContext : DbContext
 			new Poi
 			{
 				Id = 3,
-				Name = "Khu Che Cuoi Pho",
-				Description = "Khu vuc tap trung hang che.",
-				OwnerInfo = null,
+				Name = "Sushi Vien Vinh Khanh",
+				Description = "Sushi binh dan nhung chat luong, thu hut rat dong gioi tre.",
 				Latitude = 10.7540,
 				Longitude = 106.6785,
 				MapX = 75,
 				MapY = 40,
-				TriggerRadiusMeters = 20,
-				Priority = 5,
+				TriggerRadiusMeters = 15,
+				Priority = 5, // Normal Priority
 				CooldownSeconds = 120,
-				Category = PoiCategory.CheTrangMiem,
-				ImageUrl = null,
-				AudioViUrl = null,
+				Category = PoiCategory.DacSan,
 				QrCode = "VK-POI-003",
-				ContentVersion = 1,
+				IsActive = true,
+				CreatedAt = seedTime,
+				UpdatedAt = seedTime
+			},
+			new Poi
+			{
+				Id = 4,
+				Name = "Com Tam Tu Map",
+				Description = "Com tam dem ngon nhat khu vuc, suon nuong thom phuc.",
+				Latitude = 10.7535,
+				Longitude = 106.6782,
+				MapX = 45,
+				MapY = 40,
+				TriggerRadiusMeters = 10,
+				Priority = 0, // Default Priority
+				CooldownSeconds = 60,
+				Category = PoiCategory.ComTam,
+				QrCode = "VK-POI-004",
+				IsActive = true,
+				CreatedAt = seedTime,
+				UpdatedAt = seedTime
+			},
+			new Poi
+			{
+				Id = 5,
+				Name = "Che Hien Khanh",
+				Description = "Che khuc bach va cac loai che giai nhiet truyen thong.",
+				Latitude = 10.7538,
+				Longitude = 106.6784,
+				MapX = 60,
+				MapY = 40,
+				TriggerRadiusMeters = 15,
+				Priority = 3,
+				CooldownSeconds = 60,
+				Category = PoiCategory.CheTrangMiem,
+				QrCode = "VK-POI-005",
 				IsActive = true,
 				CreatedAt = seedTime,
 				UpdatedAt = seedTime
