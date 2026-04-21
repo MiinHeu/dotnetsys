@@ -36,7 +36,7 @@ public static class DbSeeder
 				SessionId = $"seed-session-{random.Next(1, 20)}",
 				Latitude = 10.7535 + (random.NextDouble() - 0.5) * 0.002,
 				Longitude = 106.6782 + (random.NextDouble() - 0.5) * 0.002,
-				Accuracy = random.Next(5, 20),
+				AccuracyMeters = (float)random.Next(5, 20),
 				RecordedAt = now.AddHours(-random.Next(1, 48))
 			});
 		}
