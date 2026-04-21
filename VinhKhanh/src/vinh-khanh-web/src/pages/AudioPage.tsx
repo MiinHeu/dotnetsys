@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Search, Music, Play, Pause, Upload, Loader2, User } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 
-type PoiTranslation = NonNullable<Poi['translations']>[number]
 
 export function AudioPage() {
   const { role } = useAuthStore()
