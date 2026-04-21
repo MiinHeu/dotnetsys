@@ -34,7 +34,7 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x' # Sử dụng .NET 9 LTS ổn định
+          dotnet-version: '10.0.x' # Quay lại .NET 10 để khớp với máy chủ Azure
 
       - name: Publish API
         working-directory: VinhKhanh/src/VinhKhanh.API
