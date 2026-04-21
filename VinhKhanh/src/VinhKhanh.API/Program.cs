@@ -11,7 +11,9 @@ using VinhKhanh.API.Services;
 using VinhKhanh.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+#if DEBUG
 builder.WebHost.UseUrls("https://0.0.0.0:7016", "http://0.0.0.0:5283");
+#endif
 
 // Keep logging portable across local/dev/test environments
 // and avoid hard dependency on Windows EventLog permissions.
@@ -34,14 +36,19 @@ builder.Services.AddHealthChecks();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-#if DEBUG
-	var sqlite = builder.Configuration.GetConnectionString("Sqlite") ?? "Data Source=app.db";
-	options.UseSqlite(sqlite);
-	options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
-#else
+	// Ưu tiên PostgreSQL nếu có chuỗi kết nối Default trong appsettings hoặc Env Vars
 	var connStr = builder.Configuration.GetConnectionString("Default");
-	options.UseNpgsql(connStr);
-#endif
+	if (!string.IsNullOrWhiteSpace(connStr) && !connStr.Contains("DATABASE_HOST"))
+	{
+		options.UseNpgsql(connStr);
+	}
+	else
+	{
+		// Dự phòng sang SQLite cho bản Deploy ban đầu hoặc Local Debug
+		var sqlite = builder.Configuration.GetConnectionString("Sqlite") ?? "Data Source=app.db";
+		options.UseSqlite(sqlite);
+		options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+	}
 });
 
 builder.Services.AddSignalR();
