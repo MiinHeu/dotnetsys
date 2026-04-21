@@ -1,0 +1,49 @@
+name: Build and Deploy to Azure
+
+on:
+  push:
+    branches:
+      - NewBranch # Nhánh bạn vừa đẩy lên
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Build React Frontend
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Frontend
+        working-directory: VinhKhanh/src/vinh-khanh-web
+        run: |
+          npm install
+          npm run build:vite
+
+      # 2. Chuẩn bị wwwroot cho Backend
+      - name: Prep Backend wwwroot
+        run: |
+          mkdir -p VinhKhanh/src/VinhKhanh.API/wwwroot
+          cp -r VinhKhanh/src/vinh-khanh-web/dist/* VinhKhanh/src/VinhKhanh.API/wwwroot/
+
+      # 3. Build & Publish .NET Backend
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x' # Hỗ trợ .NET 10
+
+      - name: Publish API
+        working-directory: VinhKhanh/src/VinhKhanh.API
+        run: dotnet publish -c Release -o ./publish
+
+      # 4. Deploy lên Azure App Service
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'vinh-khanh-api' # Thay bằng tên Web App của bạn trên Azure
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: VinhKhanh/src/VinhKhanh.API/publish
