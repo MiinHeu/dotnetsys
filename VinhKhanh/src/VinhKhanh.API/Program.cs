@@ -152,13 +152,13 @@ try
         var forceDefaultCredentials = builder.Configuration.GetValue<bool>("Seed:ForceDefaultCredentials");
         try
         {
-            Console.WriteLine("[STARTUP] Running Database Migration...");
-            db.Database.Migrate();
+            Console.WriteLine("[STARTUP] Initializing Database (EnsureCreated)...");
+            // Sử dụng EnsureCreated để tạo DB sạch từ Model hiên tại, bỏ qua Migration history
+            db.Database.EnsureCreated();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[STARTUP] Migrate failed: {ex.Message}. Falling back to EnsureCreated.");
-            db.Database.EnsureCreated();
+            Console.WriteLine($"[STARTUP] Database initialization failed: {ex.Message}");
         }
         await DbSeeder.SeedAsync(db, forceDefaultCredentials);
     }
