@@ -34,7 +34,7 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x' # Hỗ trợ .NET 10
+          dotnet-version: '9.0.x' # Sử dụng .NET 9 LTS ổn định
 
       - name: Publish API
         working-directory: VinhKhanh/src/VinhKhanh.API
