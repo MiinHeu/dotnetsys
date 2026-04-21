@@ -150,20 +150,12 @@ using (var scope = app.Services.CreateScope())
 	var forceDefaultCredentials = builder.Configuration.GetValue<bool>("Seed:ForceDefaultCredentials");
 	try
 	{
-		if (db.Database.IsSqlite() && await IsLegacySqliteDatabaseAsync(db))
-		{
-			// Legacy dev DB created via EnsureCreated (no migration history).
-			// Skip Migrate() to avoid noisy "table already exists" startup failures.
-			db.Database.EnsureCreated();
-		}
-		else
-		{
-			db.Database.Migrate();
-		}
+		Console.WriteLine("[STARTUP] Running Database Migration...");
+		db.Database.Migrate();
 	}
 	catch (Exception ex)
 	{
-		logger.LogWarning(ex, "Database.Migrate failed, fallback to EnsureCreated.");
+		Console.WriteLine($"[STARTUP] Migrate failed: {ex.Message}. Falling back to EnsureCreated.");
 		db.Database.EnsureCreated();
 	}
 	await DbSeeder.SeedAsync(db, forceDefaultCredentials);
@@ -197,19 +189,6 @@ app.MapHealthChecks("/health");
 
 app.Run();
 
-static async Task<bool> IsLegacySqliteDatabaseAsync(ApplicationDbContext db)
-{
-	await using var conn = db.Database.GetDbConnection();
-	if (conn.State != System.Data.ConnectionState.Open)
-		await conn.OpenAsync();
-
-	// Has any user table?
-	await using var tableCmd = conn.CreateCommand();
-	tableCmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';";
-	var tableCount = Convert.ToInt32(await tableCmd.ExecuteScalarAsync());
-	if (tableCount == 0) return false;
-
-	// Has migration history table?
 	await using var histCmd = conn.CreateCommand();
 	histCmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='__EFMigrationsHistory';";
 	var historyCount = Convert.ToInt32(await histCmd.ExecuteScalarAsync());
