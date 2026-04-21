@@ -10,183 +10,194 @@ using VinhKhanh.API.Hubs;
 using VinhKhanh.API.Services;
 using VinhKhanh.Infrastructure.Data;
 
-var builder = WebApplication.CreateBuilder(args);
-Console.WriteLine($"[STARTUP] Starting VinhKhanh API in {builder.Environment.EnvironmentName} mode");
-#if DEBUG
-builder.WebHost.UseUrls("https://0.0.0.0:7016", "http://0.0.0.0:5283");
-#else
-// Azure Linux App Service for .NET 8/9/10 defaults to 8080
-builder.WebHost.ConfigureKestrel(serverOptions =>
+try 
 {
-    serverOptions.ListenAnyIP(8080);
-});
-#endif
+    var builder = WebApplication.CreateBuilder(args);
+    Console.WriteLine($"[STARTUP] Starting VinhKhanh API in {builder.Environment.EnvironmentName} mode");
+    #if DEBUG
+    builder.WebHost.UseUrls("https://0.0.0.0:7016", "http://0.0.0.0:5283");
+    #else
+    // Azure Linux App Service for .NET 8/9/10 defaults to 8080
+    builder.WebHost.ConfigureKestrel(serverOptions =>
+    {
+        serverOptions.ListenAnyIP(8080);
+    });
+    #endif
 
-// Keep logging portable across local/dev/test environments
-// and avoid hard dependency on Windows EventLog permissions.
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-if (builder.Environment.IsDevelopment())
+    // Keep logging portable across local/dev/test environments
+    // and avoid hard dependency on Windows EventLog permissions.
+    builder.Logging.ClearProviders();
+    builder.Logging.AddConsole();
+    if (builder.Environment.IsDevelopment())
+    {
+        builder.Logging.AddDebug();
+    }
+
+    builder.Services.AddOpenApi();
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            // Prevent runtime 500 when entities have circular navigation references (EF)
+            options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+            options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        });
+    builder.Services.AddHealthChecks();
+
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    {
+        // Ưu tiên PostgreSQL nếu có chuỗi kết nối Default trong appsettings hoặc Env Vars
+        var connStr = builder.Configuration.GetConnectionString("Default");
+        if (!string.IsNullOrWhiteSpace(connStr) && !connStr.Contains("DATABASE_HOST"))
+        {
+            Console.WriteLine("[STARTUP] Using PostgreSQL Database");
+            options.UseNpgsql(connStr);
+        }
+        else
+        {
+            // Dự phòng sang SQLite cho bản Deploy ban đầu hoặc Local Debug
+            var sqlite = builder.Configuration.GetConnectionString("Sqlite") ?? "Data Source=app.db";
+            Console.WriteLine($"[STARTUP] Using SQLite Database: {sqlite}");
+            options.UseSqlite(sqlite);
+            options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+        }
+    });
+
+    builder.Services.AddSignalR();
+
+    builder.Services.AddHttpClient();
+    builder.Services.AddScoped<GeminiTranslationService>();
+    builder.Services.AddScoped<OllamaTranslationService>();
+    builder.Services.AddScoped<LibreTranslateService>();
+    builder.Services.AddScoped<MicrosoftTranslatorService>();
+    builder.Services.AddScoped<ITranslationService, ResilientTranslationService>();
+    if (!string.IsNullOrWhiteSpace(builder.Configuration["AzureOpenAI:Endpoint"])
+        && !string.IsNullOrWhiteSpace(builder.Configuration["AzureOpenAI:Key"]))
+    {
+        builder.Services.AddScoped<IAiService, AzureAiService>();
+    }
+    else
+    {
+        builder.Services.AddScoped<IAiService, OllamaAiService>();
+    }
+    if (!string.IsNullOrWhiteSpace(builder.Configuration["VoiceRss:ApiKey"]))
+    {
+        builder.Services.AddScoped<ITtsService, VoiceRssTtsService>();
+    }
+    else
+    {
+        builder.Services.AddScoped<ITtsService, AzureTtsService>();
+    }
+
+    // Redis — dùng NoOpRedisService cho testing
+    builder.Services.AddScoped<IRedisService, NoOpRedisService>();
+
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("Default", policy =>
+        {
+            var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+
+            // Production-safe default: allow any origin (no credentials).
+            // If you set Cors:AllowedOrigins, we will lock it down to those origins.
+            if (allowedOrigins is { Length: > 0 })
+            {
+                policy
+                    .WithOrigins(allowedOrigins)
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            }
+            else if (builder.Environment.IsDevelopment())
+            {
+                // Dev convenience: Allow everything related to your local network and emulators
+                policy
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            }
+            else
+            {
+                policy
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            }
+        });
+    });
+
+    // JWT (chưa áp authorize cho toàn bộ endpoint, nhưng cấu hình để sẵn cho PHAN sau).
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                ValidAudience = builder.Configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+            };
+        });
+
+    builder.Services.AddAuthorization();
+
+    var app = builder.Build();
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+        var forceDefaultCredentials = builder.Configuration.GetValue<bool>("Seed:ForceDefaultCredentials");
+        try
+        {
+            Console.WriteLine("[STARTUP] Running Database Migration...");
+            db.Database.Migrate();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[STARTUP] Migrate failed: {ex.Message}. Falling back to EnsureCreated.");
+            db.Database.EnsureCreated();
+        }
+        await DbSeeder.SeedAsync(db, forceDefaultCredentials);
+    }
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.MapOpenApi();
+        app.MapScalarApiReference();
+    }
+
+    // Cấu hình Proxy để nhận diện IP và HTTPs đúng từ Azure LB
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+    });
+
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
+    app.UseCors("Default");
+    app.UseStaticFiles();
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapControllers();
+    app.MapHub<VinhKhanhHub>("/hubs/vinh-khanh");
+    app.MapHealthChecks("/health");
+
+    app.Run();
+}
+catch (Exception ex)
 {
-	builder.Logging.AddDebug();
+    Console.WriteLine("[CRITICAL] Global Startup Error:");
+    Console.WriteLine(ex.ToString());
+    throw;
 }
 
-builder.Services.AddOpenApi();
-builder.Services.AddControllers()
-	.AddJsonOptions(options =>
-	{
-		// Prevent runtime 500 when entities have circular navigation references (EF)
-		options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-		options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-	});
-builder.Services.AddHealthChecks();
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-	// Ưu tiên PostgreSQL nếu có chuỗi kết nối Default trong appsettings hoặc Env Vars
-	var connStr = builder.Configuration.GetConnectionString("Default");
-	if (!string.IsNullOrWhiteSpace(connStr) && !connStr.Contains("DATABASE_HOST"))
-	{
-		Console.WriteLine("[STARTUP] Using PostgreSQL Database");
-		options.UseNpgsql(connStr);
-	}
-	else
-	{
-		// Dự phòng sang SQLite cho bản Deploy ban đầu hoặc Local Debug
-		var sqlite = builder.Configuration.GetConnectionString("Sqlite") ?? "Data Source=app.db";
-		Console.WriteLine($"[STARTUP] Using SQLite Database: {sqlite}");
-		options.UseSqlite(sqlite);
-		options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
-	}
-});
-
-builder.Services.AddSignalR();
-
-builder.Services.AddHttpClient();
-builder.Services.AddScoped<GeminiTranslationService>();
-builder.Services.AddScoped<OllamaTranslationService>();
-builder.Services.AddScoped<LibreTranslateService>();
-builder.Services.AddScoped<MicrosoftTranslatorService>();
-builder.Services.AddScoped<ITranslationService, ResilientTranslationService>();
-if (!string.IsNullOrWhiteSpace(builder.Configuration["AzureOpenAI:Endpoint"])
-    && !string.IsNullOrWhiteSpace(builder.Configuration["AzureOpenAI:Key"]))
-{
-	builder.Services.AddScoped<IAiService, AzureAiService>();
-}
-else
-{
-	builder.Services.AddScoped<IAiService, OllamaAiService>();
-}
-if (!string.IsNullOrWhiteSpace(builder.Configuration["VoiceRss:ApiKey"]))
-{
-	builder.Services.AddScoped<ITtsService, VoiceRssTtsService>();
-}
-else
-{
-	builder.Services.AddScoped<ITtsService, AzureTtsService>();
-}
-
-// Redis — dùng NoOpRedisService cho testing
-builder.Services.AddScoped<IRedisService, NoOpRedisService>();
-
-builder.Services.AddCors(options =>
-{
-	options.AddPolicy("Default", policy =>
-	{
-		var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
-
-		// Production-safe default: allow any origin (no credentials).
-		// If you set Cors:AllowedOrigins, we will lock it down to those origins.
-		if (allowedOrigins is { Length: > 0 })
-		{
-			policy
-				.WithOrigins(allowedOrigins)
-				.AllowAnyMethod()
-				.AllowAnyHeader();
-		}
-		else if (builder.Environment.IsDevelopment())
-		{
-			// Dev convenience: Allow everything related to your local network and emulators
-			policy
-				.AllowAnyOrigin()
-				.AllowAnyMethod()
-				.AllowAnyHeader();
-		}
-		else
-		{
-			policy
-				.AllowAnyOrigin()
-				.AllowAnyMethod()
-				.AllowAnyHeader();
-		}
-	});
-});
-
-// JWT (chưa áp authorize cho toàn bộ endpoint, nhưng cấu hình để sẵn cho PHAN sau).
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-	.AddJwtBearer(options =>
-	{
-		options.TokenValidationParameters = new TokenValidationParameters
-		{
-			ValidateIssuer = true,
-			ValidateAudience = true,
-			ValidateLifetime = true,
-			ValidateIssuerSigningKey = true,
-			ValidIssuer = builder.Configuration["Jwt:Issuer"],
-			ValidAudience = builder.Configuration["Jwt:Audience"],
-			IssuerSigningKey = new SymmetricSecurityKey(
-				Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
-		};
-	});
-
-builder.Services.AddAuthorization();
-
-var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
-{
-	var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-	var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
-	var forceDefaultCredentials = builder.Configuration.GetValue<bool>("Seed:ForceDefaultCredentials");
-	try
-	{
-		Console.WriteLine("[STARTUP] Running Database Migration...");
-		db.Database.Migrate();
-	}
-	catch (Exception ex)
-	{
-		Console.WriteLine($"[STARTUP] Migrate failed: {ex.Message}. Falling back to EnsureCreated.");
-		db.Database.EnsureCreated();
-	}
-	await DbSeeder.SeedAsync(db, forceDefaultCredentials);
-}
-
-if (app.Environment.IsDevelopment())
-{
-	app.MapOpenApi();
-	app.MapScalarApiReference();
-}
-
-// Cấu hình Proxy để nhận diện IP và HTTPs đúng từ Azure LB
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
-});
-
-if (!app.Environment.IsDevelopment())
-{
-	app.UseHttpsRedirection();
-}
-app.UseCors("Default");
-app.UseStaticFiles();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-app.MapHub<VinhKhanhHub>("/hubs/vinh-khanh");
-app.MapHealthChecks("/health");
-
-app.Run();
+public partial class Program;
 
 public partial class Program;
