@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router'
 import React, { useEffect, useState } from 'react'
 import { api, type Poi } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
+ 
+type PoiTranslation = NonNullable<Poi['translations']>[number]
 
 
 type GeoPoint = {
