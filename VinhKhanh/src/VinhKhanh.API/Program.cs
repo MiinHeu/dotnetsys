@@ -14,6 +14,12 @@ var builder = WebApplication.CreateBuilder(args);
 Console.WriteLine($"[STARTUP] Starting VinhKhanh API in {builder.Environment.EnvironmentName} mode");
 #if DEBUG
 builder.WebHost.UseUrls("https://0.0.0.0:7016", "http://0.0.0.0:5283");
+#else
+// Azure Linux App Service for .NET 8/9/10 defaults to 8080
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(8080);
+});
 #endif
 
 // Keep logging portable across local/dev/test environments
