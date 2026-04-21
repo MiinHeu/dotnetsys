@@ -11,6 +11,7 @@ using VinhKhanh.API.Services;
 using VinhKhanh.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+Console.WriteLine($"[STARTUP] Starting VinhKhanh API in {builder.Environment.EnvironmentName} mode");
 #if DEBUG
 builder.WebHost.UseUrls("https://0.0.0.0:7016", "http://0.0.0.0:5283");
 #endif
@@ -40,12 +41,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	var connStr = builder.Configuration.GetConnectionString("Default");
 	if (!string.IsNullOrWhiteSpace(connStr) && !connStr.Contains("DATABASE_HOST"))
 	{
+		Console.WriteLine("[STARTUP] Using PostgreSQL Database");
 		options.UseNpgsql(connStr);
 	}
 	else
 	{
 		// Dự phòng sang SQLite cho bản Deploy ban đầu hoặc Local Debug
 		var sqlite = builder.Configuration.GetConnectionString("Sqlite") ?? "Data Source=app.db";
+		Console.WriteLine($"[STARTUP] Using SQLite Database: {sqlite}");
 		options.UseSqlite(sqlite);
 		options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
 	}
@@ -165,6 +168,12 @@ if (app.Environment.IsDevelopment())
 	app.MapOpenApi();
 	app.MapScalarApiReference();
 }
+
+// Cấu hình Proxy để nhận diện IP và HTTPs đúng từ Azure LB
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+});
 
 if (!app.Environment.IsDevelopment())
 {
