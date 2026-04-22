@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Smartphone, Download, QrCode, AlertTriangle, Apple } from 'lucide-react';
 import qrImage from '../assets/qr-download.png';
 
