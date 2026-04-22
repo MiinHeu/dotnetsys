@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using VinhKhanh.API.Services;
 using VinhKhanh.Infrastructure.Data;
 
@@ -8,23 +9,43 @@ namespace VinhKhanh.API.Controllers;
 
 [ApiController, Route("api/[controller]")]
 [Authorize(Roles = "Admin")]
-public class AdminController(ApplicationDbContext db) : ControllerBase
+public class AdminController(ApplicationDbContext db, IConnectionTracker tracker, IMemoryCache _cache) : ControllerBase
 {
 	[HttpGet("summary")]
 	public async Task<IActionResult> Summary(CancellationToken ct = default)
 	{
-		var totalPois = await db.Pois.AsNoTracking().CountAsync(ct);
-		var totalTours = await db.Tours.AsNoTracking().CountAsync(ct);
-		var totalUsers = await db.AppUsers.AsNoTracking().CountAsync(ct);
-		var totalVisits = await db.PoiVisitLogs.AsNoTracking().CountAsync(ct);
+		const string CacheKey = "admin_summary_stats";
 
-		var ownerStats = await db.Pois.AsNoTracking()
-			.Where(p => p.OwnerUserId.HasValue)
-			.GroupBy(p => p.OwnerUserId!.Value)
-			.Select(g => new { OwnerId = g.Key, PoiCount = g.Count() })
-			.ToListAsync(ct);
+		var result = await _cache.GetOrCreateAsync(CacheKey, async entry =>
+		{
+			entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
 
-		return Ok(new { totalPois, totalTours, totalUsers, totalVisits, ownerStats });
+			var totalPois = await db.Pois.AsNoTracking().CountAsync(ct);
+			var totalTours = await db.Tours.AsNoTracking().CountAsync(ct);
+			var totalUsers = await db.AppUsers.AsNoTracking().CountAsync(ct);
+			var totalVisits = await db.PoiVisitLogs.AsNoTracking().CountAsync(ct);
+
+			var ownerStats = await db.Pois.AsNoTracking()
+				.Where(p => p.OwnerUserId.HasValue)
+				.GroupBy(p => p.OwnerUserId!.Value)
+				.Select(g => new { OwnerId = g.Key, PoiCount = g.Count() })
+				.ToListAsync(ct);
+
+			return new { totalPois, totalTours, totalUsers, totalVisits, ownerStats };
+		});
+
+		// activeUsers is real-time, get it fresh every time
+		var activeUsers = tracker.GetOnlineCount();
+
+		return Ok(new
+		{
+			result.totalPois,
+			result.totalTours,
+			result.totalUsers,
+			result.totalVisits,
+			activeUsers,
+			result.ownerStats
+		});
 	}
 
 	[Authorize(Roles = "Admin")]

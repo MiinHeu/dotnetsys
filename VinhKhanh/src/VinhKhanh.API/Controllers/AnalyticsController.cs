@@ -1,12 +1,14 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using VinhKhanh.Infrastructure.Data;
 using VinhKhanh.Shared.DTOs;
 
 namespace VinhKhanh.API.Controllers;
 
 [ApiController, Route("api/[controller]")]
-public class AnalyticsController(ApplicationDbContext db) : ControllerBase
+public class AnalyticsController(ApplicationDbContext db, IMemoryCache _cache) : ControllerBase
 {
 	[HttpPost("log")]
 	public async Task<IActionResult> LogVisit([FromBody] VisitLogDto dto, CancellationToken ct = default)
@@ -74,6 +76,7 @@ public class AnalyticsController(ApplicationDbContext db) : ControllerBase
 
 			var poiIds = top.Select(x => x.PoiId).Distinct().ToList();
 			var names = await db.Pois.IgnoreQueryFilters()
+				.AsNoTracking()
 				.Where(p => poiIds.Contains(p.Id))
 				.Select(p => new { p.Id, p.Name })
 				.ToDictionaryAsync(x => x.Id, x => x.Name, ct);
@@ -98,20 +101,107 @@ public class AnalyticsController(ApplicationDbContext db) : ControllerBase
 	public async Task<IActionResult> GetHeatmap([FromQuery] int hours = 24, CancellationToken ct = default)
 	{
 		hours = Math.Clamp(hours, 1, 24 * 30);
-		var since = DateTime.UtcNow.AddHours(-hours);
+		string cacheKey = $"analytics_heatmap_{hours}";
 
 		try
 		{
-			var points = await db.MovementLogs
-				.Where(m => m.RecordedAt >= since)
-				.Select(m => new { m.Latitude, m.Longitude })
-				.ToListAsync(ct);
+			var points = await _cache.GetOrCreateAsync(cacheKey, async entry =>
+			{
+				entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
+				var since = DateTime.UtcNow.AddHours(-hours);
+
+				// Group by SessionId and rounded coordinates (5 decimal places ~ 1.1m)
+				// to represent actual people density instead of activity duration.
+				return await db.MovementLogs
+					.AsNoTracking()
+					.Where(m => m.RecordedAt >= since)
+					.GroupBy(m => new
+					{
+						m.SessionId,
+						Lat = Math.Round(m.Latitude, 5),
+						Lon = Math.Round(m.Longitude, 5)
+					})
+					.Select(g => new { Latitude = g.Key.Lat, Longitude = g.Key.Lon })
+					.ToListAsync(ct);
+			});
 
 			return Ok(points);
 		}
 		catch (OperationCanceledException)
 		{
 			return NoContent();
+		}
+	}
+
+	[HttpGet("poi-heatmap-stats")]
+	public async Task<IActionResult> GetPoiHeatmapStats([FromQuery] int hours = 24, CancellationToken ct = default)
+	{
+		hours = Math.Clamp(hours, 1, 24 * 30);
+		var since = DateTime.UtcNow.AddHours(-hours);
+
+		try
+		{
+			// 1. Get all active POIs
+			var pois = await db.Pois
+				.AsNoTracking()
+				.Where(p => p.IsActive)
+				.Select(p => new { p.Id, p.Name, p.Latitude, p.Longitude, p.TriggerRadiusMeters })
+				.ToListAsync(ct);
+
+			// 2. Get unique visitor positions in the timeframe
+			// We group by SessionId + rounded Lat/Lon to get a clean set of "visit points"
+			var visitorPoints = await db.MovementLogs
+				.AsNoTracking()
+				.Where(m => m.RecordedAt >= since)
+				.GroupBy(m => new
+				{
+					m.SessionId,
+					Lat = Math.Round(m.Latitude, 5),
+					Lon = Math.Round(m.Longitude, 5)
+				})
+				.Select(g => new { g.Key.SessionId, Latitude = g.Key.Lat, Longitude = g.Key.Lon })
+				.ToListAsync(ct);
+
+			// 3. Match visitors to POIs (Simple proximity check)
+			// Factor for meters to lat/lon degrees (Approx for HCM City)
+			const double latFactor = 111000.0;
+			const double lonFactor = 109000.0;
+
+			var stats = pois.Select(poi =>
+			{
+				// Count unique SessionIds that came within the POI's radius
+				var visitorCount = visitorPoints
+					.Where(p =>
+					{
+						var dLat = (p.Latitude - poi.Latitude) * latFactor;
+						var dLon = (p.Longitude - poi.Longitude) * lonFactor;
+						var dist = Math.Sqrt(dLat * dLat + dLon * dLon);
+						return dist <= poi.TriggerRadiusMeters;
+					})
+					.Select(p => p.SessionId)
+					.Distinct()
+					.Count();
+
+				return new
+				{
+					poi.Id,
+					poi.Name,
+					visitorCount
+				};
+			})
+			.OrderByDescending(x => x.visitorCount)
+			.ToList();
+
+			return Ok(stats);
+		}
+		catch (OperationCanceledException)
+		{
+			return NoContent();
+		}
+		catch (Exception ex)
+		{
+			logger.LogError(ex, "Error calculating POI heatmap stats");
+			return StatusCode(500, "Internal server error");
 		}
 	}
 }

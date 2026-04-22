@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { api, type Poi } from '@/lib/api'
-import { Route, Users, TrendingUp, BarChart3, UserCog, UtensilsCrossed } from 'lucide-react'
+import { Route, Users, TrendingUp, BarChart3, UserCog, UtensilsCrossed, Smartphone } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
@@ -27,7 +27,15 @@ export function Dashboard() {
   const summary = useQuery({
     queryKey: ['admin', 'summary'],
     queryFn: async () =>
-      (await api.get<{ totalPois: number; totalTours: number; totalUsers: number; totalVisits: number; ownerStats?: { ownerId: number; poiCount: number }[] }>('/api/admin/summary')).data,
+      (await api.get<{ 
+        totalPois: number; 
+        totalTours: number; 
+        totalUsers: number; 
+        totalVisits: number; 
+        activeUsers: number;
+        ownerStats?: { ownerId: number; poiCount: number }[] 
+      }>('/api/admin/summary')).data,
+    refetchInterval: 10000, // Tự động làm mới mỗi 10 giây để cập nhật số người trực tuyến
   })
 
   const ownersQ = useQuery({
@@ -78,6 +86,15 @@ export function Dashboard() {
       icon: TrendingUp,
       bg: 'bg-rose-600',
     },
+    {
+      label: 'Thiết bị trực tuyến',
+      value: summary.data?.activeUsers ?? 0,
+      sub: 'Đang kết nối',
+      desc: 'Số thiết bị đang mở ứng dụng thực tế',
+      icon: Smartphone,
+      bg: 'bg-green-600',
+      isLive: true
+    },
   ]
 
   const actions = [
@@ -111,7 +128,15 @@ export function Dashboard() {
           >
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm font-bold uppercase tracking-wider text-white/80">{label}</p>
-              <Icon className="opacity-80" size={24} />
+              <div className="relative">
+                <Icon className="opacity-80" size={24} />
+                {label === 'Thiết bị trực tuyến' && (
+                   <span className="absolute -right-1 -top-1 flex h-3 w-3">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75"></span>
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-white"></span>
+                  </span>
+                )}
+              </div>
             </div>
             <p className="mb-6 text-4xl font-black">{value}</p>
             <div className="mt-auto border-t border-white/20 pt-4">

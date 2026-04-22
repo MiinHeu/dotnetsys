@@ -32,11 +32,26 @@ export function AnalyticsPage() {
       }>,
   })
 
+  const poiVisitorStats = useQuery({
+    queryKey: ['analytics', 'poi-heatmap-stats'],
+    queryFn: async () => (await api.get('/api/analytics/poi-heatmap-stats?hours=24')).data as Array<{
+      id: number
+      name: string
+      visitorCount: number
+    }>,
+  })
+
   const barData =
     top.data?.map((x) => ({
       name: `POI ${x.poiId}`,
       luot: x.count,
       tbGiay: Math.round(x.avgDuration ?? 0),
+    })) ?? []
+
+  const heatmapStatsData =
+    poiVisitorStats.data?.map((x) => ({
+      name: x.name,
+      visitorCount: x.visitorCount,
     })) ?? []
 
   const scatter =
@@ -48,54 +63,76 @@ export function AnalyticsPage() {
     })) ?? []
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-lg font-semibold">Analytics</h2>
-      <section>
-        <h3 className="mb-2 text-sm font-medium text-stone-600">Top POI (30 ngày)</h3>
-        <div className="h-72 w-full">
-          {top.isLoading ? (
-            <p>Đang tải…</p>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="luot" fill="#ea580c" name="Lượt" />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </section>
-      <section>
-        <h3 className="mb-2 text-sm font-medium text-stone-600">
-          Heatmap điểm (movement log, 48h) — trục X=kinh độ, Y=vĩ độ
-        </h3>
-        <div className="h-80 w-full">
+    <div className="space-y-8 p-4">
+      <h2 className="text-2xl font-bold text-slate-900">Analytics & Insights</h2>
+      
+      <div className="grid gap-8 lg:grid-cols-2">
+        {/* Biểu đồ lượt nghe TTS */}
+        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-slate-800">
+             Lượt nghe TTS (30 ngày)
+          </h3>
+          <div className="h-72 w-full">
+            {top.isLoading ? (
+              <p className="flex h-full items-center justify-center text-slate-500">Đang tải...</p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis axisLine={false} tickLine={false} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="luot" fill="#ea580c" name="Lượt nghe" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </section>
+
+        {/* Biểu đồ lượt khách thực tế qua Heatmap */}
+        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-slate-800">
+             Khách ghé thăm thực tế (Heatmap - 24h)
+          </h3>
+          <div className="h-72 w-full">
+            {poiVisitorStats.isLoading ? (
+              <p className="flex h-full items-center justify-center text-slate-500">Đang tải...</p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={heatmapStatsData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis axisLine={false} tickLine={false} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="visitorCount" fill="#0ea5e9" name="Khách vãng lai" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+          <p className="mt-4 text-xs text-slate-500 italic">
+            * Dữ liệu được tính bằng số lượng người dùng duy nhất xuất hiện trong bán kính kích hoạt của quán ăn.
+          </p>
+        </section>
+      </div>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 className="mb-6 text-lg font-bold text-slate-800">Mật độ di chuyển (48h)</h3>
+        <div className="h-96 w-full">
           {heat.isLoading ? (
-            <p>Đang tải…</p>
-          ) : scatter.length === 0 ? (
-            <p className="text-sm text-stone-500">Chưa có dữ liệu path.</p>
+            <p className="flex h-full items-center justify-center text-slate-500">Đang tải...</p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  type="number"
-                  dataKey="x"
-                  name="Lon"
-                  domain={['dataMin - 0.002', 'dataMax + 0.002']}
-                />
-                <YAxis
-                  type="number"
-                  dataKey="y"
-                  name="Lat"
-                  domain={['dataMin - 0.002', 'dataMax + 0.002']}
-                />
-                <ZAxis type="number" dataKey="z" range={[20, 20]} />
+              <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis type="number" dataKey="x" name="Long" unit="" domain={['auto', 'auto']} tick={{ fontSize: 10 }} axisLine={false} />
+                <YAxis type="number" dataKey="y" name="Lat" unit="" domain={['auto', 'auto']} tick={{ fontSize: 10 }} axisLine={false} />
+                <ZAxis type="number" dataKey="z" range={[50, 400]} />
                 <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                <Scatter data={scatter} fill="#f97316" />
+                <Scatter name="Mật độ khách" data={scatter} fill="#8b5cf6" />
               </ScatterChart>
             </ResponsiveContainer>
           )}

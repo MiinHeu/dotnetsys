@@ -14,54 +14,8 @@ public static class DbSeeder
 		CancellationToken ct = default)
 	{
 		await SeedUsersAsync(db, forceDefaultCredentials, ct);
-		await SeedAnalyticsAsync(db, ct);
 	}
 
-	private static async Task SeedAnalyticsAsync(ApplicationDbContext db, CancellationToken ct)
-	{
-		// Only seed if empty to avoid bloat
-		if (await db.MovementLogs.AnyAsync(ct)) return;
-
-		Console.WriteLine("[SEED] Generating Heatmap and Analytics data...");
-		var random = new Random();
-		var now = DateTime.UtcNow;
-
-		// 1. Seed Movement Logs for Heatmap (approx 200 points around Vinh Khanh street)
-		// Vinh Khanh street is roughly around Lat: 10.7535, Lng: 106.6782
-		var movements = new List<MovementLog>();
-		for (int i = 0; i < 200; i++)
-		{
-			movements.Add(new MovementLog
-			{
-				SessionId = $"seed-session-{random.Next(1, 20)}",
-				Latitude = 10.7535 + (random.NextDouble() - 0.5) * 0.002,
-				Longitude = 106.6782 + (random.NextDouble() - 0.5) * 0.002,
-				AccuracyMeters = (float)random.Next(5, 20),
-				RecordedAt = now.AddHours(-random.Next(1, 48))
-			});
-		}
-		db.MovementLogs.AddRange(movements);
-
-		// 2. Seed Visit Logs for Top Analytics (approx 50 visits)
-		// We know POIs 1 to 5 exist from ApplicationDbContext HasData
-		var visits = new List<PoiVisitLog>();
-		for (int i = 0; i < 50; i++)
-		{
-			visits.Add(new PoiVisitLog
-			{
-				PoiId = random.Next(1, 6),
-				SessionId = $"seed-user-{random.Next(1, 50)}",
-				LanguageCode = i % 5 == 0 ? "en" : "vi",
-				TriggerType = i % 3 == 0 ? "QR" : "GPS",
-				ListenDurationSeconds = random.Next(10, 300),
-				VisitedAt = now.AddDays(-random.Next(0, 7))
-			});
-		}
-		db.PoiVisitLogs.AddRange(visits);
-
-		await db.SaveChangesAsync(ct);
-		Console.WriteLine("[SEED] Analytics data seeded successfully.");
-	}
 
 	private static async Task SeedUsersAsync(ApplicationDbContext db, bool forceDefaultCredentials, CancellationToken ct)
 	{

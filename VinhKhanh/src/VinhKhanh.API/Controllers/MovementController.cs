@@ -62,7 +62,13 @@ public class MovementController(ApplicationDbContext db) : ControllerBase
 
 		var points = await db.MovementLogs
 			.Where(m => m.RecordedAt >= since)
-			.Select(m => new { m.Latitude, m.Longitude })
+			.GroupBy(m => new
+			{
+				m.SessionId,
+				Lat = Math.Round(m.Latitude, 5),
+				Lon = Math.Round(m.Longitude, 5)
+			})
+			.Select(g => new { Latitude = g.Key.Lat, Longitude = g.Key.Lon })
 			.ToListAsync(ct);
 
 		return Ok(points);

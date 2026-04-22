@@ -30,7 +30,7 @@ const empty: Poi = {
   mapX: 50,
   mapY: 50,
   triggerRadiusMeters: 15,
-  priority: 5,
+  priority: 0,
   cooldownSeconds: 60,
   qrCode: null,
   imageUrl: null,
@@ -293,7 +293,7 @@ export function PoiEditor() {
     setPreviewBusy(true)
     try {
       const { language, text } = await prepareNarrationText()
-      setTtsMessage(`Đang lấy giọng đọc ${language.label} từ VoiceRSS...`)
+      setTtsMessage(`Đang lấy giọng đọc ${language.label} từ Azure...`)
 
       const response = await api.post('/api/tts/synthesize', {
         text,
@@ -305,7 +305,7 @@ export function PoiEditor() {
       const url = window.URL.createObjectURL(blob)
       const audio = new Audio(url)
 
-      setTtsMessage(`Đang nghe thử ${language.label} (VoiceRSS)...`)
+      setTtsMessage(`Đang nghe thử ${language.label} (Azure)...`)
       await audio.play()
       setTtsMessage(`Đã nghe thử ${language.label}. Nếu ổn, bạn có thể bấm Xuất mp3.`)
     } catch (err: unknown) {
@@ -710,12 +710,15 @@ export function PoiEditor() {
           </label>
           <label className="text-sm">
             Ưu tiên
-            <input
-              type="number"
-              className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
+            <select
+              className="mt-1 w-full rounded border px-2 py-1.5 dark:border-stone-600 dark:bg-stone-800 disabled:opacity-50"
               value={form.priority}
               onChange={(e) => setForm({ ...form, priority: Number(e.target.value) })}
-            />
+              disabled={!isAdmin}
+            >
+              <option value={0}>Thấp / Bình thường</option>
+              <option value={10}>Cao / Ưu tiên</option>
+            </select>
           </label>
         </div>
 

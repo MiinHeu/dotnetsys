@@ -14,6 +14,7 @@ import { ToursAdmin } from "./pages/ToursAdmin";
 import { TourEditor } from "./pages/TourEditor";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { HistoryPage } from "./pages/HistoryPage";
+import { HeatmapPage } from "./pages/HeatmapPage";
 import { AudioPage } from "./pages/AudioPage";
 import { ChangePassword } from "./pages/ChangePassword";
 import { UserManagement } from "./pages/UserManagement";
@@ -57,6 +58,7 @@ export default function App() {
         {isAdmin && (
           <>
             <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/heatmap" element={<HeatmapPage />} />
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/users" element={<UserManagement />} />
           </>

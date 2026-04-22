@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router'
 import { useAuthStore } from '@/store/authStore'
-import { LayoutGrid, MapPin, Globe, Route, Mic2, BarChart2, Activity, LogOut, Menu, X, KeyRound, Users, Smartphone } from 'lucide-react'
+import { LayoutGrid, MapPin, Globe, Route, Mic2, BarChart2, Flame, Activity, LogOut, Menu, X, KeyRound, Users, Smartphone } from 'lucide-react'
 import { useState } from 'react'
 
 // Admin sees all; Owner sees only their relevant items
@@ -11,6 +11,7 @@ const adminNav = [
   { to: '/tours', label: 'Lộ Trình', icon: Route },
   { to: '/audio', label: 'Quản lý Audio', icon: Mic2 },
   { to: '/analytics', label: 'Thống Kê', icon: BarChart2 },
+  { to: '/heatmap', label: 'Bản đồ nhiệt', icon: Flame },
   { to: '/history', label: 'Lịch Sử', icon: Activity },
   { to: '/users', label: 'Tài Khoản', icon: Users },
   { to: '/download', label: 'Tải Ứng Dụng', icon: Smartphone },

@@ -34,6 +34,7 @@ try
     }
 
     builder.Services.AddOpenApi();
+    builder.Services.AddMemoryCache();
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
         {
@@ -63,30 +64,23 @@ try
     });
 
     builder.Services.AddSignalR();
+    builder.Services.AddSingleton<IConnectionTracker, ConnectionTracker>();
 
     builder.Services.AddHttpClient();
+    // Ưu tiên dùng Azure hoàn toàn cho Dịch thuật
     builder.Services.AddScoped<GeminiTranslationService>();
     builder.Services.AddScoped<OllamaTranslationService>();
     builder.Services.AddScoped<LibreTranslateService>();
     builder.Services.AddScoped<MicrosoftTranslatorService>();
-    builder.Services.AddScoped<ITranslationService, ResilientTranslationService>();
-    if (!string.IsNullOrWhiteSpace(builder.Configuration["AzureOpenAI:Endpoint"])
-        && !string.IsNullOrWhiteSpace(builder.Configuration["AzureOpenAI:Key"]))
-    {
-        builder.Services.AddScoped<IAiService, AzureAiService>();
-    }
-    else
-    {
-        builder.Services.AddScoped<IAiService, OllamaAiService>();
-    }
-    if (!string.IsNullOrWhiteSpace(builder.Configuration["VoiceRss:ApiKey"]))
-    {
-        builder.Services.AddScoped<ITtsService, VoiceRssTtsService>();
-    }
-    else
-    {
-        builder.Services.AddScoped<ITtsService, AzureTtsService>();
-    }
+    builder.Services.AddScoped<ITranslationService, MicrosoftTranslatorService>();
+    // Ưu tiên dùng Azure OpenAI cho AI Service
+    builder.Services.AddScoped<GeminiAiService>();
+    builder.Services.AddScoped<OllamaAiService>();
+    builder.Services.AddScoped<IAiService, GeminiAiService>();
+    // Ưu tiên dùng Azure cho TTS
+    builder.Services.AddScoped<VoiceRssTtsService>();
+    builder.Services.AddScoped<AzureTtsService>();
+    builder.Services.AddScoped<ITtsService, AzureTtsService>();
 
     // Redis — dùng NoOpRedisService cho testing
     builder.Services.AddScoped<IRedisService, NoOpRedisService>();

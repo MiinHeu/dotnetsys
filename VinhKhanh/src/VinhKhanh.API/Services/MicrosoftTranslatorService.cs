@@ -41,11 +41,12 @@ public class MicrosoftTranslatorService(
 				req.Headers.TryAddWithoutValidation("Ocp-Apim-Subscription-Region", region);
 			req.Headers.TryAddWithoutValidation("X-ClientTraceId", Guid.NewGuid().ToString());
 
+			logger.LogInformation("Microsoft Translator Request: {Url}", builder.Uri);
 			using var res = await http.SendAsync(req, ct);
 			var responseBody = await res.Content.ReadAsStringAsync(ct);
 			if (!res.IsSuccessStatusCode)
 			{
-				logger.LogWarning("Microsoft Translator failed. Status={StatusCode}, Body={Body}", (int)res.StatusCode, responseBody);
+				logger.LogError("Microsoft Translator Error! Status={StatusCode}, Body={Body}, URL={Url}", (int)res.StatusCode, responseBody, builder.Uri);
 				return null;
 			}
 

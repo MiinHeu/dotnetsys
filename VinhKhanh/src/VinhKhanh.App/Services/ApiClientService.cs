@@ -33,8 +33,14 @@ public sealed class ApiClientService
 #endif
 		}
 
-		// Với máy thật, ưu tiên lấy IP đã cấu hình trong Preferences
+		// Với máy thật:
+#if DEBUG
+		// Khi bạn đang lập trình tại nhà (Debug mode)
 		return Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, "http://192.168.31.79:5283/");
+#else
+		// Khi đóng gói để gửi cho khách (Release mode)
+		return "https://vinh-khanh-food-street-gvhceeg4gbakhjgc.eastasia-01.azurewebsites.net/";
+#endif
 	}
 
 	public async Task<IReadOnlyList<PoiSnapshot>> GetPoisAsync(string lang, CancellationToken ct = default)

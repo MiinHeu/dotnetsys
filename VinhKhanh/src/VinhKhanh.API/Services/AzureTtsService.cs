@@ -1,4 +1,4 @@
-﻿using System.Security;
+using System.Security;
 using System.Text;
 
 namespace VinhKhanh.API.Services;
@@ -29,9 +29,7 @@ public class AzureTtsService(
 		}
 
 		var resolvedLang = NormalizeLang(lang);
-		var resolvedVoice = string.IsNullOrWhiteSpace(voice)
-			? DefaultVoiceFor(resolvedLang)
-			: voice.Trim();
+		var resolvedVoice = NormalizeVoice(voice, resolvedLang);
 		var outputFormat = cfg["AzureTTS:OutputFormat"] ?? DefaultOutputFormat;
 
 		var escapedText = SecurityElement.Escape(text.Trim()) ?? string.Empty;
@@ -55,11 +53,13 @@ public class AzureTtsService(
 			req.Headers.TryAddWithoutValidation("User-Agent", "VinhKhanh.API");
 			req.Content = new StringContent(ssml, Encoding.UTF8, "application/ssml+xml");
 
+			logger.LogInformation("Azure TTS Request: {Url}", endpoint);
 			using var res = await http.SendAsync(req);
 			if (!res.IsSuccessStatusCode)
 			{
 				var body = await res.Content.ReadAsStringAsync();
-				logger.LogWarning("Azure TTS failed. Status={StatusCode}, Body={Body}", (int)res.StatusCode, body);
+				var headers = string.Join("; ", res.Headers.Select(h => $"{h.Key}={string.Join(",", h.Value)}"));
+				logger.LogError("Azure TTS Error! Status={StatusCode}, Body={Body}, URL={Url}, Headers={Headers}", (int)res.StatusCode, body, endpoint, headers);
 				return Array.Empty<byte>();
 			}
 
@@ -90,6 +90,26 @@ public class AzureTtsService(
 			"th" => "th-TH",
 			_ when key.Contains('-') => raw,
 			_ => "vi-VN"
+		};
+	}
+
+	private static string NormalizeVoice(string voice, string lang)
+	{
+		if (string.IsNullOrWhiteSpace(voice))
+			return DefaultVoiceFor(lang);
+
+		var v = voice.Trim().ToLowerInvariant();
+
+		// Ánh xạ từ các tên cũ (VoiceRSS) sang Azure
+		return v switch
+		{
+			"chi" => "vi-VN-HoaiMyNeural",
+			"linda" => "en-US-JennyNeural",
+			"luli" => "zh-CN-XiaoxiaoNeural",
+			"nari" => "ko-KR-SunHiNeural",
+			"hina" => "ja-JP-NanamiNeural",
+			_ when v.Contains('-') => voice.Trim(), // Nếu đã có định dạng Azure chuẩn
+			_ => DefaultVoiceFor(lang)
 		};
 	}
 

@@ -126,20 +126,24 @@ public class PoiController(
 	[AllowAnonymous]
 	public async Task<IActionResult> GenerateQrCode(int id, CancellationToken ct = default)
 	{
-		var poi = await db.Pois.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, ct);
-		if (poi == null) return NotFound(new { message = "POI khong ton tai." });
-
-		if (string.IsNullOrWhiteSpace(poi.QrCode))
-			return BadRequest(new { message = "POI nay chua duoc gan ma QR." });
-
 		try
 		{
+			var poi = await db.Pois.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, ct);
+			if (poi == null) return NotFound(new { message = "POI khong ton tai." });
+
+			if (string.IsNullOrWhiteSpace(poi.QrCode))
+				return BadRequest(new { message = "POI nay chua duoc gan ma QR." });
+
 			using var qrGenerator = new QRCoder.QRCodeGenerator();
 			var qrCodeData = qrGenerator.CreateQrCode(poi.QrCode, QRCoder.QRCodeGenerator.ECCLevel.Q);
 			var qrCode = new QRCoder.PngByteQRCode(qrCodeData);
 			byte[] qrCodeImage = qrCode.GetGraphic(20);
 
 			return File(qrCodeImage, "image/png");
+		}
+		catch (OperationCanceledException)
+		{
+			return NoContent();
 		}
 		catch (Exception ex)
 		{
@@ -192,8 +196,13 @@ public class PoiController(
 		if (!ModelState.IsValid)
 			return BadRequest(ModelState);
 
-		// Owner: tự động gán OwnerUserId
-		if (IsOwnerRole)
+		// Owner: tự động gán OwnerUserId và ép Priority thấp (0)
+		if (IsOwnerRole && !AuthClaims.IsAdmin(HttpContext.User))
+		{
+			poi.OwnerUserId = CurrentUserId;
+			poi.Priority = 0;
+		}
+		else if (IsOwnerRole) // Is owner but also might be admin? (rare case but for safety)
 		{
 			poi.OwnerUserId = CurrentUserId;
 		}
@@ -321,7 +330,13 @@ public class PoiController(
 		poi.MapX = updated.MapX;
 		poi.MapY = updated.MapY;
 		poi.TriggerRadiusMeters = updated.TriggerRadiusMeters;
-		poi.Priority = updated.Priority;
+		
+		// Only Admin can change priority
+		if (AuthClaims.IsAdmin(HttpContext.User))
+		{
+			poi.Priority = updated.Priority;
+		}
+		
 		poi.CooldownSeconds = updated.CooldownSeconds;
 		poi.Category = updated.Category;
 		poi.IsActive = updated.IsActive;

@@ -1,8 +1,16 @@
-import { Smartphone, Download, QrCode, AlertTriangle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Smartphone, Download, QrCode, AlertTriangle, Apple } from 'lucide-react';
 import qrImage from '../assets/qr-download.png';
 
 export function DownloadPage() {
   const downloadUrl = 'https://drive.google.com/uc?export=download&id=1PXrLjhoT7zWacxQVf7jJxCrRBj8Yl-Qk';
+  const [os, setOs] = useState<'android' | 'ios' | 'other'>('other');
+
+  useEffect(() => {
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.includes('android')) setOs('android');
+    else if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) setOs('ios');
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
@@ -37,32 +45,59 @@ export function DownloadPage() {
           </header>
 
           <div className="space-y-4">
-            <h2 className="text-sm font-bold text-stone-400 uppercase tracking-widest">Hướng dẫn cài đặt</h2>
+            <h2 className="text-sm font-bold text-stone-400 uppercase tracking-widest">
+              {os === 'ios' ? 'Hướng dẫn cho iPhone (iOS)' : 'Hướng dẫn cho Android'}
+            </h2>
             <ul className="space-y-3">
-              {[
-                'Quét mã QR bên cạnh bằng điện thoại của bạn.',
-                'Hệ thống sẽ dẫn bạn tới Google Drive để tải file.',
-                'Chọn "Tải xuống" và bật "Cài đặt từ nguồn không xác định" nếu được hỏi.',
-                'Mở file và bắt đầu trải nghiệm Vinh Khanh Food Street.'
-              ].map((step, i) => (
-                <li key={i} className="flex gap-3 text-stone-700 italic">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center text-xs font-bold font-mono">
-                    0{i + 1}
-                  </span>
-                  {step}
-                </li>
-              ))}
+              {os === 'ios' ? (
+                <>
+                  <li className="flex gap-3 text-stone-700 italic">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center text-xs font-bold font-mono">01</span>
+                    Cài đặt ứng dụng <strong>TestFlight</strong> từ App Store.
+                  </li>
+                  <li className="flex gap-3 text-stone-700 italic">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center text-xs font-bold font-mono">02</span>
+                    Quét mã QR hoặc nhấn vào nút bên dưới để nhận lời mời trải nghiệm.
+                  </li>
+                  <li className="flex gap-3 text-stone-700 italic">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center text-xs font-bold font-mono">03</span>
+                    Chấp nhận lời mời và bắt đầu khám phá Vĩnh Khánh.
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="flex gap-3 text-stone-700 italic">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center text-xs font-bold font-mono">01</span>
+                    Quét mã QR hoặc nhấn "Tải APK" để tải file cài đặt.
+                  </li>
+                  <li className="flex gap-3 text-stone-700 italic">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center text-xs font-bold font-mono">02</span>
+                    Mở file đã tải và chọn "Cài đặt" (Cho phép nguồn không xác định nếu có).
+                  </li>
+                  <li className="flex gap-3 text-stone-700 italic">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center text-xs font-bold font-mono">03</span>
+                    Bật GPS và bắt đầu hành trình ẩm thực.
+                  </li>
+                </>
+              )}
             </ul>
           </div>
 
           <div className="pt-4 flex flex-wrap gap-4">
-            <a 
-              href={downloadUrl}
-              className="inline-flex items-center gap-3 px-8 py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 transition-all hover:translate-y-[-2px] active:translate-y-0 shadow-lg shadow-stone-200"
-            >
-              <Download size={20} />
-              Tải APK trực tiếp
-            </a>
+            {os === 'ios' ? (
+              <button className="inline-flex items-center gap-3 px-8 py-4 bg-stone-400 text-white rounded-2xl font-bold cursor-not-allowed">
+                <Apple size={20} />
+                Sắp có trên App Store
+              </button>
+            ) : (
+              <a 
+                href={downloadUrl}
+                className="inline-flex items-center gap-3 px-8 py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 transition-all hover:translate-y-[-2px] active:translate-y-0 shadow-lg shadow-stone-200"
+              >
+                <Download size={20} />
+                Tải APK trực tiếp
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -71,10 +106,11 @@ export function DownloadPage() {
       <div className="bg-blue-50 border border-blue-200 p-6 rounded-2xl flex gap-4 items-start">
         <AlertTriangle className="text-blue-600 flex-shrink-0" size={24} />
         <div className="space-y-1">
-          <h4 className="font-bold text-blue-900">Liên kết Công cộng</h4>
+          <h4 className="font-bold text-blue-900">Thông tin hỗ trợ</h4>
           <p className="text-sm text-blue-800 leading-relaxed">
-            Ứng dụng hiện đã được lưu trữ trên Google Drive. Bạn có thể quét mã này để tải app từ bất cứ đâu 
-            (Sử dụng 4G hoặc WiFi bất kỳ) mà không cần phải ở gần máy chủ.
+            {os === 'ios' 
+              ? 'Vì chính sách bảo mật của Apple, ứng dụng iPhone hiện chỉ được phân phối qua TestFlight cho các thiết bị đăng ký trước.' 
+              : 'Ứng dụng Android có thể cài đặt trực tiếp. Nếu bạn gặp lỗi "Ứng dụng chưa được ký", hãy yên tâm vì đây là bản thử nghiệm nội bộ.'}
           </p>
         </div>
       </div>
