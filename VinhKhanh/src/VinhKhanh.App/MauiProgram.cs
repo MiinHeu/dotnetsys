@@ -51,6 +51,9 @@ public static class MauiProgram
 		// Connectivity — FIX Gap 5: inject vào App.xaml.cs constructor
 		builder.Services.AddSingleton<ConnectivityService>();
 
+		// Realtime SignalR
+		builder.Services.AddSingleton<RealtimeService>();
+
 		// ── ViewModels ────────────────────────────────────────────────────────
 		builder.Services.AddSingleton<MainViewModel>();
 		builder.Services.AddSingleton<ToursViewModel>();

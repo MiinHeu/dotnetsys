@@ -16,7 +16,7 @@ public sealed class NarrationService(
 	private static readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(60) };
 	private static readonly Dictionary<string, Locale> _localeCache = [];
 	private IAudioPlayer? _player;
-	private MemoryStream? _playbackStream;
+	private Stream? _playbackStream;
 	private readonly SemaphoreSlim _gate = new(1, 1);
 	private readonly List<(Poi poi, string language)> _queue = [];
 	private readonly HashSet<string> _queuedKeys = [];
@@ -167,120 +167,123 @@ public sealed class NarrationService(
 			var audioUrl = poi.ResolveAudioUrl(lang);
 			var originalText = poi.Description; // Vietnamese original
 
-			logger.LogInformation("PlayPoiAsync: POI={PoiId}, Lang={Lang}, AudioUrl={AudioUrl}, OriginalText={Text}",
-				poi.Id, lang, audioUrl ?? "(null)", originalText?.Substring(0, Math.Min(50, originalText?.Length ?? 0)) ?? "(null)");
+			logger.LogInformation("PlayPoiAsync: POI={PoiId}, Lang={Lang}, AudioUrl={AudioUrl}",
+				poi.Id, lang, audioUrl ?? "(null)");
+
+			bool audioPlayed = false;
 
 			// Try playing audio file first (from web-generated TTS)
 			if (!string.IsNullOrWhiteSpace(audioUrl))
 			{
-				var abs = audioUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
-					? FixLocalhostForAndroid(audioUrl)
-					: $"{FixLocalhostForAndroid(apiRootTrimmed.TrimEnd('/'))}/{audioUrl.TrimStart('/')}";
+				string abs;
+				if (audioUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+				{
+					// Nếu DB lưu cứng URL là localhost hoặc 10.0.2.2, đè lại bằng API Root thực tế của điện thoại
+					if (audioUrl.Contains("localhost") || audioUrl.Contains("127.0.0.1") || audioUrl.Contains("10.0.2.2"))
+					{
+						var uri = new Uri(audioUrl);
+						abs = $"{apiRootTrimmed.TrimEnd('/')}{uri.PathAndQuery}";
+					}
+					else
+					{
+						abs = audioUrl;
+					}
+				}
+				else
+				{
+					abs = $"{apiRootTrimmed.TrimEnd('/')}/{audioUrl.TrimStart('/')}";
+				}
 
 				try
 				{
 					logger.LogInformation("Attempting to play audio from URL: {Url}", abs);
 					
-					// SỬ DỤNG CACHE ĐỂ PHÁT NGAY LẬP TỨC (Ưu tiên cao hơn việc tải ngầm)
+					// SỬ DỤNG CACHE ĐỂ PHÁT NGAY LẬP TỨC
 					var localPath = await audioCache.GetAudioPathAsync(abs, highPriority: true, ct);
 					if (!string.IsNullOrEmpty(localPath) && File.Exists(localPath))
 					{
-						logger.LogInformation("Playing from local file (Streaming): {Path}", localPath);
-						
-						// Mở trực tiếp stream từ file để phát ngay lập tức, không đợi load hết vào RAM
+						logger.LogInformation("Playing from local file: {Path}", localPath);
 						var fs = new FileStream(localPath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true);
 						_playbackStream = fs;
 						_player = audioManager.CreatePlayer(_playbackStream);
-					return ElapsedListenSeconds(sw);
+						_player.Play();
+						audioPlayed = true;
+					}
 				}
 				catch (Exception ex)
 				{
 					logger.LogWarning(ex, "Failed to play audio from URL, falling back to in-app translation + TTS");
-					// Fallback to in-app translation + TTS
 				}
 			}
 
-			// If no audio file available for this language, try in-app translation + TTS
-			string? textToSpeak = null;
+			if (!audioPlayed)
+			{
+				// If no audio file available, try in-app translation + TTS
+				string? textToSpeak = null;
 
-			if (lang == "vi")
-			{
-				textToSpeak = originalText;
-			}
-			else 
-			{
-				// 1. Kiểm tra xem đã có bản dịch sẵn trong dữ liệu POI chưa
-				var translatedDescription = poi.ResolveDescription(lang);
-				
-				// Nếu bản dịch khác với bản gốc tiếng Việt (nghĩa là đã được dịch)
-				if (translatedDescription != originalText && !string.IsNullOrWhiteSpace(translatedDescription))
+				if (lang == "vi")
 				{
-					textToSpeak = translatedDescription;
-					logger.LogInformation("Using pre-translated text from POI data: {Lang}", lang);
+					textToSpeak = originalText;
 				}
-				else if (!string.IsNullOrWhiteSpace(originalText))
+				else 
 				{
-					// 2. Chỉ gọi API dịch thuật như một giải pháp cuối cùng nếu chưa có bản dịch
-					logger.LogInformation("No pre-translation found. Translating from 'vi' to '{Lang}' via API (Slow path)...", lang);
-					var translated = await TranslateTextAsync(originalText, "vi", lang, apiRootTrimmed, ct);
-					if (!string.IsNullOrWhiteSpace(translated))
+					var translatedDescription = poi.ResolveDescription(lang);
+					if (translatedDescription != originalText && !string.IsNullOrWhiteSpace(translatedDescription))
 					{
-						textToSpeak = translated;
-						logger.LogInformation("API Translation successful: {Text}", translated);
+						textToSpeak = translatedDescription;
+						logger.LogInformation("Using pre-translated text from POI data");
 					}
-					else
+					else if (!string.IsNullOrWhiteSpace(originalText))
 					{
-						logger.LogWarning("Translation failed for POI {PoiId} to {Lang}, falling back to original", poi.Id, lang);
-						textToSpeak = originalText;
-					}
-				}
-			}
-
-			// Use device TTS for the text (either original or translated)
-			if (!string.IsNullOrWhiteSpace(textToSpeak))
-			{
-				try
-				{
-					logger.LogInformation("Using device TTS for language: {Lang}", lang);
-					var locale = await PickLocaleAsync(lang, ct);
-					logger.LogInformation("TTS locale selected: {Locale}", locale?.Language ?? "default");
-
-					if (locale != null)
-					{
-						var options = new SpeechOptions
+						logger.LogInformation("No pre-translation found. Translating via API (Slow)...");
+						var translated = await TranslateTextAsync(originalText, "vi", lang, apiRootTrimmed, ct);
+						if (!string.IsNullOrWhiteSpace(translated))
 						{
-							Locale = locale,
-							Volume = 1f,
-							Pitch = 1f,
-							Rate = 0.92f
-						};
-						await TextToSpeech.Default.SpeakAsync(textToSpeak, options);
+							textToSpeak = translated;
+						}
+						else
+						{
+							logger.LogWarning("Translation failed, falling back to original");
+							textToSpeak = originalText;
+						}
 					}
-					else
-					{
-						await TextToSpeech.Default.SpeakAsync(textToSpeak);
-					}
-
-					logger.LogInformation("TTS completed successfully");
-					return ElapsedListenSeconds(sw);
 				}
-				catch (Exception ex)
+
+				if (!string.IsNullOrWhiteSpace(textToSpeak))
 				{
-					logger.LogError(ex, "TTS failed for text: {Text}", textToSpeak);
-					return ElapsedListenSeconds(sw);
+					try
+					{
+						logger.LogInformation("Using device TTS");
+						var locale = await PickLocaleAsync(lang, ct);
+						if (locale != null)
+						{
+							var options = new SpeechOptions { Locale = locale, Volume = 1f, Pitch = 1f, Rate = 0.92f };
+							await TextToSpeech.Default.SpeakAsync(textToSpeak, options, ct);
+						}
+						else
+						{
+							await TextToSpeech.Default.SpeakAsync(textToSpeak, cancelToken: ct);
+						}
+						audioPlayed = true;
+					}
+					catch (Exception ex)
+					{
+						logger.LogError(ex, "TTS failed");
+					}
 				}
 			}
 
-			logger.LogWarning("No audio URL and no text available for POI {PoiId}", poi.Id);
-			return ElapsedListenSeconds(sw);
+			if (!audioPlayed)
+			{
+				logger.LogWarning("No audio URL and no text available for POI {PoiId}", poi.Id);
+			}
 		}
 		finally
 		{
 			_gate.Release();
 		}
 
-		// Sau khi đã bắt đầu phát (trong trường hợp file âm thanh), 
-		// chúng ta chờ cho đến khi phát xong mới kết thúc hàm (nhưng khóa _gate đã được nhả cho bài khác)
+		// Chờ phát xong âm thanh (nếu là file MP3) mới nhả trạng thái IsPlaying
 		if (_player != null)
 		{
 			while (_player.IsPlaying && !ct.IsCancellationRequested)

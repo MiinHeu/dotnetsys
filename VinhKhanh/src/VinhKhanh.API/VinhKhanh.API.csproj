@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -7,6 +7,7 @@
     <BuildInParallel>false</BuildInParallel>
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
     <WarningsAsErrors>NU1605;SYSLIB0011</WarningsAsErrors>
+    <UserSecretsId>20b23187-6c66-483e-bdfa-502401714f48</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

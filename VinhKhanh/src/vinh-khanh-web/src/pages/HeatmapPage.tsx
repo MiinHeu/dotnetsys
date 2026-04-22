@@ -22,9 +22,10 @@ function HeatmapLayer({ points }: { points: Array<[number, number, number]> }) {
     // Create heatmap layer
     // Gradient: Green -> Lime -> Yellow -> Orange -> Red
     const heat = (L as any).heatLayer(points, {
-      radius: 25,
-      blur: 15,
+      radius: 30, // Tăng nhẹ radius để mượt hơn
+      blur: 20,
       maxZoom: 17,
+      max: 30, // Yêu cầu ít nhất 30 điểm trùng lặp để đạt màu Đỏ
       gradient: {
         0.4: '#10b981', // Green (Emerald 500)
         0.6: '#84cc16', // Lime 500

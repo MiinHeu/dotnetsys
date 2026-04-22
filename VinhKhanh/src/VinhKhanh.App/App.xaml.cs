@@ -7,11 +7,15 @@ public partial class App : Application
 {
 	// Giữ reference tránh GC collect — kick-start auto-sync khi WiFi kết nối lại
 	private readonly ConnectivityService _connectivity;
+	private readonly RealtimeService _realtime;
 
-	public App(ConnectivityService connectivity)
+	public App(ConnectivityService connectivity, RealtimeService realtime)
 	{
 		InitializeComponent();
 		_connectivity = connectivity;
+		_realtime = realtime;
+
+		_ = _realtime.StartAsync();
 
 		var langCode = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "en");
 		var culture = new System.Globalization.CultureInfo(langCode);
