@@ -8,7 +8,7 @@ using VinhKhanh.Shared.DTOs;
 namespace VinhKhanh.API.Controllers;
 
 [ApiController, Route("api/[controller]")]
-public class AnalyticsController(ApplicationDbContext db, IMemoryCache _cache) : ControllerBase
+public class AnalyticsController(ApplicationDbContext db, IMemoryCache _cache, ILogger<AnalyticsController> logger) : ControllerBase
 {
 	[HttpPost("log")]
 	public async Task<IActionResult> LogVisit([FromBody] VisitLogDto dto, CancellationToken ct = default)

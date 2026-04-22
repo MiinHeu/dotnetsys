@@ -36,7 +36,7 @@ public class GeminiAiService(
                 {
                     contents.Add(new
                     {
-                        role = msg.IsUser ? "user" : "model",
+                        role = msg.Role == "user" ? "user" : "model",
                         parts = new[] { new { text = msg.Content } }
                     });
                 }
