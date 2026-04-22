@@ -174,6 +174,7 @@ try
         app.UseHttpsRedirection();
     }
     app.UseCors("Default");
+    app.UseDefaultFiles();
     app.UseStaticFiles();
 
     app.UseAuthentication();
@@ -182,6 +183,9 @@ try
     app.MapControllers();
     app.MapHub<VinhKhanhHub>("/hubs/vinh-khanh");
     app.MapHealthChecks("/health");
+
+    // SPA fallback: serve index.html for any non-API, non-file route
+    app.MapFallbackToFile("index.html");
 
     app.Run();
 }
