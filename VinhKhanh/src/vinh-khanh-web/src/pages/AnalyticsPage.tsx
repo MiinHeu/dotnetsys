@@ -7,9 +7,6 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  ScatterChart,
-  Scatter,
-  ZAxis,
 } from 'recharts'
 import { api } from '@/lib/api'
 
