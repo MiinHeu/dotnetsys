@@ -98,16 +98,16 @@ public class AnalyticsController(ApplicationDbContext db, IMemoryCache _cache, I
 	}
 
 	[HttpGet("heatmap")]
-	public async Task<IActionResult> GetHeatmap([FromQuery] int hours = 24, CancellationToken ct = default)
+	public async Task<IActionResult> GetHeatmap([FromQuery] double hours = 24, CancellationToken ct = default)
 	{
-		hours = Math.Clamp(hours, 1, 24 * 30);
+		hours = Math.Clamp(hours, 0.01, 24 * 30); // Min ~36 seconds
 		string cacheKey = $"analytics_heatmap_{hours}";
 
 		try
 		{
 			var points = await _cache.GetOrCreateAsync(cacheKey, async entry =>
 			{
-				entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
+				entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30); // Lower cache for live data
 				var since = DateTime.UtcNow.AddHours(-hours);
 
 				// Group by SessionId and rounded coordinates (5 decimal places ~ 1.1m)
@@ -134,9 +134,9 @@ public class AnalyticsController(ApplicationDbContext db, IMemoryCache _cache, I
 	}
 
 	[HttpGet("poi-heatmap-stats")]
-	public async Task<IActionResult> GetPoiHeatmapStats([FromQuery] int hours = 24, CancellationToken ct = default)
+	public async Task<IActionResult> GetPoiHeatmapStats([FromQuery] double hours = 24, CancellationToken ct = default)
 	{
-		hours = Math.Clamp(hours, 1, 24 * 30);
+		hours = Math.Clamp(hours, 0.01, 24 * 30);
 		var since = DateTime.UtcNow.AddHours(-hours);
 
 		try

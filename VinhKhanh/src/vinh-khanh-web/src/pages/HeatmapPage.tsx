@@ -60,14 +60,14 @@ export function HeatmapPage() {
         latitude: number
         longitude: number
       }>,
-    refetchInterval: hours <= 1 ? 15000 : 60000, // Refresh faster for "Live" mode
+    refetchInterval: hours < 1 ? 10000 : 60000, // Refresh faster for "Live" mode
   })
 
   const heatPoints: Array<[number, number, number]> = data?.map(p => [p.latitude, p.longitude, 1]) || []
   const center: [number, number] = [10.7535, 106.6782]
 
   const timeOptions = [
-    { label: 'Trực tiếp', value: 1, icon: Zap },
+    { label: 'Trực tiếp', value: 0.16, icon: Zap }, // ~10 minutes
     { label: '24 giờ', value: 24, icon: Clock },
     { label: '48 giờ', value: 48, icon: Clock },
     { label: '72 giờ', value: 72, icon: Clock },
@@ -84,7 +84,7 @@ export function HeatmapPage() {
             Bản đồ nhiệt mật độ
           </h2>
           <p className="text-sm text-stone-500 font-medium">
-            {hours === 1 ? 'Dữ liệu di chuyển trực tiếp trong 1 giờ qua' : `Phân tích mật độ khách hàng trong ${hours} giờ qua`}
+            {hours < 1 ? 'Dữ liệu di chuyển tức thời trong 10 phút qua' : `Phân tích mật độ khách hàng trong ${hours} giờ qua`}
           </p>
         </div>
 
