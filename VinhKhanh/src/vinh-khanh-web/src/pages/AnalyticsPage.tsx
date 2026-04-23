@@ -66,13 +66,13 @@ export function AnalyticsPage() {
     <div className="space-y-8 p-4">
       <h2 className="text-2xl font-bold text-slate-900">Analytics & Insights</h2>
       
-      <div className="grid gap-8 lg:grid-cols-2">
+      <div className="flex flex-col gap-8">
         {/* Biểu đồ lượt nghe TTS */}
         <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-slate-800">
              Lượt nghe TTS (30 ngày)
           </h3>
-          <div className="h-72 w-full">
+          <div className="h-96 w-full">
             {top.isLoading ? (
               <p className="flex h-full items-center justify-center text-slate-500">Đang tải...</p>
             ) : (
@@ -96,7 +96,7 @@ export function AnalyticsPage() {
           <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-slate-800">
              Khách ghé thăm thực tế (Heatmap - 24h)
           </h3>
-          <div className="h-72 w-full">
+          <div className="h-96 w-full">
             {poiVisitorStats.isLoading ? (
               <p className="flex h-full items-center justify-center text-slate-500">Đang tải...</p>
             ) : (
