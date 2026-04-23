@@ -30,7 +30,7 @@ export function Dashboard() {
       (await api.get<{ 
         totalPois: number; 
         totalTours: number; 
-        totalUsers: number; 
+        totalDevices: number; 
         totalVisits: number; 
         activeUsers: number;
         ownerStats?: { ownerId: number; poiCount: number }[] 
@@ -71,10 +71,10 @@ export function Dashboard() {
       bg: 'bg-blue-600',
     },
     {
-      label: 'Khách tham quan',
-      value: summary.isLoading ? '...' : (summary.data?.totalUsers ?? '—'),
-      sub: 'Tổng lượt đăng ký',
-      desc: 'Lượt du khách sử dụng ứng dụng',
+      label: 'Thiết bị đã cài',
+      value: summary.isLoading ? '...' : (summary.data?.totalDevices ?? '—'),
+      sub: 'Unique Installs',
+      desc: 'Số lượng thiết bị duy nhất đã sử dụng app',
       icon: Users,
       bg: 'bg-teal-600',
     },

@@ -22,7 +22,13 @@ public class AdminController(ApplicationDbContext db, IConnectionTracker tracker
 
 			var totalPois = await db.Pois.AsNoTracking().CountAsync(ct);
 			var totalTours = await db.Tours.AsNoTracking().CountAsync(ct);
-			var totalUsers = await db.AppUsers.AsNoTracking().CountAsync(ct);
+			
+			// AppUsers are administrative accounts (Admin, Owner).
+			// To count unique app users (installs), we count distinct SessionIds from logs.
+			var totalHistoryDevices = await db.AppHistoryLogs.AsNoTracking().Select(x => x.SessionId).Distinct().CountAsync(ct);
+			var totalVisitDevices = await db.PoiVisitLogs.AsNoTracking().Select(x => x.SessionId).Distinct().CountAsync(ct);
+			var totalDevices = (new[] { totalHistoryDevices, totalVisitDevices }).Max();
+
 			var totalVisits = await db.PoiVisitLogs.AsNoTracking().CountAsync(ct);
 
 			var ownerStats = await db.Pois.AsNoTracking()
@@ -31,7 +37,7 @@ public class AdminController(ApplicationDbContext db, IConnectionTracker tracker
 				.Select(g => new { OwnerId = g.Key, PoiCount = g.Count() })
 				.ToListAsync(ct);
 
-			return new { totalPois, totalTours, totalUsers, totalVisits, ownerStats };
+			return new { totalPois, totalTours, totalDevices, totalVisits, ownerStats };
 		});
 
 		// activeUsers is real-time, get it fresh every time
@@ -41,7 +47,7 @@ public class AdminController(ApplicationDbContext db, IConnectionTracker tracker
 		{
 			result.totalPois,
 			result.totalTours,
-			result.totalUsers,
+			result.totalDevices,
 			result.totalVisits,
 			activeUsers,
 			result.ownerStats
