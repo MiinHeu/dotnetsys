@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 
 <head>
@@ -497,7 +497,7 @@
 <body>
 
   <nav>
-    <div class="nb">🍜 Vĩnh Khánh <span>PRD v3.0 Final</span></div>
+    <div class="nb">🍜 Vĩnh Khánh <span>PRD v4.0 Updated</span></div>
     <ul class="nl">
       <li><a href="#ch01">Tổng Quan</a></li>
       <li><a href="#ch02">Actors</a></li>
@@ -531,7 +531,7 @@
         class="badge b">SignalR</span>
       <span class="badge g">PostgreSQL 17</span><span class="badge g">EF Core 10</span><span class="badge g">Redis
         8</span>
-      <span class="badge v">Azure OpenAI GPT-4o-mini</span><span class="badge v">Ollama llama3.2:3b</span><span
+      <span class="badge v">Google Gemini 1.5 Flash</span><span class="badge v">Azure OpenAI GPT-4o-mini</span><span class="badge v">Ollama llama3.2:3b</span><span
         class="badge o">JWT Bearer + BCrypt</span>
     </div>
   </div>
@@ -558,7 +558,7 @@
       <div class="l">DB Tables</div>
     </div>
     <div class="sc">
-      <div class="n">12</div>
+      <div class="n">13</div>
       <div class="l">Controllers</div>
     </div>
     <div class="sc">
@@ -618,13 +618,13 @@
       </div>
       <div class="fc">
         <h4>🌐 Đa Ngôn Ngữ</h4>
-        <p>7 ngôn ngữ: vi, en, zh, ko, ja, km, th. Dịch tự động qua chuỗi fallback: Ollama → LibreTranslate → Microsoft
+        <p>7 ngôn ngữ: vi, en, zh, ko, ja, km, th. Dịch tự động qua chuỗi fallback: Gemini → Ollama → LibreTranslate → Microsoft
           Translator.</p>
       </div>
       <div class="fc">
         <h4>🤖 AI Chatbot 24/7</h4>
-        <p>Khách hỏi về món ăn, quán, lịch sử phố. AI trả lời dựa trên context POI + Tour. PoC: Ollama llama3.2:3b;
-          Prod: Azure GPT-4o-mini.</p>
+        <p>Khách hỏi về món ăn, quán, lịch sử phố. AI trả lời dựa trên context POI + Tour. Primary: Gemini 1.5 Flash;
+          PoC: Ollama llama3.2:3b; Prod: Azure GPT-4o-mini.</p>
       </div>
       <div class="fc">
         <h4>📱 Offline-First Mobile</h4>
@@ -675,7 +675,7 @@
           </tr>
           <tr>
             <td>AI Services</td>
-            <td>Ollama (PoC) / Azure OpenAI (prod)</td>
+            <td>Gemini 1.5 Flash (primary) / Ollama (PoC) / Azure OpenAI (prod)</td>
             <td>Chatbot + Translation</td>
           </tr>
           <tr>
@@ -1573,6 +1573,7 @@
           participant NS as NarrationService
           participant TC as TranslationController
           participant RT as ResilientTranslationService
+          participant GM as GeminiTranslation
           participant OL as OllamaTranslation
           participant LT as LibreTranslate
           participant MS as MicrosoftTranslator
@@ -1589,6 +1590,10 @@
           else No audio for "ko"
           NS->>TC: POST /api/translation/text {text, from="vi", to="ko"}
           TC->>RT: TranslateAsync(text, "vi", "ko")
+          RT->>GM: GeminiTranslation.Translate()
+          alt [Gemini OK]
+          GM-->>RT: translated text
+          else Gemini fail
           RT->>OL: OllamaTranslation.Translate()
           alt [Ollama OK]
           OL-->>RT: translated text
@@ -1602,6 +1607,7 @@
           MS-->>RT: translated text
           else All fail
           RT-->>NS: null → use original vi text
+          end
           end
           end
           end
@@ -1950,7 +1956,7 @@
 
     <div class="card">
       <h3>🤖 6.1 AI Chatbot 24/7</h3>
-      <p><code>OllamaAiService</code> (PoC) / <code>AzureAiService</code> (production). System prompt với POI+Tour
+      <p><code>GeminiAiService</code> (primary) / <code>OllamaAiService</code> (PoC) / <code>AzureAiService</code> (production). System prompt với POI+Tour
         context. History 10 messages. Text limit 5000 chars.</p>
       <div class="dw">
         <div class="dt">Activity Diagram — AI Chatbot</div>
@@ -1965,9 +1971,11 @@
           F --> G[POST /api/ai/chat\nmessage, lang, history]
           G --> H[Build system prompt:\n- POI context\n- Tour context\n- Chat history 10 msgs]
           H --> I{Environment?}
+          I -->|"Primary"| I2[GeminiAiService\nGemini 1.5 Flash]
           I -->|PoC| J[OllamaAiService\nllama3.2:3b local]
           I -->|Production| K[AzureAiService\nGPT-4o-mini]
-          J --> L[Nhận AI response]
+          I2 --> L[Nhận AI response]
+          J --> L
           K --> L
           L --> M{Response rỗng?}
           M -->|Yes| N["Fallback message\nXin lỗi, chưa có câu trả lời"]
@@ -1993,7 +2001,11 @@
           API->>API: Build poiContext (name, category, MapX, MapY, desc)
           API->>API: Build tourContext (name, stops order)
           API->>API: Build system prompt với context
-          alt [Môi trường PoC (Ollama đã cấu hình)]
+          alt [Primary (Gemini cấu hình)]
+          API->>AI: GeminiAiService.ChatAsync(system, user, history)
+          AI->>AI: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
+          AI-->>API: response text
+          else PoC (Ollama cấu hình)
           API->>AI: OllamaAiService.ChatAsync(system, user, history)
           AI->>AI: POST http://localhost:11434/api/chat
           AI-->>API: response text
@@ -2010,7 +2022,7 @@
 
     <div class="card">
       <h3>🌐 6.2 Thuyết Minh Đa Ngôn Ngữ Tự Động</h3>
-      <p><code>ResilientTranslationService</code>: OllamaTranslation → LibreTranslate → MicrosoftTranslator fallback
+      <p><code>ResilientTranslationService</code>: GeminiTranslation → OllamaTranslation → LibreTranslate → MicrosoftTranslator fallback
         chain. 7 ngôn ngữ: vi, en, zh, ko, ja, km, th.</p>
       <div class="dw">
         <div class="dt">Activity Diagram — ResilientTranslationService</div>
@@ -2018,13 +2030,20 @@
           flowchart TD
           A([POST /api/translation/text\ntext, from, to]) --> B{targetLang ==\nsourceLang?}
           B -->|Yes| C[Trả về text gốc]
-          B -->|No| D[Thử OllamaTranslationService]
-          D --> E{Ollama\nAvailable?}
-          E -->|Yes| F[Gọi Ollama API\nllama3.2:3b translate]
+          B -->|No| D[Thử GeminiTranslationService]
+          D --> E{Gemini\nConfigured?}
+          E -->|Yes| F0[Gọi Gemini API\ngemini-1.5-flash translate]
+          F0 --> G0{Response OK?}
+          G0 -->|Yes| H[Trả về translated text]
+          G0 -->|No| I0[Log warning]
+          E -->|No| I0
+          I0 --> D2[Thử OllamaTranslationService]
+          D2 --> E2{Ollama\nAvailable?}
+          E2 -->|Yes| F[Gọi Ollama API\nllama3.2:3b translate]
           F --> G{Response OK?}
-          G -->|Yes| H[Trả về translated text]
+          G -->|Yes| H
           G -->|No| I[Log warning]
-          E -->|No| I
+          E2 -->|No| I
           I --> J[Thử LibreTranslateService]
           J --> K{LibreTranslate\nAvailable?}
           K -->|Yes| L[Gọi LibreTranslate API]
@@ -2052,15 +2071,21 @@
           participant NS as NarrationService
           participant TC as TranslationController
           participant RT as ResilientTranslationService
+          participant GM as GeminiTranslation
           participant OL as OllamaTranslation
           participant LT as LibreTranslate
           participant MS as MicrosoftTranslator
 
           NS->>TC: POST /api/translation/text\n{text="Cơm tấm...", from="vi", to="ja"}
           TC->>RT: TranslateAsync("Cơm tấm...", "vi", "ja")
+          RT->>GM: GeminiTranslationService.TranslateAsync()
+          alt [Gemini khả dụng]
+          GM-->>RT: "コムタム..."
+          RT-->>TC: translated
+          else Gemini unavailable/error
           RT->>OL: OllamaTranslationService.TranslateAsync()
           alt [Ollama khả dụng]
-          OL-->>RT: "コムタム..."
+          OL-->>RT: translated text
           RT-->>TC: translated
           else Ollama unavailable/error
           RT->>LT: LibreTranslateService.TranslateAsync()
@@ -2075,6 +2100,7 @@
           else All fail
           RT-->>TC: null
           TC-->>NS: 503 Service Unavailable
+          end
           end
           end
           end
@@ -3360,13 +3386,28 @@
           +TranslateAsync(text, from, to, ct) Task~string~
           }
           class ResilientTranslationService {
+          -GeminiTranslationService _gemini
           -OllamaTranslationService _ollama
           -LibreTranslateService _libre
           -MicrosoftTranslatorService _ms
           +TranslateAsync(text, from, to, ct) Task~string~
+          -BuildProviderChain() IEnumerable
+          }
+          class GeminiTranslationService {
+          -string _apiKey
+          -string _model
+          +TranslateAsync(text, from, to, ct) Task~string~
+          -CleanResult(raw) string
           }
           class IAiService {
           &lt;&lt;interface&gt;&gt;
+          +ChatAsync(system, user, history) Task~string~
+          }
+          class GeminiAiService {
+          -IConfiguration _cfg
+          -IHttpClientFactory _factory
+          -string _apiKey
+          -string _model
           +ChatAsync(system, user, history) Task~string~
           }
           class OllamaAiService {
@@ -3408,6 +3449,8 @@
           +DbSet~AppHistoryLog~ AppHistoryLogs
           }
           ITranslationService <|.. ResilientTranslationService
+          ITranslationService <|.. GeminiTranslationService
+          IAiService <|.. GeminiAiService
           IAiService <|.. OllamaAiService
           IAiService <|.. AzureAiService
           ITtsService <|.. VoiceRssTtsService
@@ -3485,11 +3528,29 @@
             +EnqueueMovementBatchAsync(batch) Task
             +FlushAsync(api) Task
             }
+            class AudioCacheService {
+            -HttpClient _httpClient
+            -string _cacheDir
+            -SemaphoreSlim _downloadSemaphore
+            +GetAudioPathAsync(url, highPriority, ct) Task~string~
+            +PreFetchAsync(url) Task
+            -GetHash(input) string
+            }
+            class RealtimeService {
+            -HubConnection _hub
+            +ConnectAsync() Task
+            +OnPoiUpdated(callback) void
+            +OnTourUpdated(callback) void
+            }
+            class SessionService {
+            +SessionId string
+            }
             IGpsService <|.. GpsService
             IGeofenceService <|.. GeofenceService
             INarrationService <|.. NarrationService
             ILocalDbService <|.. LocalDbService
             GeofenceService --> INarrationService : triggers
+            NarrationService --> AudioCacheService : uses
           </div>
         </div>
       </div>
@@ -3535,6 +3596,7 @@
             end
             end
             subgraph CLOUD["☁️ Cloud Services (Production)"]
+            GEMINI_AI["Google Gemini AI\ngemini-1.5-flash\nPrimary AI + Translation"]
             AZURE_AI["Azure OpenAI\nGPT-4o-mini"]
             AZURE_TTS["Azure Cognitive\nSpeech Services"]
             MS_TRANS["Microsoft Translator\nCognitive Services"]
@@ -3549,6 +3611,7 @@
             ASPNET --> SQLITE
             ASPNET --> REDIS
             ASPNET --> FS
+            ASPNET -->|"Primary AI"| GEMINI_AI
             ASPNET -->|"PoC"| OLLAMA
             ASPNET -->|"PoC"| LIBRE
             ASPNET -->|"Production"| AZURE_AI
@@ -3613,17 +3676,17 @@
             <tr>
               <td><code>VinhKhanh.API</code></td>
               <td>ASP.NET Core 10</td>
-              <td>12 Controllers, SignalR Hub, Services (AI/TTS/Translation), Program.cs</td>
+              <td>13 Controllers, SignalR Hub, Services (AI/TTS/Translation/Gemini), Program.cs</td>
             </tr>
             <tr>
               <td><code>VinhKhanh.App</code></td>
               <td>.NET MAUI 10</td>
-              <td>6 ViewModels, 8 Services, 6 Pages, Platforms (Android/iOS)</td>
+              <td>5 ViewModels, 15 Services, 7 Pages, Platforms (Android/iOS)</td>
             </tr>
             <tr>
               <td><code>vinh-khanh-web</code></td>
               <td>React 19 + Vite 6</td>
-              <td>18 Pages, hooks (useSignalR, useAuth), Zustand store, TanStack Query</td>
+              <td>19 Pages, hooks (useSignalR, useAuth), Zustand store, TanStack Query</td>
             </tr>
             <tr>
               <td><code>VinhKhanh.Shared</code></td>
@@ -4247,6 +4310,46 @@
       </div>
 
       <div class="card">
+        <h3>📱 AppDownloadController — <code>/api/app</code></h3>
+        <div class="tw">
+          <table>
+            <tr>
+              <th>Method</th>
+              <th>Endpoint</th>
+              <th>Auth</th>
+              <th>Mô tả</th>
+            </tr>
+            <tr>
+              <td><span class="tag tget">GET</span></td>
+              <td><code>/api/app/download</code></td>
+              <td><span class="tag tan">Anonymous</span></td>
+              <td>Tải file APK (Release Android). Trả về application/vnd.android.package-archive</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🗣️ TtsController (deprecated) — <code>/api/tts</code></h3>
+        <div class="tw">
+          <table>
+            <tr>
+              <th>Method</th>
+              <th>Endpoint</th>
+              <th>Auth</th>
+              <th>Mô tả</th>
+            </tr>
+            <tr>
+              <td><span class="tag tpost">POST</span></td>
+              <td><code>/api/tts/synthesize</code></td>
+              <td><span class="tag ta">Admin</span></td>
+              <td>TTS stream trực tiếp audio/mpeg (deprecated — dùng AudioController thay thế)</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
         <h3>⚠️ Middleware Pipeline (thứ tự quan trọng)</h3>
         <p>Sai thứ tự gây lỗi CORS với OPTIONS preflight từ React Vite:</p>
         <div class="tw">
@@ -4390,6 +4493,12 @@
               <td>QRCoder — generate PNG server-side</td>
             </tr>
             <tr>
+              <td>AI Primary</td>
+              <td>Google Gemini 1.5 Flash</td>
+              <td>latest</td>
+              <td>HTTP REST via Google.GenAI. GeminiAiService + GeminiTranslationService</td>
+            </tr>
+            <tr>
               <td>AI PoC</td>
               <td>Ollama + llama3.2:3b</td>
               <td>latest</td>
@@ -4405,7 +4514,7 @@
               <td>Translation</td>
               <td>ResilientTranslationService</td>
               <td>custom</td>
-              <td>Ollama → LibreTranslate → Microsoft Translator fallback</td>
+              <td>Gemini → Ollama → LibreTranslate → Microsoft Translator fallback</td>
             </tr>
             <tr>
               <td>TTS Server</td>
@@ -4507,7 +4616,7 @@
             </tr>
           </table>
         </div>
-        <h4>Web Pages (18 trang)</h4>
+        <h4>Web Pages (19 trang)</h4>
         <div class="tw">
           <table>
             <tr>
@@ -4524,25 +4633,25 @@
             </tr>
             <tr>
               <td>AdminLogin</td>
-              <td>/admin/login</td>
+              <td>/admin-login</td>
               <td>Admin</td>
               <td>Đăng nhập Admin</td>
             </tr>
             <tr>
               <td>OwnerLogin</td>
-              <td>/owner/login</td>
+              <td>/owner-login</td>
               <td>Owner</td>
               <td>Đăng nhập Owner</td>
             </tr>
             <tr>
               <td>OwnerRegister</td>
-              <td>/owner/register</td>
+              <td>/owner-register</td>
               <td>Anonymous</td>
               <td>Đăng ký tài khoản Owner</td>
             </tr>
             <tr>
               <td>OwnerForgotPassword</td>
-              <td>/owner/forgot-password</td>
+              <td>/owner-forgot-password</td>
               <td>Anonymous</td>
               <td>Reset mật khẩu Owner</td>
             </tr>
@@ -4617,6 +4726,18 @@
               <td>/change-password</td>
               <td>All</td>
               <td>Đổi mật khẩu</td>
+            </tr>
+            <tr>
+              <td>HeatmapPage</td>
+              <td>/heatmap</td>
+              <td>Admin</td>
+              <td>Leaflet heatmap cho GPS movement + POI visits</td>
+            </tr>
+            <tr>
+              <td>DownloadPage</td>
+              <td>/download</td>
+              <td>All</td>
+              <td>Tải APK/QR code cho Mobile App (Google Drive link)</td>
             </tr>
             <tr>
               <td>Login (legacy)</td>
@@ -4718,7 +4839,7 @@
             </tr>
           </table>
         </div>
-        <h4>MAUI Pages (6 trang)</h4>
+        <h4>MAUI Pages (7 trang)</h4>
         <div class="tw">
           <table>
             <tr>
@@ -4760,6 +4881,11 @@
               <td>SettingsPage</td>
               <td>SettingsViewModel</td>
               <td>Ngôn ngữ, GPS radius, TTS voice, sync offline</td>
+            </tr>
+            <tr>
+              <td>LanguageSelectionPage</td>
+              <td>—</td>
+              <td>Chọn ngôn ngữ ban đầu khi mở app lần đầu</td>
             </tr>
           </table>
         </div>
@@ -4847,7 +4973,7 @@
           <h4>🛡️ Reliability</h4>
           <p>• Offline-first: SQLite cache hoạt động không cần mạng<br>
             • OutboxService retry cho pending requests<br>
-            • Translation fallback chain: 3 providers<br>
+            • Translation fallback chain: 4 providers (Gemini → Ollama → Libre → MS)<br>
             • TTS fallback: server audio → device TTS<br>
             • Geofence hysteresis (1.2×): tránh trigger nhầm<br>
             • DuplicateWindow 25s: tránh phát lại liên tục<br>
@@ -5194,12 +5320,12 @@
     <!-- FOOTER -->
     <footer>
       <p>📄 PRD — Thuyết Minh Tự Động Đa Ngôn Ngữ · Phố Ẩm Thực Vĩnh Khánh</p>
-      <p style="margin-top:6px;color:#5c6bc0;">Version 3.0 Final · .NET 10 · C# 14 · ASP.NET Core 10 · React 19 · .NET
+      <p style="margin-top:6px;color:#5c6bc0;">Version 4.0 Updated · .NET 10 · C# 14 · ASP.NET Core 10 · React 19 · .NET
         MAUI 10</p>
       <p style="margin-top:4px;font-size:.75rem;">30+ chức năng · 3 Actors · 7 Ngôn ngữ · 50+ API Endpoints · 9 DB
         Tables · 18 Chương · 60+ Sơ đồ UML</p>
       <p style="margin-top:4px;font-size:.72rem;opacity:.6;">Được tạo từ phân tích toàn bộ codebase · Chính xác tuyệt
-        đối · Ngày: 17/04/2026</p>
+        đối · Cập nhật: 24/04/2026</p>
     </footer>
 
     <script>
