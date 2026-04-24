@@ -529,9 +529,9 @@
         10</span>
       <span class="badge b">React 19 + TypeScript</span><span class="badge b">.NET MAUI 10</span><span
         class="badge b">SignalR</span>
-      <span class="badge g">PostgreSQL 17</span><span class="badge g">EF Core 10</span><span class="badge g">Redis
+      <span class="badge g">SQLite (Persistent)</span><span class="badge g">EF Core 10</span><span class="badge g">Redis
         8</span>
-      <span class="badge v">Google Gemini 1.5 Flash</span><span class="badge v">Azure OpenAI GPT-4o-mini</span><span class="badge v">Ollama llama3.2:3b</span><span
+      <span class="badge v">Google Gemini 1.5 Flash</span><span class="badge v">Ollama llama3.2:3b</span><span
         class="badge o">JWT Bearer + BCrypt</span>
     </div>
   </div>
@@ -624,7 +624,7 @@
       <div class="fc">
         <h4>🤖 AI Chatbot 24/7</h4>
         <p>Khách hỏi về món ăn, quán, lịch sử phố. AI trả lời dựa trên context POI + Tour. Primary: Gemini 1.5 Flash;
-          PoC: Ollama llama3.2:3b; Prod: Azure GPT-4o-mini.</p>
+          Hệ thống AI đa nhiệm (Dịch thuật + Chatbot) dựa trên Gemini 1.5 Flash và Ollama.</p>
       </div>
       <div class="fc">
         <h4>📱 Offline-First Mobile</h4>
@@ -665,8 +665,8 @@
           </tr>
           <tr>
             <td>Database (Prod)</td>
-            <td>PostgreSQL 17</td>
-            <td>Lưu trữ POI, Tour, Users, Logs</td>
+            <td>SQLite (Persistent)</td>
+            <td>Lưu trữ POI, Tour, Users, Logs (Azure Persistent)</td>
           </tr>
           <tr>
             <td>Database (Dev)</td>
@@ -675,8 +675,8 @@
           </tr>
           <tr>
             <td>AI Services</td>
-            <td>Gemini 1.5 Flash (primary) / Ollama (PoC) / Azure OpenAI (prod)</td>
-            <td>Chatbot + Translation</td>
+            <td>Gemini 1.5 Flash (primary) / Ollama (Local AI)</td>
+            <td>AI Chatbot + Auto-Translation</td>
           </tr>
           <tr>
             <td>Cache</td>
@@ -1432,7 +1432,7 @@
           participant GS as GpsService
           participant MV as MainViewModel
           participant MC as MovementController
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           App->>GS: StartTrackingAsync()
           GS->>GPS: StartForegroundService(intent)
@@ -1623,7 +1623,7 @@
     <!-- 4.4 POI Data -->
     <div class="card">
       <h3>💾 4.4 Quản Lý Dữ Liệu POI (Offline Cache)</h3>
-      <p>SQLite offline cache <code>LocalDbService</code> + PostgreSQL/SQLite server, <code>ConnectivityService</code>
+      <p>SQLite offline cache <code>LocalDbService</code> + SQLite (Persistent) server, <code>ConnectivityService</code>
         auto-sync, <code>OutboxService</code> retry.</p>
       <div class="dw">
         <div class="dt">Activity Diagram — POI Data Sync</div>
@@ -1800,7 +1800,7 @@
           participant TQ as TanStack Query
           participant API as PoiController
           participant HUB as VinhKhanhHub
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           OW->>UI: Điền form POI, click Submit
           UI->>TQ: useMutation POST /api/poi
@@ -1826,20 +1826,20 @@
         <div class="dt">Activity Diagram — Analytics Dashboard</div>
         <div class="mermaid">
           flowchart TD
-          A([Admin mở Analytics]) --> B[GET /api/admin/summary\nAdmin JWT]
-          B --> C[Hiển thị Summary Stats\ntotalPois, totalTours, totalUsers, totalVisits]
-          C --> D[GET /api/analytics/top?days=7]
-          D --> E[Hiển thị Top POI chart\nRecharts BarChart]
-          E --> F[GET /api/analytics/heatmap?hours=24]
-          F --> G[Hiển thị Heatmap\nreact-leaflet HeatLayer]
-          G --> H{User chọn\ntime range?}
-          H -->|Thay đổi days| D
-          H -->|Thay đổi hours| F
-          H -->|Xem Movement| I[GET /api/movement/heatmap]
-          I --> J[Hiển thị GPS movement heatmap]
+          A["Admin mở Analytics"] --> B["GET /api/admin/summary (Admin JWT)"]
+          B --> C["Hiển thị Summary Stats (Pois, Tours, Devices, Visits)"]
+          C --> D["GET /api/analytics/top?days=7"]
+          D --> E["Hiển thị Top POI chart (Recharts BarChart)"]
+          E --> F["GET /api/analytics/heatmap?hours=0.16"]
+          F --> G["Hiển thị Heatmap Trực tiếp (10p)"]
+          G --> H{"User chọn time range?"}
+          H -- "Thay đổi hours" --> F
+          H -- "Chọn 10m, 24h, 48h, 72h" --> F
+          H -- "Xem Movement" --> I["GET /api/movement/heatmap"]
+          I --> J["Hiển thị GPS movement heatmap"]
           J --> H
-          H -->|Xem History| K[GET /api/history\nfilter: eventType, lang, from, to]
-          K --> L[Hiển thị History Log table\npagination]
+          H -- "Xem History" --> K["GET /api/history"]
+          K --> L["Hiển thị History Log table"]
           L --> H
         </div>
       </div>
@@ -1851,7 +1851,7 @@
           participant UI as React 19
           participant AC as AnalyticsController
           participant MC as MovementController
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           ADM->>UI: Navigate to /analytics
           UI->>AC: GET /api/admin/summary [Admin JWT]
@@ -1862,8 +1862,8 @@
           AC->>DB: "SELECT poiId, COUNT, AVG(duration) FROM PoiVisitLogs GROUP BY poiId ORDER BY COUNT DESC TAKE 20"
           DB-->>AC: TopPoiDto list
           AC-->>UI: TopPoiDto list with PoiName
-          UI->>AC: GET /api/analytics/heatmap?hours=24
-          AC->>DB: SELECT lat, lng FROM MovementLogs\nWHERE RecordedAt > NOW()-24h
+          UI->>AC: GET /api/analytics/heatmap?hours=0.16
+          AC->>DB: SELECT lat, lng FROM MovementLogs\nWHERE RecordedAt > NOW()-10m
           DB-->>AC: HeatmapPoint list
           AC-->>UI: HeatmapPoint list
           UI-->>ADM: Render Recharts BarChart + Leaflet Heatmap
@@ -1950,13 +1950,13 @@
       <div class="sn">06</div>
       <div>
         <h2>AI Features — Chatbot, Dịch Thuật, TTS</h2>
-        <p>Ollama · Azure OpenAI · ResilientTranslationService · TTS</p>
+        <p>Gemini 1.5 Flash · Ollama · ResilientTranslationService · TTS</p>
       </div>
     </div>
 
     <div class="card">
       <h3>🤖 6.1 AI Chatbot 24/7</h3>
-      <p><code>GeminiAiService</code> (primary) / <code>OllamaAiService</code> (PoC) / <code>AzureAiService</code> (production). System prompt với POI+Tour
+      <p><code>GeminiAiService</code> (primary) / <code>OllamaAiService</code> (Local AI). System prompt với POI+Tour
         context. History 10 messages. Text limit 5000 chars.</p>
       <div class="dw">
         <div class="dt">Activity Diagram — AI Chatbot</div>
@@ -1973,7 +1973,7 @@
           H --> I{Environment?}
           I -->|"Primary"| I2[GeminiAiService\nGemini 1.5 Flash]
           I -->|PoC| J[OllamaAiService\nllama3.2:3b local]
-          I -->|Production| K[AzureAiService\nGPT-4o-mini]
+          I -->|Primary| K[GeminiAiService\n1.5 Flash]
           I2 --> L[Nhận AI response]
           J --> L
           K --> L
@@ -1991,8 +1991,8 @@
           participant U as Khách Tham Quan
           participant CV as ChatViewModel (MAUI)
           participant API as AiController
-          participant AI as OllamaAiService / AzureAiService
-          participant DB as PostgreSQL
+          participant AI as GeminiAiService / OllamaAiService
+          participant DB as SQLite
 
           U->>CV: Nhập câu hỏi, gửi
           CV->>CV: Lines.Add("Bạn: " + question)
@@ -2009,8 +2009,8 @@
           API->>AI: OllamaAiService.ChatAsync(system, user, history)
           AI->>AI: POST http://localhost:11434/api/chat
           AI-->>API: response text
-          else Production (Azure configured)
-          API->>AI: AzureAiService.ChatAsync(system, user, history)
+          else Primary (Gemini)
+          API->>AI: GeminiAiService.ChatAsync(system, user, history)
           AI-->>API: response text
           end
           API-->>CV: {reply, language}
@@ -2200,7 +2200,7 @@
           participant UI as React 19
           participant ZS as Zustand Store
           participant API as AuthController
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           U->>UI: Nhập username, password, click Login
           UI->>API: POST /api/auth/login {username, password}
@@ -2255,7 +2255,7 @@
           participant U as Chủ Quán Mới
           participant UI as React 19
           participant API as AuthController
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           U->>UI: Điền form đăng ký, submit
           UI->>API: POST /api/auth/register-owner\n{username, password} [AllowAnonymous]
@@ -2306,7 +2306,7 @@
           participant ADM as Admin
           participant UI as React 19
           participant API as AuthController
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           ADM->>UI: Điền form tạo user, chọn role, submit
           UI->>API: POST /api/auth/register username, password, role Auth Bearer JWT Admin
@@ -2355,7 +2355,7 @@
           participant U as User (Admin/Owner)
           participant UI as React 19
           participant API as AuthController
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           U->>UI: Nhập currentPassword, newPassword, submit
           UI->>API: PUT /api/auth/change-password\n{currentPassword, newPassword}\nAuthorization: Bearer JWT
@@ -2402,7 +2402,7 @@
           participant U as Chủ Quán
           participant UI as React 19
           participant API as AuthController
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           U->>UI: Nhập username + mật khẩu mới, submit
           UI->>API: POST /api/auth/forgot-password\n{username, newPassword} [AllowAnonymous]
@@ -2455,7 +2455,7 @@
           participant ADM as Admin
           participant UI as React 19
           participant API as AuthController
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           ADM->>UI: Click "Khóa" trên user row
           UI->>UI: Confirm dialog
@@ -2485,7 +2485,7 @@
           sequenceDiagram
           participant UI as React 19 (PoiEditor)
           participant API as AuthController
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           UI->>API: GET /api/auth/owners\nAuthorization: Bearer JWT
           API->>API: Validate Authorize
@@ -2523,7 +2523,7 @@
           participant ADM as Admin
           participant UI as React 19
           participant API as AdminController
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           ADM->>UI: Click "Seed Database"
           UI->>API: POST /api/admin/seed Auth Bearer JWT Admin
@@ -2763,7 +2763,7 @@
           participant UI as React 19
           participant API as TourController
           participant HUB as VinhKhanhHub
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           ADM->>UI: Điền form Tour + stops, submit
           UI->>API: POST /api/tour name, desc, estimatedMinutes, stops Auth Bearer JWT Admin
@@ -2969,7 +2969,7 @@
           participant TC as TranslationController
           participant PC as PoiController
           participant HUB as VinhKhanhHub
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           OW->>UI: Chọn ngôn ngữ "ja", click Auto-translate
           UI->>TC: POST /api/translation/text\n{text: poi.Description, from:"vi", to:"ja"}
@@ -3030,7 +3030,7 @@
           participant UI as React 19
           participant PC as PoiController
           participant RT as ResilientTranslationService
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           ADM->>UI: Click Bulk Translate, overwrite=false
           UI->>PC: POST /api/poi/bulk-translate?overwrite=false Auth Bearer JWT Admin
@@ -3060,7 +3060,7 @@
           participant ADM as Admin
           participant UI as React 19
           participant API as TourController
-          participant DB as PostgreSQL
+          participant DB as SQLite
 
           ADM->>UI: Chọn Tour, click "Thêm bản dịch"
           UI->>API: POST /api/tour/{id}/translation\n{languageCode, name, description}\nAuthorization: Bearer JWT [Admin]
@@ -3585,7 +3585,7 @@
             HEALTH["Health Check\n/health"]
             end
             subgraph DATA_LAYER["💾 Data Layer"]
-            PG["PostgreSQL 17\nProduction DB\nPort 5432"]
+            PG["SQLite (Persistent)\nProduction DB\nPersistent Path: /home"]
             SQLITE["SQLite\nDevelopment DB\napp.db"]
             REDIS["Redis 8\nCache Layer\nPort 6379"]
             FS["File System\nwwwroot/audio\nwwwroot/images"]
@@ -3597,7 +3597,6 @@
             end
             subgraph CLOUD["☁️ Cloud Services (Production)"]
             GEMINI_AI["Google Gemini AI\ngemini-1.5-flash\nPrimary AI + Translation"]
-            AZURE_AI["Azure OpenAI\nGPT-4o-mini"]
             AZURE_TTS["Azure Cognitive\nSpeech Services"]
             MS_TRANS["Microsoft Translator\nCognitive Services"]
             VOICERSS["VoiceRSS TTS\nAPI"]
@@ -4126,7 +4125,7 @@
               <td><span class="tag tpost">POST</span></td>
               <td><code>/api/ai/chat</code></td>
               <td><span class="tag tg2">Public</span></td>
-              <td>AI Chatbot. Body: ChatRequest {message, language, history[10]}. Ollama/Azure</td>
+              <td>AI Chatbot. Body: ChatRequest {message, language, history[10]}. Gemini/Ollama</td>
             </tr>
             <tr>
               <td><span class="tag tpost">POST</span></td>
@@ -4458,9 +4457,9 @@
             </tr>
             <tr>
               <td>DB (Prod)</td>
-              <td>PostgreSQL 17</td>
-              <td>17.x</td>
-              <td>Npgsql.EntityFrameworkCore.PostgreSQL</td>
+              <td>SQLite (Persistent)</td>
+              <td>3.x</td>
+              <td>Microsoft.EntityFrameworkCore.Sqlite (Azure Persistent)</td>
             </tr>
             <tr>
               <td>DB (Dev)</td>
@@ -4505,10 +4504,10 @@
               <td>HTTP trực tiếp localhost:11434</td>
             </tr>
             <tr>
-              <td>AI Prod</td>
-              <td>Azure OpenAI GPT-4o-mini</td>
-              <td>latest</td>
-              <td>Azure.AI.OpenAI — upgrade 1 dòng Program.cs</td>
+              <td>AI Primary</td>
+              <td>Google Gemini 1.5 Flash</td>
+              <td>v1.5</td>
+              <td>Google.AI.Gemini (Sử dụng API Key)</td>
             </tr>
             <tr>
               <td>Translation</td>
@@ -4903,9 +4902,9 @@
             </tr>
             <tr>
               <td>DB Production</td>
-              <td>PostgreSQL</td>
-              <td>17.x</td>
-              <td>postgis/postgis:17-3.5 Docker image</td>
+              <td>SQLite</td>
+              <td>3.x</td>
+              <td>/home/vinhkhanh_persistent.db — Azure App Service</td>
             </tr>
             <tr>
               <td>DB Development</td>
@@ -4981,7 +4980,7 @@
         </div>
         <div class="fc">
           <h4>📈 Scalability</h4>
-          <p>• PostgreSQL 17 với proper indexing<br>
+          <p>• SQLite (Persistent) với proper indexing<br>
             • Redis 8 cache layer (sẵn sàng khi cần)<br>
             • Movement batch max 2000 points/request<br>
             • Soft-delete giữ data integrity<br>
@@ -5241,9 +5240,9 @@
               <td>Dùng điện thoại thật + cài Google Text-to-Speech</td>
             </tr>
             <tr>
-              <td>PostgreSQL connection refused</td>
-              <td>Docker chưa up</td>
-              <td>docker compose -f docker-compose.dev.yml up -d</td>
+              <td>SQLite file locked / not found</td>
+              <td>Tiến trình khác đang truy cập hoặc sai đường dẫn /home</td>
+              <td>Kiểm tra biến Sqlite connection string trong App Service</td>
             </tr>
             <tr>
               <td>EF migration fail</td>
