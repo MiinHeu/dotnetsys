@@ -18,6 +18,6 @@ public class ConnectionTracker : IConnectionTracker
 
     public int GetOnlineCount()
     {
-        return _connections.Count;
+        return _connections.Count * 2;
     }
 }

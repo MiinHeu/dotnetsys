@@ -24,23 +24,8 @@ public sealed class ApiClientService
 
 	public static string GetDefaultApiBase()
 	{
-		if (DeviceInfo.DeviceType == DeviceType.Virtual)
-		{
-#if ANDROID
-			return "http://10.0.2.2:5283/";
-#else
-			return "http://localhost:5283/";
-#endif
-		}
-
-		// Với máy thật:
-#if DEBUG
-		// Khi bạn đang lập trình tại nhà (Debug mode)
-		return Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, "http://172.16.0.152:5283/");
-#else
-		// Khi đóng gói để gửi cho khách (Release mode)
+		// Luôn ưu tiên Azure làm mặc định theo yêu cầu
 		return "https://vinh-khanh-food-street-gvhceeg4gbakhjgc.eastasia-01.azurewebsites.net/";
-#endif
 	}
 
 	public async Task<IReadOnlyList<PoiSnapshot>> GetPoisAsync(string lang, CancellationToken ct = default)
