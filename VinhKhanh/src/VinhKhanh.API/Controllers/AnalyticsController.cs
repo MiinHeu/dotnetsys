@@ -25,7 +25,9 @@ public class AnalyticsController(ApplicationDbContext db, IMemoryCache _cache, I
 
 		var lang = string.IsNullOrWhiteSpace(dto.LanguageCode) ? "vi" : dto.LanguageCode.Trim().ToLowerInvariant();
 		var trigger = string.IsNullOrWhiteSpace(dto.TriggerType) ? "GPS" : dto.TriggerType.Trim().ToUpperInvariant();
-		if (trigger is not ("GPS" or "QR"))
+		
+		// Cho phép thêm MANUAL cho các lượt nghe chủ động từ người dùng
+		if (trigger is not ("GPS" or "QR" or "MANUAL"))
 			trigger = "GPS";
 
 		db.PoiVisitLogs.Add(new PoiVisitLog
@@ -41,6 +43,10 @@ public class AnalyticsController(ApplicationDbContext db, IMemoryCache _cache, I
 		try
 		{
 			await db.SaveChangesAsync(ct);
+			
+			// XÓA CACHE ĐỂ DASHBOARD CẬP NHẬT NGAY LẬP TỨC
+			_cache.Remove("admin_summary_stats");
+			
 			return Ok(new { message = "Logged" });
 		}
 		catch (OperationCanceledException)

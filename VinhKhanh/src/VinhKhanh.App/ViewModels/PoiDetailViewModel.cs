@@ -103,7 +103,7 @@ public partial class PoiDetailViewModel(
 		IsPlaying = false;
 
 		// 2. Ghi nhật ký truy cập (Visit Log)
-		var trigger = TriggerType ?? "QR";
+		var trigger = TriggerType ?? "MANUAL";
 		var visit = new VisitLogDto(poi.Id, session.SessionId, lang, trigger, heard);
 		if (!await api.TryPostAnalyticsVisitAsync(visit))
 			await outbox.EnqueueVisitAsync(visit);
