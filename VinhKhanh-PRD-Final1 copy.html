@@ -741,7 +741,8 @@
       <h3>🎯 Mục Tiêu Hệ Thống</h3>
       <p>Hệ thống hướng dẫn tham quan thông minh cho phố ẩm thực Vĩnh Khánh (Quận 4, TP.HCM). Cung cấp trải nghiệm
         <strong style="color:var(--tx)">thuyết minh tự động đa ngôn ngữ</strong> dựa trên vị trí GPS của người dùng
-        (Hands-free Activation), giúp du khách dễ dàng tiếp cận thông tin văn hóa, ẩm thực tại từng địa điểm.</p>
+        (Hands-free Activation), giúp du khách dễ dàng tiếp cận thông tin văn hóa, ẩm thực tại từng địa điểm.
+      </p>
     </div>
     <div class="fg">
       <div class="fc">
@@ -1044,7 +1045,8 @@
           <li><strong>Phân tầng giao diện:</strong> Hệ thống bao gồm 3 phân hệ giao diện chính (Mobile, Web CMS, Admin
             Panel), tất cả cùng tương tác với tập hợp 5 Core Services (API & Backend).</li>
           <li><strong>Layer Bảo mật:</strong> Mọi thao tác ghi dữ liệu (CRUD) từ Web CMS và Admin Panel bắt buộc đi qua
-            <code>S_AUTH</code> (JWT Validation Pipeline).</li>
+            <code>S_AUTH</code> (JWT Validation Pipeline).
+          </li>
           <li><strong>Tự động hóa luồng Mobile:</strong> Ứng dụng Mobile kết nối trực tiếp với <code>S_GEO</code>
             (Geofencing) và <code>S_NARR</code> (Narration Engine) nhằm thực thi logic rảnh tay (Hands-free) mà không
             cần sự can thiệp của người dùng.</li>
@@ -1578,10 +1580,12 @@
             soát chất lượng nội dung toàn hệ thống.</li>
           <li><strong>Xử lý hàng loạt (Bulk Operations):</strong> Chức năng "Bulk Translate" cho phép dịch toàn bộ cơ sở
             dữ liệu POI sang các ngôn ngữ đích qua một thao tác, tận dụng năng lực xử lý bất đồng bộ của
-            <code>ResilientTranslationService</code> để tối ưu tài nguyên.</li>
+            <code>ResilientTranslationService</code> để tối ưu tài nguyên.
+          </li>
           <li><strong>Trực quan hóa dữ liệu (Data Visualization):</strong> Phân tích tập dữ liệu tọa độ
             <code>MovementLog</code> thành Heatmap, kết hợp cùng <code>AppHistoryLog</code> để cung cấp bức tranh toàn
-            cảnh về lưu lượng khách và hiệu suất hệ thống.</li>
+            cảnh về lưu lượng khách và hiệu suất hệ thống.
+          </li>
         </ol>
       </div>
 
@@ -1971,7 +1975,8 @@
           <li><strong>Tối ưu hóa truyền tải (Batching Mechanism):</strong> Thay vì gửi dữ liệu lên Server mỗi 3 giây
             (gây tốn 4G và pin), App thu thập các điểm tọa độ vào một danh sách tạm thời (Buffer). Chỉ khi đạt đủ 25
             điểm hoặc sau 30 giây, App mới đóng gói và gửi một bản tin "Batch" duy nhất qua
-            <code>/api/movement/batch</code>.</li>
+            <code>/api/movement/batch</code>.
+          </li>
         </ol>
         <hr />
         <h4>🔄 Luồng tương tác Sequence — GPS Tracking</h4>
@@ -2058,7 +2063,8 @@
           <li><strong>Cơ chế chống nhiễu (Signal Debouncing):</strong> Yêu cầu điều kiện
             <code>consecutiveHits >= 2</code> (hai lần nhận tọa độ liên tiếp đều nằm trong vùng) kết hợp cùng hệ số trễ
             thoát <code>ExitHysteresis = 1.2</code> để loại bỏ hiện tượng kích hoạt giả (false positives) do nhiễu sóng
-            GPS.</li>
+            GPS.
+          </li>
         </ol>
         <hr />
         <h4>🔄 Tương tác Hệ thống (Sequence Logic)</h4>
@@ -2272,10 +2278,12 @@
         <ul>
           <li><strong>Bootstrapping & Network Check:</strong> Quá trình khởi tạo nạp dữ liệu từ
             <code>LocalPoiCacheService</code> để render UI ngay lập tức (Zero blocking). Đồng thời,
-            <code>ConnectivityService</code> thăm dò trạng thái kết nối Internet ở luồng nền.</li>
+            <code>ConnectivityService</code> thăm dò trạng thái kết nối Internet ở luồng nền.
+          </li>
           <li><strong>Đồng bộ bất đồng bộ (Asynchronous Sync):</strong> Khi phát hiện kết nối trực tuyến, hệ thống fetch
             toàn bộ danh sách POI mới nhất từ <code>PoiController</code> và hợp nhất (merge) vào SQLite. Tiếp theo,
-            <code>OutboxService</code> kích hoạt tiến trình "Flush" để đẩy toàn bộ các log còn tồn đọng về server.</li>
+            <code>OutboxService</code> kích hoạt tiến trình "Flush" để đẩy toàn bộ các log còn tồn đọng về server.
+          </li>
           <li><strong>Chiến lược thử lại (Retry Policy):</strong> Sơ đồ Sequence minh họa vòng lặp Retry nội bộ; nếu quá
             trình đẩy dữ liệu thất bại, các payload được bảo lưu trong SQLite cho chu kỳ mạng tiếp theo, đảm bảo tính
             bền vững của dữ liệu phân tích (Zero data loss).</li>
@@ -2349,7 +2357,8 @@
         <ol>
           <li><strong>Công cụ kết xuất (Rendering Engine):</strong> Ứng dụng tích hợp <code>Mapsui</code> với backend
             <code>SkiaSharp</code> để xử lý vẽ các đa giác (Geofence Circles) và điểm đánh dấu (Markers) trực tiếp qua
-            GPU, loại bỏ hiện tượng giật lag khi tương tác.</li>
+            GPU, loại bỏ hiện tượng giật lag khi tương tác.
+          </li>
           <li><strong>Kiến trúc phân lớp (Layering Architecture):</strong> Dữ liệu bản đồ được phân tách logic thành
             nhiều lớp tĩnh (POI Layer, Geofence Layer) lấy dữ liệu từ SQLite.</li>
         </ol>
@@ -2455,7 +2464,8 @@
         <ul>
           <li><strong>Bảo mật luồng giao dịch (Transaction Security):</strong> Khi Owner submit payload,
             <code>PoiController</code> kiểm chứng JWT Token và thiết lập <code>OwnerUserId</code> tương ứng. Các vi phạm
-            quyền (Unauthorized/Forbidden) sẽ bị từ chối ngay tại lớp Middleware.</li>
+            quyền (Unauthorized/Forbidden) sẽ bị từ chối ngay tại lớp Middleware.
+          </li>
           <li><strong>Đồng bộ hóa thời gian thực (Real-time Broadcast):</strong> Giao dịch INSERT thành công trên cơ sở
             dữ liệu sẽ trigger <code>VinhKhanhHub</code> (SignalR) phát gói tin <code>PoiCreated</code>. Tất cả các
             thiết bị Mobile đang kết nối sẽ nhận bản cập nhật tức thì (Push model) thay vì chờ chu kỳ Poll tiếp theo.
@@ -2526,7 +2536,8 @@
         <ul>
           <li><strong>Truy vấn tập trung:</strong> Khi Admin mở Dashboard, React gửi đồng thời nhiều request tới
             <code>AnalyticsController</code>. Server thực thi các câu lệnh SQL <code>GROUP BY</code> và
-            <code>COUNT</code> trực tiếp trên SQLite để lấy dữ liệu thống kê trong vòng 7 ngày qua.</li>
+            <code>COUNT</code> trực tiếp trên SQLite để lấy dữ liệu thống kê trong vòng 7 ngày qua.
+          </li>
           <li><strong>Xử lý Heatmap:</strong> <code>MovementController</code> truy xuất hàng ngàn điểm tọa độ trong 10
             phút gần nhất. Dữ liệu này được gửi về dưới dạng mảng tọa độ gọn nhẹ để thư viện Leaflet phía Client xử lý
             việc vẽ các vùng màu nhiệt (Red/Blue/Yellow).</li>
@@ -2603,19 +2614,23 @@
         <p>Quét QR được thiết kế để xử lý các tình huống thực tế khó khăn (ánh sáng yếu, rung tay):</p>
         <ol>
           <li><strong>Chống rung & Chống quét lặp (Debounce):</strong> Sử dụng <code>SemaphoreSlim</code> và
-            <code>Cooldown 3s</code> để đảm bảo chỉ xử lý mã QR một lần duy nhất tại một thời điểm.</li>
+            <code>Cooldown 3s</code> để đảm bảo chỉ xử lý mã QR một lần duy nhất tại một thời điểm.
+          </li>
           <li><strong>Cơ chế phân giải mã (Normalization):</strong> Hỗ trợ cả mã QR chứa Link hoặc chỉ chứa chuỗi ID
-            <code>VK-POI-XXXX</code>.</li>
+            <code>VK-POI-XXXX</code>.
+          </li>
         </ol>
         <hr />
         <h4>🔄 Luồng tương tác Sequence — QR Scan Flow</h4>
         <ul>
           <li><strong>Khóa tương tác:</strong> Ngay khi <code>ZXing</code> nhận diện được mã, App tạm thời set
             <code>IsDetecting = false</code>. Việc này cực kỳ quan trọng để camera không tiếp tục quét trong khi App
-            đang bận tải dữ liệu từ Server.</li>
+            đang bận tải dữ liệu từ Server.
+          </li>
           <li><strong>Truy vấn & Phản hồi:</strong> App gửi chuỗi QR tới <code>PoiController</code>. Server thực hiện
             chuẩn hóa (Uppercase) trước khi tìm trong DB. Sau khi nhận được thông tin quán, App gọi
-            <code>NarrationService</code> để phát ngay thuyết minh ngôn ngữ khách đang chọn.</li>
+            <code>NarrationService</code> để phát ngay thuyết minh ngôn ngữ khách đang chọn.
+          </li>
           <li><strong>Ghi log thông minh:</strong> Sequence cho thấy log <code>QR_SCAN</code> được gửi đi ngay sau khi
             phát âm thanh. Nếu mạng lỗi, log này sẽ được đưa vào <code>OutboxService</code> để gửi lại sau, đảm bảo
             không bỏ sót lượt check-in nào của khách.</li>
@@ -2698,7 +2713,8 @@
           <li><strong>Làm giàu ngữ cảnh (Context Enrichment):</strong> Trước khi gửi câu hỏi của khách lên AI (Gemini),
             Server sẽ âm thầm đính kèm toàn bộ dữ liệu về thực đơn quán, vị trí (X/Y), và lộ trình các Tour vào
             <code>System Prompt</code>. Nhờ đó, AI biết rõ "Quán cơm tấm Thu Thảo nằm ở đâu" mà không cần được huấn
-            luyện lại.</li>
+            luyện lại.
+          </li>
           <li><strong>Bộ nhớ hội thoại (Session Memory):</strong> App gửi kèm 10 tin nhắn gần nhất trong mỗi yêu cầu.
             Điều này cho phép khách hỏi các câu nối tiếp như "Quán đó có món gì ngon?" sau khi đã hỏi về vị trí của một
             quán cụ thể.</li>
@@ -2790,7 +2806,8 @@
         <ul>
           <li><strong>Tính bền bỉ:</strong> Sơ đồ Sequence minh họa rõ nét cơ chế dự phòng (Alt/Loop). Khi
             <code>GeminiTranslation</code> báo lỗi, <code>ResilientTranslationService</code> sẽ bắt exception và chuyển
-            hướng yêu cầu sang <code>Ollama</code> ngay lập tức.</li>
+            hướng yêu cầu sang <code>Ollama</code> ngay lập tức.
+          </li>
           <li><strong>Tính trong suốt:</strong> Phía <code>NarrationService</code> chỉ cần gọi một hàm duy nhất và nhận
             về kết quả dịch. Toàn bộ sự phức tạp của việc thử sai (Retry/Fallback) được che giấu bên trong lớp Service
             dịch thuật.</li>
@@ -2877,7 +2894,8 @@
         <ul>
           <li><strong>Yêu cầu từ Admin:</strong> Khi Admin nhấn nút Generate, React 19 gửi yêu cầu tới
             <code>AudioController</code>. Server sẽ kiểm tra độ dài văn bản (tối đa 5000 ký tự) trước khi gọi tới các
-            nhà cung cấp Cloud.</li>
+            nhà cung cấp Cloud.
+          </li>
           <li><strong>Quy trình lưu trữ:</strong> Sau khi nhận dữ liệu âm thanh dạng bytes, Server thực hiện lưu vào ổ
             cứng với tên file được định danh bằng GUID kèm mã ngôn ngữ. Điều này đảm bảo không bao giờ có sự trùng lặp
             file giữa các quán ăn.</li>
@@ -3027,14 +3045,16 @@
           <li><strong>Xác thực đầu vào (Input Validation):</strong> Áp dụng bộ lọc Regex/độ dài trực tiếp tại Middleware
             để ngăn chặn các payload bất thường (ví dụ: username chứa ký tự đặc biệt).</li>
           <li><strong>Cấp phép tức thời (Instant Provisioning):</strong> Tài khoản mới được hệ thống tự động gán nhãn
-            <code>Role=Owner</code> và <code>IsActive=true</code>, rút ngắn vòng đời triển khai (Time-to-market).</li>
+            <code>Role=Owner</code> và <code>IsActive=true</code>, rút ngắn vòng đời triển khai (Time-to-market).
+          </li>
         </ol>
         <hr />
         <h4>🔄 Tương tác Hệ thống (Sequence Logic)</h4>
         <ul>
           <li><strong>Giải quyết xung đột (Conflict Resolution):</strong> API kiểm tra sự tồn tại của
             <code>Username</code> trong SQLite bằng lệnh COUNT. Nếu phát hiện vi phạm Unique Constraint, hệ thống lập
-            tức từ chối với HTTP 409 Conflict.</li>
+            tức từ chối với HTTP 409 Conflict.
+          </li>
           <li><strong>Chuyển đổi trạng thái (State Transition):</strong> Sau khi quá trình INSERT hoàn tất và trả về
             HTTP 201 Created, React Router điều hướng User về trang đăng nhập để thiết lập phiên JWT đầu tiên, đảm bảo
             quy trình bảo mật (Security Flow) không bị bypass.</li>
@@ -3183,7 +3203,8 @@
         <h4>🔄 Luồng tương tác Sequence — Forgot Password Flow</h4>
         <ul>
           <li><strong>Xác minh Role:</strong> Sơ đồ Sequence minh họa bước kiểm tra Role sau khi tìm thấy User. Nếu
-            <code>Role == Admin</code>, Server sẽ từ chối xử lý và trả về lỗi <code>400 Bad Request</code>.</li>
+            <code>Role == Admin</code>, Server sẽ từ chối xử lý và trả về lỗi <code>400 Bad Request</code>.
+          </li>
           <li><strong>Ghi đè mật khẩu:</strong> Sau khi vượt qua các bước kiểm tra, mật khẩu mới được Hash và cập nhật
             trực tiếp vào bản ghi của User trong SQLite.</li>
           <li><strong>Phản hồi người dùng:</strong> Sau khi thành công, React 19 sẽ điều hướng người dùng quay lại trang
@@ -3236,13 +3257,15 @@
         <h4>🔄 Luồng tương tác Sequence — Lock/Unlock Process</h4>
         <ul>
           <li><strong>Xác nhận hành động:</strong> Phía React hiển thị Dialog xác nhận trước khi gửi request
-            <code>PUT</code>. Việc này ngăn chặn các thao tác nhầm lẫn tai hại của Admin.</li>
+            <code>PUT</code>. Việc này ngăn chặn các thao tác nhầm lẫn tai hại của Admin.
+          </li>
           <li><strong>Kiểm tra nghiệp vụ:</strong> <code>AuthController</code> thực hiện truy vấn để lấy Username của
             tài khoản đang bị tác động. Nếu Username trùng với "admin", quy trình sẽ bị ngắt và trả lời lỗi về giao
             diện.</li>
           <li><strong>Đồng bộ giao diện:</strong> Sau khi Server trả về <code>200 OK</code>, React sử dụng cơ chế
             <code>Invalidate</code> của TanStack Query để nạp lại danh sách, giúp Admin thấy ngay trạng thái "Đã khóa"
-            mà không cần tải lại trang.</li>
+            mà không cần tải lại trang.
+          </li>
         </ul>
       </div>
       <div class="dw">
@@ -3319,7 +3342,8 @@
         </p>
         <ol>
           <li><strong>Tự động hóa cấu trúc (Auto-Migration):</strong> Trước khi nạp dữ liệu, hệ thống tự động chạy lệnh
-            <code>MigrateAsync</code> để đảm bảo cấu trúc bảng trong SQLite khớp hoàn toàn với mã nguồn C#.</li>
+            <code>MigrateAsync</code> để đảm bảo cấu trúc bảng trong SQLite khớp hoàn toàn với mã nguồn C#.
+          </li>
           <li><strong>Cơ chế Idempotency (Chống trùng lặp):</strong> Hệ thống kiểm tra sự tồn tại của tài khoản Admin
             chính (username='admin'). Nếu đã có, nó sẽ bỏ qua bước tạo User để tránh ghi đè mật khẩu hiện tại, bảo vệ
             quyền truy cập của quản trị viên.</li>
@@ -3463,7 +3487,8 @@
         <ul>
           <li><strong>Lưu trữ cục bộ:</strong> Khi khách đổi ngôn ngữ hoặc bán kính GPS, App ghi ngay vào
             <code>Preferences</code> của điện thoại. Sơ đồ Sequence cho thấy việc cập nhật UI diễn ra tức thì thông qua
-            cơ chế Data Binding.</li>
+            cơ chế Data Binding.
+          </li>
           <li><strong>Chuỗi gọi API:</strong> Khi nhấn Sync, App thực hiện một chuỗi các yêu cầu tuần tự: Đầu tiên là
             tải danh sách POI, sau đó đến danh sách Tour. Mỗi bước đều đi kèm với lệnh <code>SaveToDbAsync</code> để ghi
             vĩnh viễn vào SQLite.</li>
@@ -3546,7 +3571,8 @@
         <p>Chế độ Tour dẫn dắt khách theo một lộ trình có chủ đích:</p>
         <ol>
           <li><strong>Tuân thủ lộ trình:</strong> Theo dõi vị trí khách và gợi ý điểm dừng tiếp theo dựa trên
-            <code>StopOrder</code>.</li>
+            <code>StopOrder</code>.
+          </li>
           <li><strong>Tự động nhận diện:</strong> Thuyết minh tự động phát khi khách vào vùng Geofence của điểm dừng
             hiện tại.</li>
         </ol>
@@ -3638,7 +3664,8 @@
             dừng lỗi, toàn bộ Tour sẽ không được tạo, tránh rác dữ liệu.</li>
           <li><strong>Thông báo đa nền tảng:</strong> Sau khi DB xác nhận, Server sử dụng SignalR để quảng bá sự kiện
             <code>TourCreated</code>. Sequence cho thấy App React cũng nhận được tin này để cập nhật ngay danh sách mà
-            không cần F5 trình duyệt.</li>
+            không cần F5 trình duyệt.
+          </li>
         </ul>
       </div>
 
@@ -3790,10 +3817,12 @@
         <ul>
           <li><strong>Xác thực đa tầng:</strong> Phía React thực hiện kiểm tra sơ bộ kích thước file (50MB). Khi gửi tới
             <code>AudioController</code>, Server tiếp tục kiểm tra quyền Admin/Owner và định dạng file thực tế
-            (Content-Type) để đảm bảo an toàn hệ thống.</li>
+            (Content-Type) để đảm bảo an toàn hệ thống.
+          </li>
           <li><strong>Lưu trữ vật lý:</strong> Server ghi file trực tiếp vào thư mục <code>wwwroot/audio</code>.
             Sequence thể hiện việc trả về một URL tuyệt đối, giúp giao diện Web có thể nạp ngay file đó vào thẻ
-            <code>&lt;audio&gt;</code> để Admin nghe kiểm tra ngay lập tức.</li>
+            <code>&lt;audio&gt;</code> để Admin nghe kiểm tra ngay lập tức.
+          </li>
         </ul>
       </div>
       <div class="dw">
@@ -3927,12 +3956,14 @@
         <ul>
           <li><strong>Trợ lý AI:</strong> Sơ đồ Sequence minh họa quy trình "Dịch trước - Sửa sau". App gọi
             <code>TranslationController</code> để lấy văn bản dịch từ Gemini, sau đó điền vào Form để Owner kiểm soát
-            chất lượng cuối cùng.</li>
+            chất lượng cuối cùng.
+          </li>
           <li><strong>Logic UPSERT:</strong> Khi nhấn Lưu, Server thực hiện kiểm tra sự tồn tại (Exist Check). Nếu đã có
             ngôn ngữ đó, nó sẽ <code>UPDATE</code>; nếu chưa, nó sẽ <code>INSERT</code> bản ghi mới vào SQLite.</li>
           <li><strong>Đồng bộ thời gian thực:</strong> Ngay khi DB xác nhận lưu, Server bắn tín hiệu
             <code>PoiUpdated</code> qua SignalR. Các App khách đang mở bản đồ sẽ nhận được thông báo để cập nhật ngôn
-            ngữ hiển thị ngay lập tức.</li>
+            ngữ hiển thị ngay lập tức.
+          </li>
         </ul>
       </div>
       <div class="dw">
@@ -4006,10 +4037,12 @@
             nhớ (Include Translations) để giảm số lượng câu lệnh SQL.</li>
           <li><strong>Vòng lặp AI:</strong> Sequence minh họa vòng lặp lồng nhau (Nested Loop) cực kỳ quan trọng: Duyệt
             từng POI và duyệt từng ngôn ngữ. Mỗi lượt lặp lại là một cuộc gọi tới
-            <code>ResilientTranslationService</code>.</li>
+            <code>ResilientTranslationService</code>.
+          </li>
           <li><strong>Cam kết dữ liệu:</strong> Sau khi hoàn tất hàng trăm bản dịch AI, Server mới thực hiện
             <code>SaveChangesAsync</code> để cập nhật Database một lần duy nhất, tối ưu hóa hiệu suất SQLite và đảm bảo
-            tính nhất quán của phiên làm việc.</li>
+            tính nhất quán của phiên làm việc.
+          </li>
         </ul>
       </div>
       <div class="dw">
@@ -4153,7 +4186,8 @@
         <ol>
           <li><strong>Khởi động an toàn:</strong> Từ trạng thái <code>Idle</code>, hệ thống buộc phải đi qua bước
             <code>RequestingPermission</code>. Chỉ khi du khách cho phép truy cập vị trí "Luôn luôn", dịch vụ mới chuyển
-            sang trạng thái <code>Starting</code>.</li>
+            sang trạng thái <code>Starting</code>.
+          </li>
           <li><strong>Duy trì kết nối (Tracking State):</strong> Đây là trạng thái hoạt động chính. Mỗi khi có tọa độ
             mới, hệ thống sẽ thực hiện một chu kỳ: Lấy vị trí -> Kiểm tra Geofence -> Lưu Buffer -> Gửi Batch. Nếu tín
             hiệu GPS bị mất quá 30 giây, App tự động chuyển sang trạng thái <code>Lost</code> để cảnh báo người dùng.
@@ -4163,7 +4197,8 @@
             Geofence ngay cả khi đang ngồi trong văn phòng.</li>
           <li><strong>Dừng dịch vụ (Stopped):</strong> Khi khách thoát App hoặc tắt tính năng theo dõi,
             <code>GpsForegroundService</code> sẽ được giải phóng hoàn toàn để trả lại tài nguyên và tiết kiệm pin cho
-            điện thoại.</li>
+            điện thoại.
+          </li>
         </ol>
       </div>
     </div>
@@ -4202,13 +4237,15 @@
         <ol>
           <li><strong>Giai đoạn tiếp cận (Approaching):</strong> Khi khách di chuyển lại gần, trạng thái chuyển từ
             <code>Outside</code> sang <code>Approaching</code>. Lúc này, hệ thống bắt đầu tăng tần suất kiểm tra và đếm
-            số lần "va chạm" (Hits).</li>
+            số lần "va chạm" (Hits).
+          </li>
           <li><strong>Xác nhận kích hoạt (Triggered):</strong> Khi đạt đủ 2 lần va chạm liên tiếp (Double-Hit) và không
             nằm trong thời gian nghỉ, POI chuyển sang trạng thái <code>Triggered</code>. Đây là lúc lệnh phát thuyết
             minh được gửi tới <code>NarrationService</code>.</li>
           <li><strong>Thời gian nghỉ (Cooldown):</strong> Sau khi đã phát âm thanh, POI rơi vào trạng thái
             <code>Cooldown</code> (mặc định 60 giây). Trong thời gian này, mọi tín hiệu GPS đi vào vùng Geofence đều bị
-            bỏ qua để tránh việc thuyết minh lặp đi lặp lại gây khó chịu.</li>
+            bỏ qua để tránh việc thuyết minh lặp đi lặp lại gây khó chịu.
+          </li>
           <li><strong>Vùng đệm thoát (Hysteresis):</strong> Trạng thái chỉ quay về <code>Outside</code> khi khách đã đi
             xa khỏi quán hơn 1.2 lần bán kính gốc, đảm bảo tính ổn định tại vùng ranh giới.</li>
         </ol>
@@ -4303,7 +4340,8 @@
             kiệm tài nguyên.</li>
           <li><strong>Xử lý thông minh (Processing):</strong> Khi có POI mới vào hàng đợi, hệ thống chuyển sang
             <code>Processing</code>. Tại đây, nó quyết định sẽ phát file MP3 (<code>PlayingAudio</code>) hay gọi AI đọc
-            văn bản (<code>PlayingTTS</code>).</li>
+            văn bản (<code>PlayingTTS</code>).
+          </li>
           <li><strong>Cơ chế ngắt quãng (Interrupted):</strong> Nếu có một thông báo quan trọng hơn xuất hiện, trạng
             thái hiện tại sẽ bị chuyển sang <code>Interrupted</code>. Hệ thống dừng âm thanh cũ ngay lập tức để ưu tiên
             phát nội dung mới.</li>
@@ -4353,7 +4391,8 @@
             thưởng thức món ăn.</li>
           <li><strong>Hoàn thành hoặc Hủy bỏ:</strong> Khi đi hết toàn bộ danh sách Stop, Tour chuyển sang
             <code>Completed</code>. Nếu khách chủ động nhấn "Dừng Tour", hệ thống sẽ xóa sạch lộ trình hiện tại và quay
-            về trạng thái <code>NotStarted</code>.</li>
+            về trạng thái <code>NotStarted</code>.
+          </li>
         </ol>
       </div>
     </div>
@@ -4488,7 +4527,8 @@
         <ol>
           <li><strong>Tách biệt nội dung đa ngôn ngữ:</strong> Để hỗ trợ 7 ngôn ngữ mà không làm phình to bảng
             <code>Poi</code>, hệ thống sử dụng bảng <code>PoiTranslation</code>. Điều này cho phép mở rộng thêm bất kỳ
-            ngôn ngữ nào trong tương lai mà không cần thay đổi cấu trúc bảng chính.</li>
+            ngôn ngữ nào trong tương lai mà không cần thay đổi cấu trúc bảng chính.
+          </li>
           <li><strong>Liên kết Tour linh hoạt:</strong> Mối quan hệ giữa Tour và POI là "Nhiều - Nhiều" thông qua bảng
             trung gian <code>TourStop</code>. Thiết kế này cho phép một quán ăn xuất hiện trong nhiều tour khác nhau (ví
             dụ: Tour ẩm thực đêm, Tour món Việt) với các ghi chú (Note) và thứ tự dừng khác nhau.</li>
@@ -4503,7 +4543,8 @@
           </li>
           <li><strong>Quản lý phiên (Session Tracking):</strong> Mọi bản ghi log đều gắn liền với một
             <code>SessionId</code> duy nhất, giúp Admin có thể phân tích hành trình của một khách hàng cụ thể từ lúc bắt
-            đầu đến lúc kết thúc chuyến tham quan.</li>
+            đầu đến lúc kết thúc chuyến tham quan.
+          </li>
         </ol>
       </div>
     </div>
@@ -4602,7 +4643,8 @@
             tiếp theo nếu nhà cung cấp trước đó gặp sự cố, đảm bảo tính sẵn sàng cao nhất cho tính năng dịch thuật.</li>
           <li><strong>Quản lý Database hiệu quả:</strong> <code>ApplicationDbContext</code> được tối ưu hóa với các
             <code>Global Query Filters</code>, tự động loại bỏ các POI/Tour đã bị ẩn (IsActive=false) khỏi mọi kết quả
-            tìm kiếm mà không cần viết thêm điều kiện <code>Where</code> ở khắp nơi.</li>
+            tìm kiếm mà không cần viết thêm điều kiện <code>Where</code> ở khắp nơi.
+          </li>
         </ol>
       </div>
 
@@ -4868,36 +4910,51 @@
           <div class="dt">Sequence Diagram — Online Device Tracking</div>
           <div class="mermaid">
             sequenceDiagram
-                participant App as 📱 Tourist App (Mobile)
-                box "🔧 Backend Service Layer"
-                    participant Hub as ⚡ SignalR Gateway (Hub)
-                    participant Tracker as 📊 Online Tracker (Service)
-                end
-                participant Admin as 💻 Admin Dashboard (Web)
+            participant App as 📱 Tourist App (Mobile)
+            participant Admin as 💻 Admin Dashboard (Web)
+            box "🔧 Backend Service Layer"
+            participant Hub as ⚡ SignalR Gateway (Hub)
+            participant Tracker as 📊 ConnectionTracker
+            participant API as 🌐 Admin API (/summary)
+            end
 
-                Note over App, Admin: [Giai đoạn 1] Quy trình kết nối (OnConnected)
-                App->>Hub: Gửi yêu cầu kết nối WSS (WebSocket)
-                Hub->>Tracker: AddConnection(connectionId)
-                Tracker-->>Hub: Trả về số lượng Online mới
-                Hub->>Admin: Broadcast ("UpdateOnlineCount", count)
-                Admin->>Admin: Re-render UI (Zustand State)
+            Note over App, Admin: [Giai đoạn 1] Kết nối Real-time (SignalR)
+            App->>Hub: Kết nối WSS (Hub Connection)
+            Hub->>Tracker: AddConnection(ID)
+            Admin->>Hub: Kết nối WSS (Hub Connection)
+            Hub->>Tracker: AddConnection(ID)
 
-                Note over App, Admin: [Giai đoạn 2] Quy trình ngắt kết nối (OnDisconnected)
-                App-xHub: Đứt kết nối (Tắt App / Mất mạng)
-                Hub->>Tracker: RemoveConnection(connectionId)
-                Tracker-->>Hub: Trả về số lượng Online mới
-                Hub->>Admin: Broadcast ("UpdateOnlineCount", count)
-                Admin->>Admin: Cập nhật chỉ số trên Dashboard
+            Note over Admin, API: [Giai đoạn 2] Hiển thị chỉ số (Polling)
+            loop Mỗi 10 giây (TanStack Query)
+                Admin->>API: GET /api/admin/summary
+                API->>Tracker: GetOnlineCount()
+                Tracker-->>API: Trả về Số lượng thực tế (Actual Count)
+                API-->>Admin: JSON { activeUsers: N }
+                Admin->>Admin: Cập nhật UI Dashboard
+            end
+
+            Note over App, Hub: [Giai đoạn 3] Ngắt kết nối
+            App-xHub: Đóng App / Mất mạng
+            Hub->>Tracker: RemoveConnection(ID)
           </div>
         </div>
 
         <div class="logic-box">
           <h4>🧠 Giải Thích Logic — Theo Dõi Thiết Bị Trực Tuyến</h4>
-          <p>Quy trình này sử dụng công nghệ SignalR (WebSockets) để duy trì trạng thái kết nối giữa điện thoại và máy chủ:</p>
+          <p>Quy trình này sử dụng công nghệ SignalR (WebSockets) để duy trì trạng thái kết nối giữa điện thoại và máy
+            chủ:</p>
           <ol>
-            <li><strong>Kết nối (Handshake):</strong> Khi người dùng mở App, một đường truyền thời gian thực (WSS) được thiết lập. <code>VinhKhanhHub</code> nhận diện ID thiết bị và yêu cầu <code>ConnectionTracker</code> lưu trữ vào bộ nhớ RAM.</li>
-            <li><strong>Đồng bộ (Syncing):</strong> Ngay khi danh sách Online thay đổi, Server sẽ phát một tín hiệu (Broadcast) tới tất cả các máy tính của Admin đang mở Dashboard. Con số "Thiết bị trực tuyến" sẽ nhảy lên ngay lập tức mà không cần tải lại trang.</li>
-            <li><strong>Ngắt kết nối (Fault Tolerance):</strong> Nếu người dùng đi vào vùng mất mạng hoặc tắt nguồn đột ngột, SignalR Hub sẽ tự động phát hiện sự cố sau một khoảng thời gian chờ (Timeout) và thực hiện quy trình ngắt kết nối để đảm bảo con số hiển thị luôn chính xác nhất.</li>
+            <li><strong>Kết nối (Handshake):</strong> Khi người dùng mở App, một đường truyền thời gian thực (WSS) được
+              thiết lập. <code>VinhKhanhHub</code> nhận diện <code>Context.ConnectionId</code> và yêu cầu
+              <code>ConnectionTracker</code> lưu trữ vào <code>ConcurrentDictionary</code> trong RAM.
+            </li>
+            <li><strong>Chỉ số thực tế (Real-time Accuracy):</strong> Dashboard hiển thị chính xác số lượng các kết nối SignalR hiện đang duy trì với máy chủ, không thông qua các cơ chế ảo hóa con số.</li>
+            <li><strong>Cơ chế cập nhật (Pull vs Push):</strong> Thay vì Hub chủ động Broadcast (gây tốn băng thông),
+              Admin Dashboard sử dụng TanStack Query để kéo (Pull) dữ liệu từ endpoint <code>/api/admin/summary</code>.
+              Điều này giúp Dashboard luôn đồng bộ với các thông số thống kê khác (POI, Tours, Visits).</li>
+            <li><strong>Tự động giải phóng (Cleanup):</strong> SignalR tự động phát hiện ngắt kết nối (timeout/closure)
+              và gọi <code>OnDisconnectedAsync</code> để Tracker loại bỏ connectionId, đảm bảo bộ nhớ RAM luôn được tối
+              ưu.</li>
           </ol>
         </div>
       </div>
@@ -5065,7 +5122,8 @@
           <li><strong>Ràng buộc toàn vẹn (Referential Integrity):</strong> Triển khai quy tắc
             <code>ON DELETE CASCADE</code> cho các thực thể phụ thuộc (như <code>PoiTranslation</code>,
             <code>PoiVisitLog</code>). Khi xóa một POI gốc, hệ quản trị cơ sở dữ liệu (RDBMS) sẽ tự động dọn dẹp toàn bộ
-            dữ liệu vệ tinh, ngăn chặn tình trạng rác dữ liệu (Orphaned records).</li>
+            dữ liệu vệ tinh, ngăn chặn tình trạng rác dữ liệu (Orphaned records).
+          </li>
           <li><strong>Tối ưu hóa truy vấn (Index Strategies):</strong> Các trường dữ liệu đóng vai trò khóa tìm kiếm
             (như <code>QrCode</code>) hoặc phục vụ thống kê (<code>Latitude/Longitude</code>, <code>RecordedAt</code>)
             đều được đánh chỉ mục (B-Tree Indexing). Kiến trúc này giúp các thao tác tính toán bản đồ nhiệt (Heatmap)
@@ -6252,7 +6310,8 @@
             <li><strong>Tối ưu Băng thông:</strong> Gom nhóm (Batching) các điểm Movement để tiết kiệm chi phí HTTP
               Connection.</li>
             <li><strong>Bộ đệm (Caching):</strong> Kiểm soát vòng đời Cache qua biến trạng thái
-              <code>ContentVersion</code>.</li>
+              <code>ContentVersion</code>.
+            </li>
             <li><strong>Triển khai (Deployment):</strong> Hệ thống đóng gói hoàn toàn qua Docker Compose, hỗ trợ
               scale-out ngang dễ dàng.</li>
           </ul>

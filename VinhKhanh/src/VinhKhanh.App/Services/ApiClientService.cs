@@ -120,11 +120,7 @@ public sealed class ApiClientService
 		using var http = CreateClient();
 		var res = await http.PostAsJsonAsync("api/ai/chat", req, ct);
 		res.EnsureSuccessStatusCode();
-		var audio = await res.Content.ReadAsByteArrayAsync();
-		if (audio.Length < 2000)
-		{
-			return null;
-		}
+		
 		var json = await res.Content.ReadAsStringAsync(ct);
 		using var doc = JsonDocument.Parse(json);
 		return doc.RootElement.TryGetProperty("reply", out var r) ? r.GetString() : null;

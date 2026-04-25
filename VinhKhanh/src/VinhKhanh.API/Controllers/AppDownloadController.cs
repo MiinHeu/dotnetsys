@@ -16,15 +16,20 @@ public class AppDownloadController : ControllerBase
     [HttpGet("download")]
     public IActionResult DownloadApk()
     {
-        // Đường dẫn tương đối từ máy tính của người dùng
-        string apkPath = @"C:\Users\nt\dotnetsys\VinhKhanh\src\VinhKhanh.App\bin\Release\net10.0-android\com.companyname.vinhkhanh.app-Signed.apk";
+        // Chạy linh hoạt trên cả local và production
+        string apkPath = Path.Combine(_env.ContentRootPath, "..", "VinhKhanh.App", "bin", "Release", "net10.0-android", "com.companyname.vinhkhanh.app-Signed.apk");
 
         if (!System.IO.File.Exists(apkPath))
         {
-            return NotFound("Không tìm thấy file APK. Vui lòng build bản Release trước.");
+            // Fallback cho môi trường production nếu file được copy vào wwwroot/downloads
+            apkPath = Path.Combine(_env.WebRootPath, "downloads", "VinhKhanh_v1.0.apk");
         }
 
-        var fileBytes = System.IO.File.ReadAllBytes(apkPath);
-        return File(fileBytes, "application/vnd.android.package-archive", "VinhKhanh_v1.0.apk");
+        if (!System.IO.File.Exists(apkPath))
+        {
+            return NotFound("Không tìm thấy file APK. Vui lòng build bản Release hoặc kiểm tra thư mục downloads.");
+        }
+
+        return PhysicalFile(apkPath, "application/vnd.android.package-archive", "VinhKhanh_v1.0.apk");
     }
 }
