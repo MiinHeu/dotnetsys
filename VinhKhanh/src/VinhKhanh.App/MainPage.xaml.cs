@@ -229,6 +229,13 @@ public partial class MainPage : ContentPage
 			StatusLabel.Text = string.Format(VinhKhanh.App.Resources.Strings.AppResources.NarrationStatusPlaying, poi.ResolveName(_vm.SelectedLanguage));
 			var heardSeconds = await _narration.PlayPoiAsync(poi, _vm.SelectedLanguage, _vm.ApiRootForAudio);
 			StatusLabel.Text = string.Format(VinhKhanh.App.Resources.Strings.AppResources.NarrationStatusFinished, heardSeconds, poi.ResolveName(_vm.SelectedLanguage));
+
+			// Ghi log lượt nghe thủ công
+			var visit = new VisitLogDto(poi.Id, MauiProgram.Services.GetRequiredService<SessionService>().SessionId, _vm.SelectedLanguage, "MANUAL", heardSeconds);
+			var api = MauiProgram.Services.GetRequiredService<ApiClientService>();
+			var outbox = MauiProgram.Services.GetRequiredService<IOutboxService>();
+			if (!await api.TryPostAnalyticsVisitAsync(visit))
+				await outbox.EnqueueVisitAsync(visit);
 		}
 		catch (Exception ex)
 		{
