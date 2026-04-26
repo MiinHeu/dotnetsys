@@ -4553,31 +4553,31 @@
         <div class="dt">Class Diagram — Backend Services</div>
         <div class="mermaid">
           classDiagram
-          class Poi { }
+          class Poi
           class ITranslationService {
-          <<interface>>
-          +Task~string~ TranslateAsync(string text, string from, string to)
+            &lt;&lt;interface&gt;&gt;
+            +Task~string~ TranslateAsync(string text, string from, string to)
           }
           class ResilientTranslationService {
-          +Task~string~ TranslateAsync(string text, string from, string to)
+            +Task~string~ TranslateAsync(string text, string from, string to)
           }
           class IAiService {
-          <<interface>>
-          +Task~string~ ChatAsync(string system, string user)
+            &lt;&lt;interface&gt;&gt;
+            +Task~string~ ChatAsync(string system, string user)
           }
           class GeminiAiService {
-          +Task~string~ ChatAsync(string system, string user)
+            +Task~string~ ChatAsync(string system, string user)
           }
           class ITtsService {
-          <<interface>>
-          +Task~byte[]~ SynthesizeAsync(string text, string lang)
+            &lt;&lt;interface&gt;&gt;
+            +Task~byte_array~ SynthesizeAsync(string text, string lang)
           }
           class VoiceRssTtsService {
-          +Task~byte[]~ SynthesizeAsync(string text, string lang)
+            +Task~byte_array~ SynthesizeAsync(string text, string lang)
           }
           class ApplicationDbContext {
-          +DbSet~Poi~ Pois
-          +DbSet~PoiTranslation~ PoiTranslations
+            +DbSet~Poi~ Pois
+            +DbSet~PoiTranslation~ PoiTranslations
           }
           ITranslationService <|.. ResilientTranslationService : implements
           IAiService <|.. GeminiAiService : implements
@@ -4612,34 +4612,34 @@
           <div class="dt">Class Diagram — MAUI Services</div>
           <div class="mermaid">
           classDiagram
-          class Poi { }
-          class Location { }
+          class Poi
+          class Location
           class IGpsService {
-          <<interface>>
-          +Task StartTrackingAsync()
-          +Task StopTrackingAsync()
+            &lt;&lt;interface&gt;&gt;
+            +Task StartTrackingAsync()
+            +Task StopTrackingAsync()
           }
           class GpsService {
-          +Task StartTrackingAsync()
-          +Task StopTrackingAsync()
+            +Task StartTrackingAsync()
+            +Task StopTrackingAsync()
           }
           class IGeofenceService {
-          <<interface>>
-          +Task~List~Poi~~ CheckTriggeredAsync(Location loc, List~Poi~ pois)
+            &lt;&lt;interface&gt;&gt;
+            +Task~List_Poi~ CheckTriggeredAsync(Location loc, List_Poi pois)
           }
           class GeofenceService {
-          +Task~List~Poi~~ CheckTriggeredAsync(Location loc, List~Poi~ pois)
+            +Task~List_Poi~ CheckTriggeredAsync(Location loc, List_Poi pois)
           }
           class INarrationService {
-          <<interface>>
-          +Task EnqueueAsync(Poi poi, string lang)
-          +bool IsPlaying
+            &lt;&lt;interface&gt;&gt;
+            +Task EnqueueAsync(Poi poi, string lang)
+            +bool IsPlaying
           }
           class NarrationService {
-          +Task EnqueueAsync(Poi poi, string lang)
+            +Task EnqueueAsync(Poi poi, string lang)
           }
           class AudioCacheService {
-          +Task PreFetchAsync(string url)
+            +Task PreFetchAsync(string url)
           }
           IGpsService <|.. GpsService : implements
           IGeofenceService <|.. GeofenceService : implements
