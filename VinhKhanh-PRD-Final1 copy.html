@@ -1997,23 +1997,25 @@
         <div class="mermaid">
           sequenceDiagram
           actor KH as Khách Tham Quan
-          participant App as Ứng dụng
-          participant GPS as Dịch vụ GPS nền
-          participant MH as Màn hình chính
-          participant Server as Máy chủ
+          participant App as Ứng dụng (MAUI)
+          participant GPS as GpsForegroundService
+          participant VM as MainViewModel
+          participant API as MovementController
 
           KH->>App: Mở ứng dụng
-          App->>GPS: Bắt đầu theo dõi vị trí
-          GPS->>GPS: Tạo thông báo thường trực (Android)
-          GPS->>GPS: Bắt đầu lấy tọa độ mỗi 3 giây
+          App->>GPS: StartForegroundService()
+          activate GPS
+          GPS->>GPS: CreateNotification()
+          GPS->>GPS: GetLocationAsync()
           loop Mỗi 3 giây
-          GPS->>MH: Gửi tọa độ mới
-          MH->>MH: Lưu điểm vào bộ đệm
+          GPS->>VM: WeakReferenceMessenger.Send(LocationUpdatedMessage)
+          VM->>VM: BufferLocation(Location)
           alt Đủ 25 điểm hoặc qua 30 giây
-          MH->>Server: Gửi loạt điểm vị trí lên máy chủ
-          Server-->>MH: Xác nhận đã lưu
+          VM->>API: HTTP POST UploadBatchAsync()
+          API-->>VM: 200 OK (Success)
           end
           end
+          deactivate GPS
         </div>
       </div>
     </div>
@@ -2085,30 +2087,28 @@
         <div class="mermaid">
           sequenceDiagram
           actor KH as Khách Tham Quan
-          participant MH as Màn hình chính
-          participant GF as Dịch vụ Geofence
-          participant CD as Bộ kiểm soát thời gian chờ
-          participant TM as Dịch vụ Thuyết Minh
-          participant Server as Máy chủ
-          participant Log as Hàng chờ offline
+          participant VM as MainViewModel
+          participant GF as GeofenceService
+          participant TM as NarrationService
+          participant API as PoiController
+          participant Log as OutboxService
 
-          MH->>GF: Kiểm tra điểm kích hoạt với tọa độ mới
-          GF->>GF: Lấy hệ số bán kính từ cài đặt người dùng
-          loop Kiểm tra từng điểm tham quan (ưu tiên cao trước)
-          GF->>GF: Tính khoảng cách đến điểm
-          GF->>GF: So sánh với bán kính hiệu lực
-          alt Đủ điều kiện kích hoạt (2 lần liên tiếp trong vùng)
-          GF-->>MH: Danh sách điểm được kích hoạt
+          VM->>GF: "CheckTriggeredAsync(Location, Pois)"
+          activate GF
+          GF->>GF: GetRadiusMultiplier()
+          loop "foreach poi in pois"
+          GF->>GF: "GeoMath.Haversine()"
+          alt "Hits >= Required && !Cooldown"
+          GF-->>VM: "return triggered (List[Poi])"
           end
           end
-          MH->>CD: Kiểm tra xem điểm có đang trong thời gian chờ không
-          alt Có thể kích hoạt
-          CD-->>MH: Cho phép
-          MH->>TM: Đưa vào hàng đợi phát thuyết minh
-          MH->>CD: Ghi nhận thời điểm kích hoạt
-          MH->>Server: Ghi nhận lượt tham quan (kích hoạt GPS)
-          alt Mạng bị lỗi
-          MH->>Log: Lưu vào hàng chờ, gửi lại khi có mạng
+          deactivate GF
+
+          loop "foreach poi in triggered"
+          VM->>TM: "EnqueueAsync(poi, language)"
+          VM->>API: "HTTP POST LogVisitAsync(PoiId)"
+          alt "Mạng bị lỗi (Exception)"
+          VM->>Log: "EnqueueLogAsync(PoiId, 'Trigger')"
           end
           end
         </div>
@@ -2186,49 +2186,49 @@
         <div class="mermaid">
           sequenceDiagram
           actor KH as Khách Tham Quan
-          participant GF as Dịch vụ Geofence
-          participant TM as Dịch vụ Thuyết Minh
-          participant DT as Dịch vụ Dịch Thuật
-          participant Gemini as Gemini AI (Google)
-          participant Ollama as Ollama AI (Máy chủ nội bộ)
-          participant LibreT as LibreTranslate
-          participant MsT as Microsoft Translator
-          participant Loa as Loa thiết bị
+          participant GF as GeofenceService
+          participant TM as NarrationService
+          participant DT as ResilientTranslationService
+          participant Gemini as GeminiTranslationService
+          participant Ollama as OllamaTranslationService
+          participant LibreT as LibreTranslateService
+          participant MsT as MicrosoftTranslatorService
+          participant Loa as TextToSpeech (Device)
 
-          GF->>TM: Yêu cầu phát thuyết minh (ngôn ngữ: Hàn)
-          TM->>TM: Kiểm tra tránh phát trùng (25 giây)
-          TM->>TM: Thêm vào hàng đợi theo ưu tiên
-          alt Điểm có file âm thanh tiếng Hàn
-          TM->>TM: Tải file âm thanh
-          TM->>Loa: Phát file âm thanh
+          GF->>TM: EnqueueAsync(poi, language)
+          activate TM
+          TM->>TM: ProcessQueueAsync()
+          TM->>TM: Check DuplicateWindow (25s)
+          alt Điểm có ResolveAudioUrl(lang)
+          TM->>TM: audioCache.GetAudioPathAsync()
+          TM->>Loa: audioManager.CreatePlayer().Play()
           else Không có file âm thanh
-          TM->>DT: Yêu cầu dịch nội dung sang tiếng Hàn
-          DT->>Gemini: Thử dịch bằng Gemini AI
-          alt Gemini hoạt động bình thường
-          Gemini-->>DT: Trả về bản dịch
-          else Gemini không phản hồi
-          DT->>Ollama: Thử dịch bằng AI nội bộ
-          alt Ollama hoạt động
-          Ollama-->>DT: Trả về bản dịch
-          else Ollama không phản hồi
-          DT->>LibreT: Thử LibreTranslate
-          alt LibreTranslate hoạt động
-          LibreT-->>DT: Trả về bản dịch
-          else LibreTranslate không phản hồi
-          DT->>MsT: Thử Microsoft Translator
-          alt Microsoft hoạt động
-          MsT-->>DT: Trả về bản dịch
-          else Tất cả đều lỗi
-          DT-->>TM: Không dịch được, dùng tiếng Việt gốc
+          TM->>DT: TranslateAsync(text, from, to)
+          activate DT
+          DT->>Gemini: TranslateAsync()
+          alt Gemini OK
+          Gemini-->>DT: return translatedText
+          else Gemini Fail
+          DT->>Ollama: TranslateAsync()
+          alt Ollama OK
+          Ollama-->>DT: return translatedText
+          else Ollama Fail
+          DT->>LibreT: TranslateAsync()
+          alt Libre OK
+          LibreT-->>DT: return translatedText
+          else Libre Fail
+          DT->>MsT: TranslateAsync()
+          MsT-->>DT: return translatedText
           end
           end
           end
+          DT-->>TM: return resultText
+          deactivate DT
+          TM->>Loa: TextToSpeech.Default.SpeakAsync(options)
           end
-          DT-->>TM: Nội dung đã dịch
-          TM->>Loa: Đọc nội dung bằng giọng đọc tổng hợp
-          end
-          Loa-->>KH: Phát thuyết minh
-          TM->>TM: Ghi nhận đã phát điểm này
+          Loa-->>KH: Phát âm thanh thuyết minh
+          TM->>TM: _recentlyPlayed[key] = DateTime.UtcNow
+          deactivate TM
         </div>
       </div>
     </div>
@@ -2255,24 +2255,11 @@
           K -->|Có| L["Thử gửi lại"]
           L --> M{"Gửi\nthành công?"}
           M -->|Có| N["Xóa khỏi hàng chờ"]
-          M -->|Không| O["Giữ lại, thử lại sau"]
-          K -->|Không| P(["Sẵn sàng"])
-          N --> P
+          M -->|Không| O["Tăng retry counter & giữ lại"]
+          N --> P([Kết thúc đồng bộ])
           O --> P
           E --> P
         </div>
-      </div>
-      <div class="logic-box">
-        <h4>🧠 Phân Tích Logic — Cơ Chế Đồng Bộ & Kiến Trúc Offline-First</h4>
-        <p>Hệ thống đảm bảo tính liên tục của trải nghiệm người dùng (High Availability) bất chấp trạng thái mạng vật
-          lý:</p>
-        <ol>
-          <li><strong>Mô hình lưu trữ cục bộ (Local Storage Model):</strong> Mọi siêu dữ liệu (Metadata) về POI và lộ
-            trình (Tour) được caching tại <code>LocalDbService</code> (SQLite). Application Runtime luôn truy xuất từ
-            kho lưu trữ này (Local-first read) nhằm triệt tiêu độ trễ mạng (Network latency).</li>
-          <li><strong>Outbox Pattern:</strong> Các luồng dữ liệu phát sinh từ người dùng (Telemetry/Visit Logs) trong
-            trạng thái ngoại tuyến được ghi nhận vào bảng Outbox cục bộ.</li>
-        </ol>
         <hr />
         <h4>🔄 Tương tác Hệ thống (Sequence Logic)</h4>
         <ul>
@@ -2293,30 +2280,30 @@
         <div class="dt">Sequence Diagram — Offline Sync</div>
         <div class="mermaid">
           sequenceDiagram
-          actor KH as Khách Tham Quan
-          participant App as Ứng dụng
-          participant Cache as Bộ nhớ cục bộ (SQLite)
-          participant Server as Máy chủ API
-          participant HangCho as Hàng chờ offline
+          actor KH as "Khách Tham Quan"
+          participant App as "Ứng dụng (MAUI)"
+          participant Cache as "LocalDbService (SQLite)"
+          participant Server as "PoiController (API)"
+          participant HangCho as "OutboxService"
 
-          App->>Cache: Tải danh sách điểm tham quan từ bộ nhớ máy
-          Cache-->>App: Danh sách điểm đã lưu trước đó
-          App->>App: Kiểm tra kết nối mạng
+          App->>Cache: "GetPoisAsync()"
+          Cache-->>App: "List[Poi]"
+          App->>App: "Connectivity.NetworkAccess == Internet"
           alt Có kết nối mạng
-          App->>Server: Tải danh sách điểm mới nhất
-          Server-->>App: Danh sách điểm cập nhật
-          App->>Cache: Lưu dữ liệu mới vào bộ nhớ máy
-          App->>HangCho: Gửi các log còn tồn đọng lên máy chủ
-          loop Từng log chưa gửi
-          HangCho->>Server: Gửi lại log
-          alt Gửi thành công
-          HangCho->>HangCho: Xóa khỏi hàng chờ
-          else Gửi thất bại
-          HangCho->>HangCho: Giữ lại, thử lại sau
+          App->>Server: "HTTP GET GetAll(lang)"
+          Server-->>App: "JSON List[Poi]"
+          App->>Cache: "SavePoisAsync(pois)"
+          App->>HangCho: "FlushAsync()"
+          loop "foreach log in outbox"
+          HangCho->>Server: "HTTP POST /api/analytics/log"
+          alt Success
+          HangCho->>HangCho: "DeleteLogAsync(id)"
+          else Fail
+          HangCho->>HangCho: "IncrementRetryCount(id)"
           end
           end
           else Không có mạng
-          App-->>KH: Dùng dữ liệu đã lưu sẵn
+          App-->>KH: "Hiển thị dữ liệu offline"
           end
         </div>
       </div>
@@ -2380,21 +2367,21 @@
         <div class="mermaid">
           sequenceDiagram
           actor KH as Khách Tham Quan
-          participant BanDo as Màn hình Bản đồ
-          participant Cache as Bộ nhớ cục bộ
-          participant GPS as Dịch vụ GPS
+          participant BanDo as "Màn hình Bản đồ (MAUI)"
+          participant Cache as "Bộ nhớ cục bộ (SQLite)"
+          participant GPS as "Dịch vụ GPS (Android)"
 
           KH->>BanDo: Mở màn hình bản đồ
           BanDo->>Cache: Tải danh sách điểm tham quan
-          Cache-->>BanDo: Danh sách điểm với tọa độ
+          Cache-->>BanDo: "List[Poi] với tọa độ"
           BanDo->>BanDo: Vẽ các điểm tham quan lên bản đồ
-          BanDo->>BanDo: Vẽ vùng phát hiện (vòng tròn) quanh mỗi điểm
+          BanDo->>BanDo: Vẽ vùng phát hiện (vòng tròn)
           BanDo->>GPS: Đăng ký nhận cập nhật vị trí
           GPS-->>BanDo: Vị trí hiện tại của khách
-          BanDo->>BanDo: Cập nhật vị trí khách trên bản đồ
-          BanDo-->>KH: Hiển thị bản đồ với điểm tham quan và vị trí hiện tại
+          BanDo->>BanDo: Cập nhật vị trí khách
+          BanDo-->>KH: Hiển thị bản đồ tương tác
           KH->>BanDo: Chạm vào một điểm tham quan
-          BanDo->>Cache: Lấy thông tin chi tiết điểm đó
+          BanDo->>Cache: Lấy thông tin chi tiết
           Cache-->>BanDo: Thông tin điểm tham quan
           BanDo-->>KH: Hiển thị popup thông tin quán
           KH->>BanDo: Chạm vào popup để xem chi tiết
@@ -2479,22 +2466,24 @@
         <div class="dt">Sequence Diagram — POI CRUD (Owner)</div>
         <div class="mermaid">
           sequenceDiagram
-          actor OW as Chủ Quán
-          participant Web as Trang Web CMS
-          participant Server as Máy chủ API
-          participant DB as Cơ sở dữ liệu
-          participant RT as Thông báo thời gian thực
+          actor OW as "Chủ Quán (Owner)"
+          participant Web as "Web Admin (React)"
+          participant API as PoiController
+          participant DB as ApplicationDbContext
+          participant Hub as VinhKhanhHub
 
-          OW->>Web: Điền thông tin quán, nhấn Lưu
-          Web->>Server: Gửi thông tin quán mới (kèm token đăng nhập)
-          Server->>Server: Kiểm tra quyền (Admin hoặc Chủ quán)
-          Server->>Server: Tự động tạo mã QR cho quán
-          Server->>DB: Lưu thông tin quán vào cơ sở dữ liệu
-          DB-->>Server: Xác nhận đã lưu (kèm ID quán)
-          Server->>RT: Phát thông báo "Quán mới được thêm" đến tất cả thiết bị
-          RT-->>Web: Cập nhật danh sách quán ngay lập tức
-          Server-->>Web: Thành công - trả về thông tin quán vừa tạo
-          Web-->>OW: Thông báo "Tạo quán thành công"
+          OW->>Web: Submit Form (Save)
+          Web->>API: "HTTP POST Create(poi)"
+          activate API
+          API->>API: AuthClaims.TryGetUserId()
+          API->>API: "NormalizeQr(poi.QrCode)"
+          API->>DB: db.Pois.Add(poi)
+          API->>DB: SaveChangesAsync()
+          DB-->>API: "Created (Id: 123)"
+          API->>Hub: hub.Clients.All.SendAsync("PoiCreated", poi)
+          API-->>Web: "201 Created (poi)"
+          deactivate API
+          Web-->>OW: Show Success Toast
         </div>
       </div>
     </div>
@@ -2550,24 +2539,31 @@
         <div class="mermaid">
           sequenceDiagram
           actor ADM as Admin
-          participant Web as Trang Quản Trị
-          participant Server as Máy chủ API
-          participant DB as Cơ sở dữ liệu
+          participant Web as "Dashboard (React)"
+          participant AdminAPI as AdminController
+          participant AnalyticsAPI as AnalyticsController
+          participant DB as ApplicationDbContext
 
           ADM->>Web: Mở trang Thống kê
-          Web->>Server: Lấy tổng quan hệ thống (yêu cầu quyền Admin)
-          Server->>DB: Đếm tổng số quán, tour, người dùng, lượt nghe
-          DB-->>Server: Các con số tổng hợp
-          Server-->>Web: Dữ liệu tổng quan
-          Web->>Server: Lấy top 20 quán được nghe nhiều nhất (7 ngày qua)
-          Server->>DB: Tổng hợp lượt nghe và thời gian nghe trung bình theo quán
-          DB-->>Server: Danh sách top quán
-          Server-->>Web: Danh sách top quán kèm tên
-          Web->>Server: Lấy dữ liệu bản đồ nhiệt (10 phút gần nhất)
-          Server->>DB: Lấy tọa độ di chuyển trong 10 phút qua
-          DB-->>Server: Danh sách điểm tọa độ
-          Server-->>Web: Dữ liệu bản đồ nhiệt
-          Web-->>ADM: Hiển thị biểu đồ cột và bản đồ nhiệt
+          Web->>AdminAPI: HTTP GET Summary()
+          activate AdminAPI
+          AdminAPI->>DB: db.Pois.CountAsync()
+          AdminAPI-->>Web: "JSON { totalPois, totalVisits, ... }"
+          deactivate AdminAPI
+          
+          Web->>AnalyticsAPI: "HTTP GET GetTop(days=7)"
+          activate AnalyticsAPI
+          AnalyticsAPI->>DB: "db.PoiVisitLogs.GroupBy(PoiId)"
+          AnalyticsAPI-->>Web: "JSON List[TopPoiDto]"
+          deactivate AnalyticsAPI
+
+          Web->>AnalyticsAPI: "HTTP GET GetHeatmap(hours=0.1)"
+          activate AnalyticsAPI
+          AnalyticsAPI->>DB: "db.MovementLogs.Where(RecordedAt >= since)"
+          AnalyticsAPI-->>Web: "JSON List[CoordinateDto]"
+          deactivate AnalyticsAPI
+          
+          Web-->>ADM: Render Charts & Heatmap
         </div>
       </div>
     </div>
@@ -2641,28 +2637,27 @@
         <div class="mermaid">
           sequenceDiagram
           actor KH as Khách Tham Quan
-          participant QR as Màn hình Quét QR
-          participant Camera as Camera
-          participant Server as Máy chủ API
-          participant TM as Dịch vụ Thuyết Minh
-          participant Log as Hệ thống Ghi Log
+          participant Page as "QrScanPage (MAUI)"
+          participant Camera as "ScannerView (ZXing)"
+          participant API as ApiClientService
+          participant TM as NarrationService
+          participant Outbox as OutboxService
 
-          KH->>QR: Mở màn hình quét QR
-          QR->>Camera: Bật camera, bắt đầu quét
-          Camera-->>QR: Phát hiện mã QR
-          QR->>QR: Kiểm tra thời gian chờ (3 giây)
-          QR->>QR: Khóa màn hình, dừng quét tạm thời
-          QR->>Server: Gửi mã QR để tìm thông tin quán
-          Server-->>QR: Trả về thông tin quán và bản dịch
-          QR->>TM: Yêu cầu phát thuyết minh theo ngôn ngữ đang dùng
-          TM-->>QR: Phát xong, trả về thời lượng nghe
-          QR->>Log: Ghi nhận lượt tham quan (quét QR)
-          alt Mạng bị lỗi
-          QR->>Log: Lưu vào hàng chờ, gửi lại khi có mạng
-          end
-          QR->>Log: Ghi nhận sự kiện quét QR vào lịch sử
-          QR-->>KH: Hiển thị "Đã phát xong: [tên quán]"
-          QR->>Camera: Mở lại chế độ quét
+          KH->>Page: OnAppearing()
+          Page->>Camera: "Scanner.IsDetecting = true"
+          Camera-->>Page: "OnBarcodesDetected()"
+          Page->>Page: "HandleQrValueAsync(raw)"
+          Page->>Camera: "Scanner.IsDetecting = false"
+          Page->>API: "GetPoiByQrCodeAsync(key)"
+          API-->>Page: "Poi record (Id: 123)"
+          Page->>Page: "Shell.Current.GoToAsync(PoiDetailPage)"
+          
+          Note over Page, TM: [Tại PoiDetailPage]
+          Page->>TM: "EnqueueAsync(poi, language)"
+          TM-->>KH: PlayPoiAsync()
+          
+          Page->>Outbox: "EnqueueLogAsync(PoiId, 'QR')"
+          Outbox-->>KH: Success
         </div>
       </div>
     </div>
@@ -2730,21 +2725,24 @@
         <div class="mermaid">
           sequenceDiagram
           actor KH as Khách Tham Quan
-          participant Chat as Màn hình Chat
-          participant Server as Máy chủ API
-          participant AI as Trợ lý AI (Gemini / Ollama)
-          participant DB as Cơ sở dữ liệu
+          participant Chat as "ChatPage (ViewModel)"
+          participant API as AiController
+          participant AI as GeminiAiService
+          participant DB as ApplicationDbContext
 
           KH->>Chat: Nhập câu hỏi và gửi
-          Chat->>Chat: Hiển thị "Bạn: [câu hỏi]"
-          Chat->>Server: Gửi câu hỏi kèm 10 tin nhắn gần nhất
-          Server->>DB: Tải thông tin tất cả quán và lộ trình tour
-          Server->>Server: Xây dựng ngữ cảnh (tên quán, vị trí, mô tả, tour)
-          Server->>AI: Gửi câu hỏi kèm ngữ cảnh phố ẩm thực
-          AI-->>Server: Trả lời dựa trên thông tin thực tế
-          Server-->>Chat: Câu trả lời từ AI
-          Chat->>Chat: Hiển thị "AI: [câu trả lời]"
-          Chat-->>KH: Xem câu trả lời
+          Chat->>Chat: "History.Add(UserMessage)"
+          Chat->>API: "HTTP POST Chat(ChatRequest)"
+          activate API
+          API->>DB: "db.Pois.Include(Translations).ToListAsync()"
+          API->>DB: "db.Tours.Include(Stops).ToListAsync()"
+          API->>API: BuildSystemPrompt(pois, tours)
+          API->>AI: ChatAsync(system, userMessage, history)
+          AI-->>API: "return reply (string)"
+          API-->>Chat: "200 OK (reply, language)"
+          deactivate API
+          Chat->>Chat: "History.Add(AiMessage)"
+          Chat-->>KH: Hiển thị câu trả lời trên giao diện
         </div>
       </div>
     </div>
@@ -2819,39 +2817,34 @@
         <div class="dt">Sequence Diagram — Translation Fallback Chain</div>
         <div class="mermaid">
           sequenceDiagram
-          participant TM as Dịch vụ Thuyết Minh
-          participant DT as Dịch vụ Dịch Thuật
-          participant Gemini as Gemini AI (Google)
-          participant Ollama as Ollama AI (Nội bộ)
-          participant LibreT as LibreTranslate
-          participant MsT as Microsoft Translator
+          participant TM as NarrationService
+          participant DT as ResilientTranslationService
+          participant Gemini as GeminiTranslationService
+          participant Ollama as OllamaTranslationService
+          participant LibreT as LibreTranslateService
+          participant MsT as MicrosoftTranslatorService
 
-          TM->>DT: Yêu cầu dịch "Cơm tấm..." từ tiếng Việt sang tiếng Nhật
-          DT->>Gemini: Thử dịch bằng Gemini AI
-          alt Gemini hoạt động bình thường
-          Gemini-->>DT: Bản dịch tiếng Nhật
-          DT-->>TM: Trả về bản dịch
-          else Gemini không phản hồi
-          DT->>Ollama: Thử dịch bằng AI nội bộ
-          alt Ollama hoạt động
-          Ollama-->>DT: Bản dịch tiếng Nhật
-          DT-->>TM: Trả về bản dịch
-          else Ollama không phản hồi
-          DT->>LibreT: Thử LibreTranslate
-          alt LibreTranslate hoạt động
-          LibreT-->>DT: Bản dịch tiếng Nhật
-          DT-->>TM: Trả về bản dịch
-          else LibreTranslate không phản hồi
-          DT->>MsT: Thử Microsoft Translator
-          alt Microsoft hoạt động
-          MsT-->>DT: Bản dịch tiếng Nhật
-          DT-->>TM: Trả về bản dịch
-          else Tất cả đều lỗi
-          DT-->>TM: Không dịch được, dùng tiếng Việt gốc
+          TM->>DT: "TranslateAsync(text, from, to)"
+          activate DT
+          DT->>Gemini: "TranslateAsync()"
+          alt "Gemini OK"
+          Gemini-->>DT: "return translatedText"
+          else "Gemini Fail"
+          DT->>Ollama: "TranslateAsync()"
+          alt "Ollama OK"
+          Ollama-->>DT: "return translatedText"
+          else "Ollama Fail"
+          DT->>LibreT: "TranslateAsync()"
+          alt "Libre OK"
+          LibreT-->>DT: "return translatedText"
+          else "Libre Fail"
+          DT->>MsT: "TranslateAsync()"
+          MsT-->>DT: "return translatedText"
           end
           end
           end
-          end
+          DT-->>TM: "return finalResult"
+          deactivate DT
         </div>
       </div>
     </div>
@@ -2907,24 +2900,22 @@
         <div class="dt">Sequence Diagram — Generate TTS Audio (Admin/Owner)</div>
         <div class="mermaid">
           sequenceDiagram
-          actor OW as Chủ Quán
-          participant Web as Trang Web CMS
-          participant Server as Máy chủ API
-          participant TTS as Dịch vụ Giọng Đọc (VoiceRSS/Azure)
-          participant FS as Kho lưu trữ file
+          actor OW as "Chủ Quán"
+          participant Web as "Web Admin (React)"
+          participant API as "AiController"
+          participant TTS as "AzureTtsService / VoiceRssService"
+          participant FS as "Physical File Storage"
 
-          OW->>Web: Nhấn "Tạo giọng đọc tự động" cho quán
-          Web->>Server: Gửi nội dung văn bản, ngôn ngữ, giọng đọc (kèm token đăng nhập)
-          Server->>Server: Kiểm tra quyền và độ dài văn bản (tối đa 5000 ký tự)
-          Server->>TTS: Yêu cầu tổng hợp giọng nói từ văn bản
-          alt VoiceRSS đã cấu hình
-          TTS-->>Server: Dữ liệu âm thanh (định dạng MP3)
-          else Azure TTS
-          TTS-->>Server: Dữ liệu âm thanh (định dạng MP3)
-          end
-          Server->>FS: Lưu file âm thanh với tên duy nhất
-          Server-->>Web: Trả về đường dẫn file âm thanh
-          Web-->>OW: Hiển thị trình phát âm thanh để nghe thử
+          OW->>Web: "Click 'Generate TTS'"
+          Web->>API: "HTTP POST Synthesize(TtsRequest)"
+          activate API
+          API->>API: "NormalizeLang() & DefaultVoice()"
+          API->>TTS: "SynthesizeAsync(text, lang, voice)"
+          TTS-->>API: "return byte[] (Audio Data)"
+          API->>FS: "File.WriteAllBytesAsync(guid.mp3)"
+          API-->>Web: "200 OK (File URL)"
+          deactivate API
+          Web-->>OW: "Render audio player for preview"
         </div>
       </div>
     </div>
@@ -2988,29 +2979,27 @@
         <div class="dt">Sequence Diagram — Đăng Nhập</div>
         <div class="mermaid">
           sequenceDiagram
-          actor U as Người dùng
-          participant Web as Trang Web
-          participant Server as Máy chủ API
-          participant DB as Cơ sở dữ liệu
+          actor U as "Người dùng (Admin/Owner)"
+          participant Web as "Web Dashboard (React)"
+          participant API as AuthController
+          participant DB as ApplicationDbContext
 
-          U->>Web: Nhập tên đăng nhập và mật khẩu, nhấn Đăng nhập
-          Web->>Server: Gửi thông tin đăng nhập
-          Server->>DB: Tìm tài khoản theo tên đăng nhập (chỉ tài khoản đang hoạt động)
-          DB-->>Server: Thông tin tài khoản
-          Server->>Server: Kiểm tra mật khẩu (so sánh với mật khẩu đã mã hóa)
-          alt Mật khẩu đúng
-          Server->>Server: Tạo token đăng nhập (hiệu lực 24 giờ, kèm vai trò)
-          Server-->>Web: Đăng nhập thành công, trả về token
-          Web->>Web: Lưu token vào bộ nhớ trình duyệt
-          alt Vai trò Admin
-          Web-->>U: Chuyển đến trang Quản trị
-          else Vai trò Chủ quán
-          Web-->>U: Chuyển đến trang Quản lý quán
+          U->>Web: Nhập Username/Password + Login
+          Web->>API: "HTTP POST Login(LoginRequest)"
+          activate API
+          API->>DB: db.AppUsers.FirstOrDefaultAsync(Username)
+          DB-->>API: "AppUser record (with PasswordHash)"
+          API->>API: "BCrypt.Verify(req.Password, user.PasswordHash)"
+          alt Password Valid
+          API->>API: GenerateJwtToken(user.Id, user.Role)
+          API-->>Web: "200 OK (Token, Role, Expires)"
+          Web->>Web: Store in localStorage
+          Web-->>U: Navigate to Dashboard based on Role
+          else Password Invalid / User Not Found
+          API-->>Web: 401 Unauthorized
+          Web-->>U: Show Error Message
           end
-          else Sai mật khẩu hoặc không tìm thấy
-          Server-->>Web: Từ chối đăng nhập
-          Web-->>U: Hiển thị thông báo lỗi
-          end
+          deactivate API
         </div>
       </div>
     </div>
@@ -3065,26 +3054,28 @@
         <div class="mermaid">
           sequenceDiagram
           actor U as Chủ Quán Mới
-          participant Web as Trang Web
-          participant Server as Máy chủ API
-          participant DB as Cơ sở dữ liệu
+          participant Web as Web Admin (React)
+          participant API as AuthController
+          participant DB as ApplicationDbContext
 
-          U->>Web: Điền tên đăng nhập và mật khẩu, nhấn Đăng ký
-          Web->>Server: Gửi thông tin đăng ký
-          Server->>Server: Kiểm tra định dạng (tên 3-50 ký tự, mật khẩu tối thiểu 6 ký tự)
-          Server->>DB: Kiểm tra tên đăng nhập đã tồn tại chưa
-          alt Tên đã được dùng
-          DB-->>Server: Đã tồn tại
-          Server-->>Web: Tên đăng nhập đã được sử dụng
-          Web-->>U: Hiển thị lỗi, yêu cầu chọn tên khác
-          else Tên còn trống
-          DB-->>Server: Chưa tồn tại
-          Server->>Server: Mã hóa mật khẩu an toàn
-          Server->>DB: Tạo tài khoản mới (vai trò: Chủ quán, trạng thái: Hoạt động)
-          DB-->>Server: Tài khoản đã tạo
-          Server-->>Web: Đăng ký thành công
-          Web-->>U: Thông báo thành công, chuyển đến trang đăng nhập
+          U->>Web: Nhập Username/Password + Submit
+          Web->>API: HTTP POST RegisterOwner(RegisterRequest)
+          activate API
+          API->>API: Trim & Validate Format
+          API->>DB: db.AppUsers.AnyAsync(Username)
+          alt Username exists
+          DB-->>API: true
+          API-->>Web: 409 Conflict
+          else Username unique
+          DB-->>API: false
+          API->>API: BCrypt.HashPassword(req.Password)
+          API->>API: GenerateNextDisplayId("Owner")
+          API->>DB: db.AppUsers.Add(user)
+          API->>DB: SaveChangesAsync()
+          API-->>Web: 200 OK (User Object)
+          Web-->>U: Show Success & Redirect to Login
           end
+          deactivate API
         </div>
       </div>
     </div>
@@ -3115,22 +3106,24 @@
         <div class="mermaid">
           sequenceDiagram
           actor ADM as Admin
-          participant Web as Trang Quản Trị
-          participant Server as Máy chủ API
-          participant DB as Cơ sở dữ liệu
+          participant Web as Web Admin (React)
+          participant API as AuthController
+          participant DB as ApplicationDbContext
 
-          ADM->>Web: Điền thông tin tài khoản mới, chọn vai trò, nhấn Tạo
-          Web->>Server: Gửi yêu cầu tạo tài khoản (kèm token Admin)
-          Server->>Server: Kiểm tra quyền Admin
-          Server->>Server: Kiểm tra vai trò hợp lệ (Admin hoặc Chủ quán)
-          Server->>DB: Kiểm tra tên đăng nhập đã tồn tại chưa
-          DB-->>Server: Chưa tồn tại
-          Server->>Server: Mã hóa mật khẩu an toàn
-          Server->>DB: Tạo tài khoản mới
-          DB-->>Server: Tài khoản đã tạo
-          Server-->>Web: Tạo thành công
-          Web->>Web: Làm mới danh sách người dùng
-          Web-->>ADM: Thông báo "Tạo tài khoản thành công"
+          ADM->>Web: Nhập User Info + Select Role + Create
+          Web->>API: HTTP POST Register(RegisterRequest) [JWT]
+          activate API
+          API->>API: AuthClaims.IsAdmin(User)
+          API->>API: Validate Username & Role
+          API->>DB: db.AppUsers.AnyAsync(Username)
+          DB-->>API: false
+          API->>API: BCrypt.HashPassword(Password)
+          API->>DB: db.AppUsers.Add(user)
+          API->>DB: SaveChangesAsync()
+          API-->>Web: 200 OK (Success)
+          Web->>Web: TanStack Query Invalidate("users")
+          Web-->>ADM: Show Success Toast
+          deactivate API
         </div>
       </div>
     </div>
@@ -3163,27 +3156,28 @@
         <div class="dt">Sequence Diagram — Đổi Mật Khẩu</div>
         <div class="mermaid">
           sequenceDiagram
-          actor U as Người dùng
-          participant Web as Trang Web
-          participant Server as Máy chủ API
-          participant DB as Cơ sở dữ liệu
+          actor U as Người dùng (Admin/Owner)
+          participant Web as Web Admin (React)
+          participant API as AuthController
+          participant DB as ApplicationDbContext
 
-          U->>Web: Nhập mật khẩu hiện tại và mật khẩu mới, nhấn Lưu
-          Web->>Server: Gửi yêu cầu đổi mật khẩu (kèm token đăng nhập)
-          Server->>Server: Xác định người dùng từ token
-          Server->>DB: Lấy mật khẩu đã mã hóa của người dùng
-          DB-->>Server: Mật khẩu đã mã hóa
-          Server->>Server: Kiểm tra mật khẩu hiện tại có đúng không
-          alt Mật khẩu hiện tại đúng
-          Server->>Server: Mã hóa mật khẩu mới
-          Server->>DB: Cập nhật mật khẩu mới
-          DB-->>Server: Đã cập nhật
-          Server-->>Web: Đổi mật khẩu thành công
-          Web-->>U: Thông báo thành công
-          else Mật khẩu hiện tại sai
-          Server-->>Web: Mật khẩu hiện tại không đúng
-          Web-->>U: Hiển thị lỗi
+          U->>Web: Nhập Current/New Password + Save
+          Web->>API: HTTP PUT ChangePassword(req) [JWT]
+          activate API
+          API->>API: AuthClaims.TryGetUserId()
+          API->>DB: db.AppUsers.FirstOrDefaultAsync(Id)
+          DB-->>API: AppUser record
+          API->>API: BCrypt.Verify(CurrentPassword, PasswordHash)
+          alt Password Valid
+          API->>API: BCrypt.HashPassword(NewPassword)
+          API->>DB: SaveChangesAsync()
+          API-->>Web: 200 OK (Success)
+          Web-->>U: Show Success Toast
+          else Password Invalid
+          API-->>Web: 400 Bad Request (Current password wrong)
+          Web-->>U: Show Error Toast
           end
+          deactivate API
         </div>
       </div>
     </div>
@@ -3215,29 +3209,29 @@
         <div class="dt">Sequence Diagram — Quên Mật Khẩu</div>
         <div class="mermaid">
           sequenceDiagram
-          actor U as Chủ Quán
-          participant Web as Trang Web
-          participant Server as Máy chủ API
-          participant DB as Cơ sở dữ liệu
+          actor U as Chủ Quán (Owner)
+          participant Web as Web Dashboard (React)
+          participant API as AuthController
+          participant DB as ApplicationDbContext
 
-          U->>Web: Nhập tên đăng nhập và mật khẩu mới, nhấn Đặt lại
-          Web->>Server: Gửi yêu cầu đặt lại mật khẩu
-          Server->>DB: Tìm tài khoản theo tên đăng nhập (chỉ tài khoản đang hoạt động)
-          alt Không tìm thấy tài khoản
-          DB-->>Server: Không có kết quả
-          Server-->>Web: Tài khoản không tồn tại
-          Web-->>U: Hiển thị lỗi
-          else Tài khoản là Admin
-          DB-->>Server: Tài khoản Admin
-          Server-->>Web: Tài khoản Admin không thể đặt lại theo cách này
-          Web-->>U: Hiển thị lỗi
-          else Tài khoản Chủ quán hợp lệ
-          DB-->>Server: Thông tin tài khoản
-          Server->>Server: Mã hóa mật khẩu mới
-          Server->>DB: Cập nhật mật khẩu mới
-          Server-->>Web: Đặt lại mật khẩu thành công
-          Web-->>U: Chuyển đến trang đăng nhập
+          U->>Web: Nhập Username + New Password + Reset
+          Web->>API: HTTP POST ForgotPassword(req)
+          activate API
+          API->>DB: db.AppUsers.FirstOrDefaultAsync(Username)
+          alt Not Found
+          DB-->>API: null
+          API-->>Web: 404 Not Found
+          else Is Admin
+          DB-->>API: AppUser (Role == Admin)
+          API-->>Web: 400 Bad Request (Cannot reset admin)
+          else Is Owner
+          DB-->>API: AppUser (Role == Owner)
+          API->>API: BCrypt.HashPassword(NewPassword)
+          API->>DB: SaveChangesAsync()
+          API-->>Web: 200 OK (Success)
+          Web-->>U: Redirect to Login
           end
+          deactivate API
         </div>
       </div>
     </div>
@@ -3273,26 +3267,28 @@
         <div class="mermaid">
           sequenceDiagram
           actor ADM as Admin
-          participant Web as Trang Quản Trị
-          participant Server as Máy chủ API
-          participant DB as Cơ sở dữ liệu
+          participant Web as Web Admin (React)
+          participant API as AuthController
+          participant DB as ApplicationDbContext
 
-          ADM->>Web: Nhấn "Khóa tài khoản" trên dòng người dùng
-          Web->>Web: Hiển thị hộp thoại xác nhận
-          ADM->>Web: Xác nhận hành động
-          Web->>Server: Gửi yêu cầu thay đổi trạng thái tài khoản (kèm token Admin)
-          Server->>Server: Kiểm tra quyền Admin
-          Server->>DB: Lấy thông tin tài khoản cần thay đổi
-          DB-->>Server: Thông tin tài khoản
-          alt Tài khoản là "admin" chính
-          Server-->>Web: Không thể khóa tài khoản quản trị chính
-          else Tài khoản thông thường
-          Server->>DB: Cập nhật trạng thái (Khóa hoặc Mở khóa)
-          DB-->>Server: Đã cập nhật
-          Server-->>Web: Thành công
-          Web->>Web: Làm mới danh sách người dùng
-          Web-->>ADM: Hiển thị trạng thái mới "Đã khóa"
+          ADM->>Web: Toggle "Active" status on User row
+          Web->>Web: Show Confirmation Dialog
+          Web->>API: HTTP PUT UpdateUserStatus(id, req) [JWT]
+          activate API
+          API->>API: AuthClaims.IsAdmin(User)
+          API->>DB: db.AppUsers.FindAsync(id)
+          DB-->>API: AppUser record
+          alt Target is Main Admin
+          API->>API: Check Username == "admin"
+          API-->>Web: 400 Bad Request (Cannot lock admin)
+          else Target is Owner
+          API->>API: user.IsActive = req.IsActive
+          API->>DB: SaveChangesAsync()
+          API-->>Web: 200 OK (Success)
+          Web->>Web: TanStack Query Invalidate("users")
+          Web-->>ADM: Update Row UI
           end
+          deactivate API
         </div>
       </div>
     </div>
@@ -3303,16 +3299,17 @@
         <div class="dt">Sequence Diagram — Get Owners List</div>
         <div class="mermaid">
           sequenceDiagram
-          participant Web as Trang Web CMS
-          participant Server as Máy chủ API
-          participant DB as Cơ sở dữ liệu
+          participant Web as Web Admin (React)
+          participant API as AuthController
+          participant DB as ApplicationDbContext
 
-          Web->>Server: Lấy danh sách chủ quán (kèm token đăng nhập)
-          Server->>Server: Kiểm tra quyền truy cập
-          Server->>DB: Lấy danh sách tài khoản có vai trò Chủ quán đang hoạt động
-          DB-->>Server: Danh sách chủ quán (ID và tên đăng nhập)
-          Server-->>Web: Danh sách chủ quán
-          Web->>Web: Điền vào danh sách chọn chủ quán trong form tạo quán
+          Web->>API: HTTP GET GetOwners() [JWT]
+          activate API
+          API->>DB: db.AppUsers.Where(Role == "Owner" && IsActive)
+          DB-->>API: List of Owners
+          API-->>Web: 200 OK (JSON List)
+          deactivate API
+          Web->>Web: Populate Select field (OwnerId)
         </div>
       </div>
     </div>
@@ -3359,24 +3356,21 @@
         <div class="mermaid">
           sequenceDiagram
           actor ADM as Admin
-          participant Web as Trang Quản Trị
-          participant Server as Máy chủ API
-          participant DB as Cơ sở dữ liệu
+          participant Web as Web Admin (React)
+          participant API as AdminController
+          participant DB as ApplicationDbContext
 
-          ADM->>Web: Nhấn "Khởi tạo dữ liệu mẫu"
-          Web->>Server: Gửi yêu cầu khởi tạo (kèm token Admin)
-          Server->>Server: Kiểm tra quyền Admin
-          Server->>DB: Cập nhật cấu trúc cơ sở dữ liệu (nếu cần)
-          Server->>DB: Kiểm tra tài khoản Admin đã tồn tại chưa
-          alt Chưa có tài khoản Admin
-          Server->>DB: Tạo tài khoản Admin mặc định
-          end
-          Server->>DB: Tạo dữ liệu quán mẫu (3 quán)
-          Server->>DB: Tạo lộ trình tour mẫu (1 tour)
-          Server->>DB: Đếm tổng số bản ghi đã tạo
-          DB-->>Server: Tổng kết
-          Server-->>Web: Khởi tạo thành công, kèm thống kê
-          Web-->>ADM: Thông báo "Đã khởi tạo dữ liệu mẫu thành công"
+          ADM->>Web: Click "Seed Database"
+          Web->>API: HTTP POST SeedDatabase() [JWT]
+          activate API
+          API->>API: AuthClaims.IsAdmin(User)
+          API->>DB: db.Database.MigrateAsync()
+          API->>DB: Check if "admin" user exists
+          API->>DB: Add Mock Pois (3) & Mock Tour (1)
+          API->>DB: SaveChangesAsync()
+          API-->>Web: 200 OK (Stats JSON)
+          deactivate API
+          Web-->>ADM: Show Success Message with count
         </div>
       </div>
     </div>
@@ -3501,28 +3495,28 @@
         <div class="mermaid">
           sequenceDiagram
           actor KH as Khách Tham Quan
-          participant Settings as Màn hình Cài đặt
-          participant Cache as Bộ nhớ cục bộ
-          participant Server as Máy chủ API
+          participant Settings as "SettingsPage (MAUI)"
+          participant Pref as "Preferences (Device)"
+          participant API as ApiClientService
+          participant DB as LocalDbService
 
-          KH->>Settings: Đổi ngôn ngữ sang tiếng Hàn
-          Settings->>Cache: Lưu cài đặt ngôn ngữ
-          Settings-->>KH: Giao diện chuyển sang tiếng Hàn
+          KH->>Settings: Thay đổi Ngôn ngữ / Bán kính
+          Settings->>Pref: "Set(AppPreferences.UiLanguage, 'ko')"
+          Settings->>Pref: "Set(AppPreferences.GpsRadiusMultiplier, 1.5)"
+          Settings-->>KH: Update UI Strings & Radius Preview
 
-          KH->>Settings: Điều chỉnh bán kính GPS lên 1.5x
-          Settings->>Cache: Lưu cài đặt bán kính
-          Settings-->>KH: Hiển thị "Bán kính hiệu lực: 22.5m"
-
-          KH->>Settings: Nhấn "Đồng bộ ngay"
-          Settings->>Settings: Bắt đầu đồng bộ
-          Settings->>Server: Tải danh sách quán (ngôn ngữ: Hàn)
-          Server-->>Settings: Danh sách quán cập nhật
-          Settings->>Cache: Lưu vào bộ nhớ máy
-          Settings->>Server: Tải danh sách lộ trình tour (ngôn ngữ: Hàn)
-          Server-->>Settings: Danh sách tour cập nhật
-          Settings->>Cache: Lưu vào bộ nhớ máy
-          Settings->>Settings: Hoàn tất đồng bộ
-          Settings-->>KH: "Đã tải 42 điểm tham quan thành công"
+          KH->>Settings: Click "Sync Now"
+          activate Settings
+          Settings->>Settings: Set IsSyncing = true
+          Settings->>API: "HTTP GET GetAll(lang='ko')"
+          API-->>Settings: "JSON List[Poi]"
+          Settings->>DB: SavePoisAsync(pois)
+          Settings->>API: "HTTP GET GetTours(lang='ko')"
+          API-->>Settings: "JSON List[Tour]"
+          Settings->>DB: SaveToursAsync(tours)
+          Settings->>Settings: Set IsSyncing = false
+          deactivate Settings
+          Settings-->>KH: "Show Success Alert (Synced 42 POIs)"
         </div>
       </div>
     </div>
@@ -3594,27 +3588,25 @@
         <div class="mermaid">
           sequenceDiagram
           actor KH as Khách Tham Quan
-          participant Tour as Màn hình Tour
-          participant MH as Màn hình chính
-          participant Cache as Bộ nhớ cục bộ
-          participant Server as Máy chủ API
-          participant TM as Dịch vụ Thuyết Minh
+          participant TourVM as "ToursViewModel (MAUI)"
+          participant MapVM as "MainViewModel (Mapsui)"
+          participant GF as GeofenceService
+          participant TM as NarrationService
 
-          KH->>Tour: Mở danh sách tour
-          Tour->>Server: Tải danh sách lộ trình tour
-          Server-->>Tour: Danh sách tour với các điểm dừng
-          Tour->>Cache: Lưu vào bộ nhớ máy
-          Tour-->>KH: Hiển thị danh sách tour
-          KH->>Tour: Chọn tour, nhấn "Bắt đầu"
-          Tour->>MH: Chuyển sang bản đồ với lộ trình đã chọn
-          MH-->>KH: Hiển thị bản đồ và các điểm dừng theo thứ tự
-          loop Từng điểm dừng theo thứ tự
-          MH-->>KH: Hiển thị "Đang đến: [tên quán]"
-          Note over MH: GPS phát hiện khách vào vùng điểm dừng
-          MH->>TM: Phát thuyết minh cho điểm dừng này
-          TM-->>KH: Phát thuyết minh
+          KH->>TourVM: Chọn Tour + Click "Bắt đầu"
+          TourVM->>MapVM: "Shell.Current.GoToAsync('//MapPage')"
+          TourVM->>MapVM: "SetActiveTour(selectedTour)"
+          MapVM->>MapVM: "DrawTourRoute(stops)"
+          MapVM-->>KH: Render Map with Tour Layer
+          loop Monitoring GPS
+          GF-->>MapVM: "WeakReferenceMessenger.Send(GeofenceUpdate)"
+          alt "IsInside == true (Next Stop)"
+          MapVM->>TM: "EnqueueAsync(poi, language)"
+          TM-->>KH: PlayAudioAsync()
+          MapVM->>MapVM: "MoveToNextStop()"
           end
-          MH-->>KH: "Chúc mừng! Bạn đã hoàn thành tour!"
+          end
+          MapVM-->>KH: "Display 'Tour Completed!' toast"
         </div>
       </div>
     </div>
@@ -3674,27 +3666,26 @@
         <div class="mermaid">
           sequenceDiagram
           actor ADM as Admin
-          participant Web as Trang Quản Trị
-          participant Server as Máy chủ API
-          participant DB as Cơ sở dữ liệu
-          participant RT as Thông báo thời gian thực
+          participant Web as "Web Admin (React)"
+          participant API as TourController
+          participant DB as ApplicationDbContext
+          participant Hub as VinhKhanhHub
 
-          ADM->>Web: Điền thông tin tour và các điểm dừng, nhấn Lưu
-          Web->>Server: Gửi thông tin tour mới (kèm token Admin)
-          Server->>Server: Kiểm tra quyền Admin
-          Server->>Server: Kiểm tra không có điểm dừng trùng thứ tự hoặc trùng quán
-          Server->>DB: Kiểm tra các quán trong danh sách điểm dừng có tồn tại không
-          DB-->>Server: Danh sách quán hợp lệ
-          Server->>DB: Lưu thông tin tour
-          DB-->>Server: Tour đã tạo (kèm ID)
+          ADM->>Web: Nhập Tour Data + Stops + Save
+          Web->>API: "HTTP POST Create(TourCreateDto) [JWT]"
+          activate API
+          API->>API: "TryValidateTour(dto)"
+          API->>DB: Check all PoiIds exist
+          API->>DB: db.Tours.Add(tour)
           loop Từng điểm dừng
-          Server->>DB: Lưu điểm dừng (thứ tự, thời gian dừng, ghi chú)
+          API->>DB: "tour.Stops.Add(stop)"
           end
-          Server->>RT: Phát thông báo "Tour mới được tạo" đến tất cả thiết bị
-          RT-->>Web: Cập nhật danh sách tour ngay lập tức
-          Server-->>Web: Tạo tour thành công
-          Web->>Web: Làm mới danh sách tour
-          Web-->>ADM: Thông báo "Tạo tour thành công"
+          API->>DB: SaveChangesAsync()
+          DB-->>API: "Created (Id: 456)"
+          API->>Hub: "hub.Clients.All.SendAsync('TourCreated', tour)"
+          API-->>Web: "201 Created (tour)"
+          deactivate API
+          Web-->>ADM: Redirect to Tour List with Success Toast
         </div>
       </div>
     </div>
@@ -3760,25 +3751,22 @@
         <div class="mermaid">
           sequenceDiagram
           actor KH as Khách Tham Quan
-          participant Detail as Màn hình Chi tiết Quán
-          participant Cache as Bộ nhớ cục bộ
-          participant Server as Máy chủ API
-          participant TM as Dịch vụ Thuyết Minh
+          participant Page as "PoiDetailPage (MAUI)"
+          participant API as ApiClientService
+          participant TM as NarrationService
 
-          KH->>Detail: Mở trang chi tiết quán
-          Detail->>Cache: Tìm thông tin quán trong bộ nhớ máy
-          alt Tìm thấy trong bộ nhớ
-          Cache-->>Detail: Thông tin quán và bản dịch
-          else Không có trong bộ nhớ
-          Detail->>Server: Tải thông tin quán từ máy chủ
-          Server-->>Detail: Thông tin quán đầy đủ
+          KH->>Page: "OnNavigatedTo(PoiId)"
+          Page->>API: "GetPoiAsync(id)"
+          API-->>Page: "Poi record (JSON)"
+          Page->>Page: "ResolveName() & ResolveDescription()"
+          Page-->>KH: Hiển thị thông tin quán & hình ảnh
+          alt "AutoPlay == true"
+          Page->>TM: "EnqueueAsync(poi, language)"
+          TM-->>KH: PlayPoiAsync()
           end
-          Detail->>Detail: Chọn bản dịch theo ngôn ngữ đang dùng
-          Detail-->>KH: Hiển thị tên, mô tả, hình ảnh, âm thanh
-          KH->>Detail: Nhấn "Phát lại thuyết minh"
-          Detail->>TM: Yêu cầu phát thuyết minh (kích hoạt thủ công)
-          Detail->>Server: Ghi nhận lượt nghe thủ công
-          TM-->>KH: Phát thuyết minh
+          KH->>Page: Click "Replay"
+          Page->>TM: "EnqueueAsync(poi, language)"
+          TM-->>KH: PlayPoiAsync()
         </div>
       </div>
     </div>
@@ -3829,19 +3817,21 @@
         <div class="dt">Sequence Diagram — Upload Audio</div>
         <div class="mermaid">
           sequenceDiagram
-          actor OW as Admin/Chủ Quán
-          participant Web as Trang Web CMS
-          participant Server as Máy chủ API
-          participant FS as Kho lưu trữ file
+          actor OW as "Admin/Chủ Quán"
+          participant Web as "Web Admin (React)"
+          participant API as "AudioController"
+          participant FS as "Physical File Storage"
 
-          OW->>Web: Chọn file âm thanh, nhấn Tải lên
-          Web->>Web: Kiểm tra kích thước (tối đa 50MB) và định dạng (mp3/wav/m4a)
-          Web->>Server: Gửi file âm thanh (kèm token đăng nhập)
-          Server->>Server: Kiểm tra quyền và định dạng file
-          Server->>Server: Tạo tên file duy nhất
-          Server->>FS: Lưu file vào kho lưu trữ
-          Server-->>Web: Trả về đường dẫn file âm thanh
-          Web-->>OW: Hiển thị trình phát âm thanh để nghe thử
+          OW->>Web: "Select File + Click 'Upload'"
+          Web->>Web: "Check file.size <= 50MB"
+          Web->>API: "HTTP POST Upload(file) [JWT]"
+          activate API
+          API->>API: "Check extension (.mp3, .wav, .m4a)"
+          API->>API: "Generate unique filename (GUID)"
+          API->>FS: "FileStream.CopyToAsync()"
+          API-->>Web: "200 OK (URL, filename)"
+          deactivate API
+          Web-->>OW: "Render audio player for preview"
         </div>
       </div>
     </div>
@@ -3883,21 +3873,20 @@
         <div class="mermaid">
           sequenceDiagram
           actor ADM as Admin
-          participant Web as Trang Quản Trị
-          participant Server as Máy chủ API
-          participant QR as Thư viện tạo mã QR
+          participant Web as "Web Admin (React)"
+          participant API as PoiController
+          participant QR as QRCoder.QRCodeGenerator
 
-          ADM->>Web: Nhấn "Xem mã QR" cho quán
-          Web->>Server: Yêu cầu tạo ảnh mã QR
-          Server->>Server: Lấy chuỗi mã định danh của quán
-          alt Quán chưa có mã định danh
-          Server-->>Web: Thông báo lỗi
-          else Quán có mã định danh
-          Server->>QR: Tạo ảnh mã QR từ chuỗi định danh
-          QR-->>Server: Dữ liệu ảnh PNG
-          Server-->>Web: Trả về ảnh mã QR (định dạng PNG)
-          Web-->>ADM: Hiển thị mã QR, có thể tải về để in
-          end
+          ADM->>Web: Click "View QR Code"
+          Web->>API: "HTTP GET GenerateQrCode(id) [JWT]"
+          activate API
+          API->>API: "Check poi.QrCode is not null"
+          API->>QR: "CreateQrCode(poi.QrCode, ECCLevel.Q)"
+          QR-->>API: return PngByteQRCode
+          API->>API: "GetGraphic(20)"
+          API-->>Web: "200 OK (Content-Type: image/png)"
+          deactivate API
+          Web-->>ADM: "Render img with API URL + Download option"
         </div>
       </div>
     </div>
@@ -3971,31 +3960,29 @@
         <div class="mermaid">
           sequenceDiagram
           actor OW as Admin/Chủ Quán
-          participant Web as Trang Web CMS
-          participant Server as Máy chủ API
-          participant AI as Dịch vụ Dịch Thuật AI
-          participant DB as Cơ sở dữ liệu
-          participant RT as Thông báo thời gian thực
+          participant Web as "Web Admin (React)"
+          participant API as PoiController
+          participant AI as ResilientTranslationService
+          participant DB as ApplicationDbContext
+          participant Hub as VinhKhanhHub
 
-          OW->>Web: Chọn ngôn ngữ "Nhật", nhấn "Dịch tự động"
-          Web->>Server: Yêu cầu dịch nội dung mô tả sang tiếng Nhật
-          Server->>AI: Gửi văn bản cần dịch
-          AI-->>Server: Bản dịch tiếng Nhật
-          Server-->>Web: Trả về bản dịch
-          Web-->>OW: Điền bản dịch vào form để xem xét
-          OW->>Web: Chỉnh sửa nếu cần, nhấn Lưu
-          Web->>Server: Lưu bản dịch (kèm token đăng nhập)
-          Server->>DB: Kiểm tra đã có bản dịch tiếng Nhật chưa
-          alt Đã có bản dịch
-          Server->>DB: Cập nhật bản dịch hiện có
-          else Chưa có
-          Server->>DB: Thêm bản dịch mới
-          end
-          Server->>DB: Tăng số phiên bản nội dung
-          Server->>RT: Phát thông báo "Quán đã cập nhật" đến thiết bị
-          RT-->>Web: Cập nhật giao diện
-          Server-->>Web: Lưu thành công
-          Web-->>OW: Thông báo "Đã lưu bản dịch tiếng Nhật"
+          OW->>Web: "Click 'Auto Translate' (Language: JA)"
+          Web->>API: "HTTP POST Translate(req) [Internal/External AI]"
+          activate API
+          API->>AI: "TranslateAsync(description, 'vi', 'ja')"
+          AI-->>API: return translatedText
+          API-->>Web: "200 OK (translatedText)"
+          deactivate API
+          OW->>Web: "Review & Click 'Save Translation'"
+          Web->>API: "HTTP POST AddTranslation(id, PoiTranslationDto) [JWT]"
+          activate API
+          API->>DB: "db.PoiTranslations.Upsert(lang, content)"
+          API->>DB: poi.ContentVersion++
+          API->>DB: SaveChangesAsync()
+          API->>Hub: "hub.Clients.All.SendAsync('PoiUpdated', poi)"
+          API-->>Web: "200 OK (Success)"
+          deactivate API
+          Web-->>OW: Show Success Notification
         </div>
       </div>
     </div>
@@ -4050,26 +4037,29 @@
         <div class="mermaid">
           sequenceDiagram
           actor ADM as Admin
-          participant Web as Trang Quản Trị
-          participant Server as Máy chủ API
-          participant AI as Dịch vụ Dịch Thuật AI
-          participant DB as Cơ sở dữ liệu
+          participant Web as "Web Admin (React)"
+          participant API as PoiController
+          participant AI as ResilientTranslationService
+          participant DB as ApplicationDbContext
 
-          ADM->>Web: Nhấn "Dịch hàng loạt", chọn không ghi đè bản dịch cũ
-          Web->>Server: Gửi yêu cầu dịch hàng loạt (kèm token Admin)
-          Server->>DB: Tải toàn bộ danh sách quán kèm bản dịch hiện có
-          DB-->>Server: Danh sách quán
-          loop Từng quán × từng ngôn ngữ (Anh, Nhật, Hàn, Trung)
-          Server->>Server: Kiểm tra đã có bản dịch chưa
-          alt Chưa có hoặc cho phép ghi đè
-          Server->>AI: Yêu cầu dịch nội dung mô tả
-          AI-->>Server: Bản dịch
-          Server->>Server: Lưu bản dịch vào bộ nhớ tạm
+          ADM->>Web: "Click 'Bulk Translate' (Overwrite: false)"
+          Web->>API: "HTTP POST BulkTranslate(overwrite=false) [JWT]"
+          activate API
+          API->>DB: "db.Pois.Include(Translations).ToListAsync()"
+          loop foreach poi in pois
+          loop foreach lang in [en, ja, ko, zh]
+          API->>API: Check if translation exists
+          alt "Missing or Overwrite == true"
+          API->>AI: "TranslateAsync(description, 'vi', lang)"
+          AI-->>API: return translatedText
+          API->>API: "poi.Translations.Add/Update(lang)"
           end
           end
-          Server->>DB: Lưu tất cả bản dịch mới vào cơ sở dữ liệu
-          Server-->>Web: Hoàn tất, đã tạo 168 bản dịch mới
-          Web-->>ADM: Thông báo "Đã dịch 168 bản dịch mới"
+          API->>DB: "SaveChangesAsync() (Per POI Batch)"
+          end
+          API-->>Web: "200 OK (Total New Translations)"
+          deactivate API
+          Web-->>ADM: Show Bulk Completion Toast
         </div>
       </div>
     </div>
@@ -4113,26 +4103,34 @@
         <div class="mermaid">
           sequenceDiagram
           actor ADM as Admin
-          participant Web as Trang Quản Trị
-          participant Server as Máy chủ API
-          participant DB as Cơ sở dữ liệu
+          participant Web as "Web Admin (React)"
+          participant API as TourController
+          participant DB as ApplicationDbContext
+          participant Hub as VinhKhanhHub
 
-          ADM->>Web: Chọn tour, nhấn "Thêm bản dịch"
-          Web->>Server: Gửi bản dịch mới (ngôn ngữ, tên, mô tả) kèm token Admin
-          Server->>DB: Kiểm tra đã có bản dịch ngôn ngữ này chưa
-          alt Đã tồn tại
-          Server-->>Web: Bản dịch ngôn ngữ này đã có rồi
-          else Chưa có
-          Server->>DB: Thêm bản dịch mới
-          Server-->>Web: Thêm thành công
-          Web-->>ADM: Thông báo "Đã thêm bản dịch"
+          ADM->>Web: "Click 'Add Translation' (Tour)"
+          Web->>API: "HTTP POST AddTranslation(id, dto) [JWT]"
+          activate API
+          API->>DB: "db.TourTranslations.AnyAsync(langCode)"
+          alt Lang exists
+          API-->>Web: 409 Conflict
+          else New lang
+          API->>DB: "db.TourTranslations.Add(trans)"
+          API->>DB: SaveChangesAsync()
+          API->>Hub: "hub.Clients.All.SendAsync('TourUpdated', tour)"
+          API-->>Web: "200 OK (Success)"
           end
+          deactivate API
 
-          ADM->>Web: Nhấn "Sửa bản dịch"
-          Web->>Server: Gửi nội dung cập nhật kèm token Admin
-          Server->>DB: Cập nhật bản dịch
-          Server-->>Web: Cập nhật thành công
-          Web-->>ADM: Thông báo "Đã cập nhật bản dịch"
+          ADM->>Web: "Click 'Update Translation' (Tour)"
+          Web->>API: "HTTP PUT UpdateTranslation(id, lang, dto) [JWT]"
+          activate API
+          API->>DB: "db.TourTranslations.FirstOrDefaultAsync()"
+          API->>DB: "trans.Name = dto.Name..."
+          API->>DB: SaveChangesAsync()
+          API->>Hub: "hub.Clients.All.SendAsync('TourUpdated', tour) "
+          API-->>Web: "200 OK (Success)"
+          deactivate API
         </div>
       </div>
     </div>
@@ -4555,76 +4553,35 @@
         <div class="dt">Class Diagram — Backend Services</div>
         <div class="mermaid">
           classDiagram
+          class Poi { }
           class ITranslationService {
-          &lt;&lt;interface&gt;&gt;
-          +TranslateAsync(text, from, to, ct) Task~string~
+          <<interface>>
+          +Task~string~ TranslateAsync(string text, string from, string to)
           }
           class ResilientTranslationService {
-          -GeminiTranslationService _gemini
-          -OllamaTranslationService _ollama
-          -LibreTranslateService _libre
-          -MicrosoftTranslatorService _ms
-          +TranslateAsync(text, from, to, ct) Task~string~
-          -BuildProviderChain() IEnumerable
-          }
-          class GeminiTranslationService {
-          -string _apiKey
-          -string _model
-          +TranslateAsync(text, from, to, ct) Task~string~
-          -CleanResult(raw) string
+          +Task~string~ TranslateAsync(string text, string from, string to)
           }
           class IAiService {
-          &lt;&lt;interface&gt;&gt;
-          +ChatAsync(system, user, history) Task~string~
+          <<interface>>
+          +Task~string~ ChatAsync(string system, string user)
           }
           class GeminiAiService {
-          -IConfiguration _cfg
-          -IHttpClientFactory _factory
-          -string _apiKey
-          -string _model
-          +ChatAsync(system, user, history) Task~string~
-          }
-          class OllamaAiService {
-          -IHttpClientFactory _factory
-          +ChatAsync(system, user, history) Task~string~
-          }
-          class AzureAiService {
-          -IConfiguration _cfg
-          +ChatAsync(system, user, history) Task~string~
+          +Task~string~ ChatAsync(string system, string user)
           }
           class ITtsService {
-          &lt;&lt;interface&gt;&gt;
-          +SynthesizeAsync(text, lang, voice) Task~byte[]~
+          <<interface>>
+          +Task~byte[]~ SynthesizeAsync(string text, string lang)
           }
           class VoiceRssTtsService {
-          -IConfiguration _cfg
-          +SynthesizeAsync(text, lang, voice) Task~byte[]~
-          }
-          class AzureTtsService {
-          -IConfiguration _cfg
-          +SynthesizeAsync(text, lang, voice) Task~byte[]~
-          }
-          class IRedisService {
-          &lt;&lt;interface&gt;&gt;
-          +SetAsync(key, value, expiry) Task
-          +GetAsync(key) Task~string~
-          +DeleteAsync(key) Task
-          +PublishAsync(channel, message) Task
+          +Task~byte[]~ SynthesizeAsync(string text, string lang)
           }
           class ApplicationDbContext {
           +DbSet~Poi~ Pois
           +DbSet~PoiTranslation~ PoiTranslations
-          +DbSet~PoiVisitLog~ PoiVisitLogs
-          +DbSet~AppUser~ AppUsers
-          +DbSet~Tour~ Tours
-          +DbSet~TourStop~ TourStops
-          +DbSet~TourTranslation~ TourTranslations
-          +DbSet~MovementLog~ MovementLogs
-          +DbSet~AppHistoryLog~ AppHistoryLogs
           }
-          ITranslationService <|.. ResilientTranslationService ITranslationService <|.. GeminiTranslationService
-            IAiService <|.. GeminiAiService IAiService <|.. OllamaAiService IAiService <|.. AzureAiService ITtsService
-            <|.. VoiceRssTtsService ITtsService <|.. AzureTtsService</div>
+          ITranslationService <|.. ResilientTranslationService : implements
+          IAiService <|.. GeminiAiService : implements
+          ITtsService <|.. VoiceRssTtsService : implements
         </div>
       </div>
       <div class="logic-box">
@@ -4647,99 +4604,50 @@
           </li>
         </ol>
       </div>
+    </div>
 
       <div class="card">
         <h3>📱 13.3 Mobile Services (.NET MAUI)</h3>
         <div class="dw">
           <div class="dt">Class Diagram — MAUI Services</div>
           <div class="mermaid">
-            classDiagram
-            class IGpsService {
-            &lt;&lt;interface&gt;&gt;
-            +StartTrackingAsync() Task
-            +StopTrackingAsync() Task
-            }
-            class GpsService {
-            -CancellationTokenSource _cts
-            -RouteWaypoints[] (mock)
-            +StartTrackingAsync() Task
-            +StopTrackingAsync() Task
-            -RunRouteSimulationAsync(ct) Task
-            -StartIosLoopAsync(ct) Task
-            }
-            class IGeofenceService {
-            &lt;&lt;interface&gt;&gt;
-            +CheckTriggeredAsync(loc, pois) Task~List~Poi~~
-            }
-            class GeofenceService {
-            -Dictionary~int,DateTime~ _lastTriggered
-            -Dictionary~int,int~ _consecutiveHits
-            -HashSet~int~ _insidePoiIds
-            +CheckTriggeredAsync(loc, pois) Task~List~Poi~~
-            -GetRadiusMultiplier() double
-            }
-            class INarrationService {
-            &lt;&lt;interface&gt;&gt;
-            +EnqueueAsync(poi, language) Task
-            +InterruptIfHigherPriority(priority) void
-            +StopCurrentAsync() Task
-            +IsPlaying bool
-            }
-            class NarrationService {
-            -IAudioManager _audioManager
-            -SemaphoreSlim _gate
-            -List~(Poi,string)~ _queue
-            -HashSet~string~ _queuedKeys
-            -Dictionary~string,DateTime~ _recentlyPlayed
-            +EnqueueAsync(poi, language) Task
-            +PlayPoiAsync(poi, lang, apiRoot, ct) Task~int~
-            +InterruptIfHigherPriority(priority) void
-            +StopCurrentAsync() Task
-            }
-            class ILocalDbService {
-            &lt;&lt;interface&gt;&gt;
-            +GetPoisAsync() Task~List~Poi~~
-            +SavePoisAsync(pois) Task
-            +CountPoisAsync() Task~int~
-            +GetToursAsync() Task~List~Tour~~
-            +SaveToursAsync(tours) Task
-            }
-            class LocalDbService {
-            -SQLiteAsyncConnection _db
-            +GetPoisAsync() Task~List~Poi~~
-            +SavePoisAsync(pois) Task
-            +CountPoisAsync() Task~int~
-            }
-            class IOutboxService {
-            &lt;&lt;interface&gt;&gt;
-            +EnqueueVisitAsync(visit) Task
-            +EnqueueHistoryAsync(history) Task
-            +EnqueueMovementBatchAsync(batch) Task
-            +FlushAsync(api) Task
-            }
-            class AudioCacheService {
-            -HttpClient _httpClient
-            -string _cacheDir
-            -SemaphoreSlim _downloadSemaphore
-            +GetAudioPathAsync(url, highPriority, ct) Task~string~
-            +PreFetchAsync(url) Task
-            -GetHash(input) string
-            }
-            class RealtimeService {
-            -HubConnection _hub
-            +ConnectAsync() Task
-            +OnPoiUpdated(callback) void
-            +OnTourUpdated(callback) void
-            }
-            class SessionService {
-            +SessionId string
-            }
-            IGpsService <|.. GpsService IGeofenceService <|.. GeofenceService INarrationService <|.. NarrationService
-              ILocalDbService <|.. LocalDbService GeofenceService --> INarrationService : triggers
-              NarrationService --> AudioCacheService : uses
+          classDiagram
+          class Poi { }
+          class Location { }
+          class IGpsService {
+          <<interface>>
+          +Task StartTrackingAsync()
+          +Task StopTrackingAsync()
+          }
+          class GpsService {
+          +Task StartTrackingAsync()
+          +Task StopTrackingAsync()
+          }
+          class IGeofenceService {
+          <<interface>>
+          +Task~List~Poi~~ CheckTriggeredAsync(Location loc, List~Poi~ pois)
+          }
+          class GeofenceService {
+          +Task~List~Poi~~ CheckTriggeredAsync(Location loc, List~Poi~ pois)
+          }
+          class INarrationService {
+          <<interface>>
+          +Task EnqueueAsync(Poi poi, string lang)
+          +bool IsPlaying
+          }
+          class NarrationService {
+          +Task EnqueueAsync(Poi poi, string lang)
+          }
+          class AudioCacheService {
+          +Task PreFetchAsync(string url)
+          }
+          IGpsService <|.. GpsService : implements
+          IGeofenceService <|.. GeofenceService : implements
+          INarrationService <|.. NarrationService : implements
+          GeofenceService --> INarrationService : "triggers"
+          NarrationService --> AudioCacheService : "uses"
           </div>
         </div>
-      </div>
       <div class="logic-box">
         <h4>🧠 Giải Thích Chi Tiết — Kiến Trúc Mobile Services</h4>
         <p>Phía Mobile App tập trung vào việc xử lý các tác vụ thực tế và duy trì trải nghiệm người dùng mượt mà:</p>
@@ -4913,29 +4821,35 @@
             participant App as 📱 Tourist App (Mobile)
             participant Admin as 💻 Admin Dashboard (Web)
             box "🔧 Backend Service Layer"
-            participant Hub as ⚡ SignalR Gateway (Hub)
+            participant Hub as ⚡ VinhKhanhHub
             participant Tracker as 📊 ConnectionTracker
-            participant API as 🌐 Admin API (/summary)
+            participant API as 🌐 AdminController
             end
 
             Note over App, Admin: [Giai đoạn 1] Kết nối Real-time (SignalR)
-            App->>Hub: Kết nối WSS (Hub Connection)
-            Hub->>Tracker: AddConnection(ID)
-            Admin->>Hub: Kết nối WSS (Hub Connection)
-            Hub->>Tracker: AddConnection(ID)
+            App->>Hub: HubConnection.StartAsync()
+            activate Hub
+            Hub->>Tracker: OnConnectedAsync() -> AddConnection(ID)
+            Admin->>Hub: useSignalR() -> Connect
+            Hub->>Tracker: OnConnectedAsync() -> AddConnection(ID)
+            deactivate Hub
 
             Note over Admin, API: [Giai đoạn 2] Hiển thị chỉ số (Polling)
             loop Mỗi 10 giây (TanStack Query)
-                Admin->>API: GET /api/admin/summary
-                API->>Tracker: GetOnlineCount()
-                Tracker-->>API: Trả về Số lượng thực tế (Actual Count)
-                API-->>Admin: JSON { activeUsers: N }
-                Admin->>Admin: Cập nhật UI Dashboard
+            Admin->>API: HTTP GET Summary()
+            activate API
+            API->>Tracker: GetOnlineCount()
+            Tracker-->>API: return _connections.Count
+            API-->>Admin: JSON { activeUsers: N }
+            Admin->>Admin: UpdateUI()
+            deactivate API
             end
 
             Note over App, Hub: [Giai đoạn 3] Ngắt kết nối
-            App-xHub: Đóng App / Mất mạng
-            Hub->>Tracker: RemoveConnection(ID)
+            App-xHub: HubConnection.StopAsync()
+            activate Hub
+            Hub->>Tracker: OnDisconnectedAsync() -> RemoveConnection(ID)
+            deactivate Hub
           </div>
         </div>
 
@@ -4948,7 +4862,8 @@
               thiết lập. <code>VinhKhanhHub</code> nhận diện <code>Context.ConnectionId</code> và yêu cầu
               <code>ConnectionTracker</code> lưu trữ vào <code>ConcurrentDictionary</code> trong RAM.
             </li>
-            <li><strong>Chỉ số thực tế (Real-time Accuracy):</strong> Dashboard hiển thị chính xác số lượng các kết nối SignalR hiện đang duy trì với máy chủ, không thông qua các cơ chế ảo hóa con số.</li>
+            <li><strong>Chỉ số thực tế (Real-time Accuracy):</strong> Dashboard hiển thị chính xác số lượng các kết nối
+              SignalR hiện đang duy trì với máy chủ, không thông qua các cơ chế ảo hóa con số.</li>
             <li><strong>Cơ chế cập nhật (Pull vs Push):</strong> Thay vì Hub chủ động Broadcast (gây tốn băng thông),
               Admin Dashboard sử dụng TanStack Query để kéo (Pull) dữ liệu từ endpoint <code>/api/admin/summary</code>.
               Điều này giúp Dashboard luôn đồng bộ với các thông số thống kê khác (POI, Tours, Visits).</li>

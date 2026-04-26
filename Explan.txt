@@ -1,0 +1,841 @@
+# TÀI LIỆU KỸ THUẬT VĨNH KHÁNH FOOD STREET
+## NGUỒN SỰ THẬT (SOURCE OF TRUTH) - VERSION 4.0
+## CẬP NHẬT: 24/04/2026
+
+---
+
+# Chương 1 – Tổng Quan Dự Án
+
+## Tầm Nhìn
+Khách du lịch đi dạo phố ẩm thực Vĩnh Khánh (Quận 4, TP.HCM). Điện thoại họ **tự động phát thuyết minh bằng ngôn ngữ của họ** khi đến gần một quán ăn — không cần bấm gì cả. Đó là cốt lõi. Mọi thứ còn lại là hạ tầng phục vụ cho điều đó.
+
+## Các Mảng Công Nghệ Chính
+- **GPS Geofencing:** Tự động kích hoạt thuyết minh khi khách bước vào vùng bán kính 15m quanh POI. Thuật toán Haversine + hysteresis + consecutive hits = 2.
+- **Đa Ngôn Ngữ:** 7 ngôn ngữ (vi, en, zh, ko, ja, km, th). Dịch tự động qua chuỗi fallback: Gemini → Ollama → LibreTranslate → Microsoft.
+- **AI Chatbot 24/7:** Giải đáp thắc mắc về món ăn, quán, lịch sử phố dựa trên context POI + Tour.
+- **Offline-First Mobile:** .NET MAUI 10 (Android + iOS). Sử dụng SQLite cache và OutboxService để đảm bảo hoạt động khi không có mạng.
+- **CMS Chủ Quán:** Web React 19 cho chủ quán tự quản lý POI, media và xem thống kê.
+- **Analytics:** Theo dõi log di chuyển (batch 25 điểm/30s) và lượt tham quan để tạo bản đồ nhiệt (Heatmap).
+
+---
+
+# Chương 2 – Actors & Stakeholders
+
+| Actor | Platform | Vai trò | Chức năng chính |
+| :--- | :--- | :--- | :--- |
+| **Khách Tham Quan** | .NET MAUI 10 | End-user | Nghe thuyết minh GPS, quét QR, hỏi AI, xem bản đồ, theo tour. |
+| **Chủ Quán (Owner)** | Web React 19 | Chủ quán ăn | Quản lý POI, upload audio, thêm bản dịch, xem thống kê của quán. |
+| **Admin** | Web React 19 | Quản trị viên | Quản lý hệ thống, Users, POI/Tour, Bulk translate, Analytics & History. |
+| **System** | ASP.NET Core 10 | Backend | Xử lý Geofencing, Narration queue, Translation fallback, AI Inference. |
+
+---
+
+# Chương 3 – Theo dõi GPS
+
+## Tổng quan
+Phần này tài liệu hóa hệ thống con theo dõi GPS được sử dụng bởi ứng dụng di động MAUI. Hệ thống này chạy như một dịch vụ nền (foreground service) trên Android và như một vòng lặp chạy ngầm trên iOS, liên tục cập nhật vị trí, gom nhóm dữ liệu và gửi chúng về backend.
+
+### Giải thích Sơ đồ hoạt động – Theo dõi GPS
+Sơ đồ này mô tả chi tiết luồng hoạt động (workflow) của tính năng theo dõi vị trí (GPS tracking) chạy nền trong ứng dụng. Hệ thống xử lý linh hoạt các yêu cầu cấp quyền, sự khác biệt giữa hai hệ điều hành (iOS/Android), chế độ giả lập (Mock Mode), và tối ưu hóa việc gửi dữ liệu.
+
+**Giai đoạn 1: Khởi động và Yêu cầu quyền**
+- **[Khởi động App]:** Điểm bắt đầu của luồng hệ thống khi người dùng mở ứng dụng.
+- **[Platform?] (Rẽ nhánh 1):** Hệ thống kiểm tra ứng dụng đang chạy trên môi trường nào.
+- **Ngách "iOS" & "Android":** Cả hai ngách đều dẫn đến khối **[Request LocationAlways Permission]**. Ứng dụng yêu cầu quyền truy cập vị trí ở chế độ "Luôn luôn" (Always) để theo dõi ngay cả khi ẩn ứng dụng.
+- **Ngách "Mock Mode":** Luồng đặc biệt cho việc test, bỏ qua xin quyền và đi thẳng xuống phát tọa độ giả lập.
+- **[Permission Granted?] (Kiểm tra quyền):**
+  - **Ngách "No":** Chuyển tới **[Hiển thị thông báo yêu cầu quyền]** để giải thích lý do bắt buộc.
+  - **Ngách "Yes":** Chuyển tới khối rẽ nhánh tiếp theo để thiết lập dịch vụ nền.
+
+**Giai đoạn 2: Khởi tạo dịch vụ nền và Lấy tọa độ**
+- **[Platform?] (Từ ngách Yes):** Kiểm tra hệ điều hành để áp dụng phương pháp chạy nền tương ứng.
+- **Ngách "iOS":** Chuyển tới **[StartIosLoopAsync / CLLocationManager]** để quản lý cập nhật vị trí theo chuẩn Apple.
+- **Ngách "Android":** Chuyển tới **[StartForegroundService / TypeLocation + Notification]**. Bắt buộc dùng service nổi kèm thông báo ghim để hệ thống không tự động tắt app.
+- **[TrackingLoopAsync / GetLocationAsync mỗi 3s]:** Cả iOS và Android hội tụ về đây để lấy tọa độ thực tế định kỳ.
+- **[RunRouteSimulationAsync / mỗi 1.5s]:** Ngách dành cho Mock Mode, tự động phát tọa độ giả lập theo lộ trình có sẵn.
+- **[Publish LocationUpdatedMessage]:** Đóng gói tọa độ thành tin nhắn nội bộ để tách biệt việc lấy dữ liệu và hiển thị.
+- **[MainViewModel.Receive]:** Khối giao diện lắng nghe và nhận tọa độ.
+- **[Buffer MovementPoint]:** Tọa độ được đưa vào mảng tạm thời (buffer) trong RAM thay vì gửi ngay lên server.
+
+**Giai đoạn 3: Gom nhóm dữ liệu và Đẩy lên Server**
+- **[Buffer ≥ 25 hoặc 30s?]:** Trạm kiểm tra cơ chế gom nhóm (Batching).
+  - **Ngách "Yes":** Gom toàn bộ tọa độ trong buffer và gọi **[POST /api/movement/batch]** để đẩy lên Backend.
+  - **Ngách "No":** Bỏ qua bước gọi API, tiếp tục tích lũy tọa độ.
+- **[Tiếp tục loop]:** Quay ngược lại vòng lặp lấy tọa độ cho chu kỳ tiếp theo.
+
+### Sơ đồ trình tự – Luồng GPS Tracking (Android)
+
+MAUI App -> GpsService: Gọi StartTrackingAsync() để kích hoạt dịch vụ. 
+
+GpsService -> GpsForegroundService: Khởi chạy dịch vụ nền kèm Notification (Android). 
+
+GpsForegroundService -> Hệ điều hành: Thực hiện các lệnh tạo channel và gọi StartForeground(TypeLocation) để xin quyền ưu tiên cao. 
+
+GpsForegroundService -> MainViewModel: Nằm trong vòng lặp vô tận, mỗi 3s sẽ lấy tọa độ và gửi LocationUpdatedMessage qua Messenger. 
+
+MainViewModel -> MainViewModel: Đưa tọa độ nhận được vào Buffer di chuyển. 
+
+MainViewModel -> MovementController: Kiểm tra khối rẽ nhánh (alt), gửi gói dữ liệu (Batch) lên API khi đạt 25 điểm hoặc sau 30s. 
+
+MovementController -> SQLite: Thực hiện lệnh INSERT dữ liệu vào bảng MovementLogs và trả về mã 200 OK.
+
+### Hộp logic chi tiết – Theo dõi GPS
+- **Khả năng phục hồi dịch vụ:** Dịch vụ nền đảm bảo hệ điều hành không tắt tiến trình. Trên Android, một thông báo cố định sẽ hiển thị "Đang theo dõi...".
+- **Trừu tượng hóa nền tảng:** `GpsService` trừu tượng hóa các cài đặt riêng biệt của từng nền tảng; Android dùng dịch vụ nền, iOS dùng đăng ký `CLLocationManager` liên tục.
+- **Chiến lược gom nhóm:** Cân bằng giữa mức tiêu thụ pin và chi phí mạng:
+  - **Kích hoạt theo số lượng:** 25 điểm ≈ 75 m di chuyển (giả sử khoảng cách 3 giây).
+  - **Kích hoạt theo thời gian:** 30 giây đảm bảo dữ liệu được gửi ngay cả khi người dùng đứng yên.
+- **Xử lý lỗi:** Nếu POST thất bại, nhóm dữ liệu vẫn nằm trong bộ đệm và sẽ được thử lại ở lần kích hoạt tiếp theo.
+
+---
+
+# Chương 4 – Hàng rào địa lý (Geofence)
+
+## Tổng quan
+Hệ thống Geofence đóng vai trò là "bộ não" quyết định của ứng dụng di động, chịu trách nhiệm xác thực vị trí khách tham quan so với các Điểm tham quan (POI). Nó chuyển đổi tọa độ GPS thô thành các sự kiện văn hóa/ẩm thực bằng cách kích hoạt thuyết minh tự động khi các điều kiện về khoảng cách và thời gian cư trú được thỏa mãn.
+
+### Giải thích Sơ đồ hoạt động – Kiểm tra Geofence
+Quy trình này diễn ra liên tục mỗi khi có tọa độ mới từ GPS (chu kỳ 3 giây), đảm bảo phản hồi tức thì nhưng vẫn lọc bỏ được các tín hiệu nhiễu.
+
+**Giai đoạn 1: Tiếp nhận và Lọc dữ liệu đầu vào**
+- **[Nhận LocationUpdatedMessage]:** Mỗi khi `GpsService` gửi tin nhắn qua Messenger nội bộ, Geofence Engine sẽ thức tỉnh. Nó nhận vào `Latitude` và `Longitude` hiện tại của khách.
+- **[Load POIs & Sync State]:** App truy vấn danh sách POI từ `LocalDbService`. Lưu ý: chỉ những POI đang ở trạng thái `IsActive = true` mới được đưa vào tính toán để tối ưu hiệu năng.
+- **[Cấu hình Độ nhạy (Multiplier)]:** Hệ thống đọc giá trị `gps_radius_multiplier` từ bộ nhớ máy (`Preferences`). Nếu khách đặt là 2.0x, một quán có bán kính 15m sẽ được mở rộng thành 30m, phù hợp cho những người muốn nghe thông tin sớm hơn.
+- **[Sorting Priority]:** Trong trường hợp khách đứng tại giao lộ có nhiều quán ăn chồng lấn bán kính, hệ thống sắp xếp POI theo `Priority` giảm dần. Quán có độ ưu tiên cao nhất sẽ được xử lý và phát thuyết minh trước.
+
+**Giai đoạn 2: Tính toán Hình học và Cơ chế Chống nhiễu**
+- **[Haversine Mathematics]:** Engine thực hiện thuật toán Haversine để tính khoảng cách cung tròn trên mặt cầu (Trái đất). Công thức này tính đến độ cong của Trái đất, đảm bảo độ chính xác đến từng mét ngay cả khi di chuyển ở vận tốc đi bộ.
+- **[Dynamic Radius Adjustment]:** Bán kính kích hoạt được tính bằng: `BaseRadius * Multiplier`.
+- **[Inside Geofence? (Rẽ nhánh 1)]:** Kiểm tra khoảng cách hiện tại so với bán kính đã hiệu chỉnh.
+  - **Ngách "Inside":** Khoảng cách ≤ bán kính. Hệ thống tăng bộ đếm `consecutiveHits` cho POI này.
+  - **Ngách "Outside":** Khoảng cách > bán kính (đã bao gồm hệ số Hysteresis 1.2x nếu đang ở trong). Bộ đếm `consecutiveHits` bị reset về 0.
+- **[Consecutive Hits ≥ 2? (Rẽ nhánh 2)]:** Kiểm tra tính ổn định của vị trí để tránh nhiễu GPS.
+  - **Ngách "Yes":** Xác nhận khách thực sự đang ở trong quán. Chuyển xuống bước kiểm tra Cooldown.
+  - **Ngách "No":** Bỏ qua, tiếp tục lắng nghe tọa độ tiếp theo. (Trạng thái: **Approaching** nếu hits=1).
+- **[Hysteresis Logic (Vùng đệm thoát)]:** Khi khách đang ở trong quán và bắt đầu đi ra, hệ thống áp dụng hệ số 1.2x vào bán kính. Ví dụ: bán kính vào là 15m, nhưng bán kính để hệ thống coi là "đã rời khỏi" quán là 18m. Điều này ngăn chặn việc âm thanh bị bật/tắt liên tục khi khách đứng ngay ranh giới hàng rào.
+
+**Giai đoạn 3: Phối hợp Dịch vụ và Đồng bộ Analytics**
+- **[Can Trigger? (Rẽ nhánh 3 - Cooldown Store)]:** Kiểm tra "Bộ nhớ chờ" để tránh phát âm thanh quá dày đặc.
+  - **Ngách "Yes":** Quán chưa phát hoặc đã qua 60 giây kể từ lần phát cuối. Tiến hành phát thuyết minh.
+  - **Ngách "No":** Hủy yêu cầu. Khách vẫn đang đứng trong quán nhưng hệ thống sẽ không phát lại để tránh làm phiền.
+- **[Narration Queuing]:** POI được đẩy vào `NarrationService`. 
+- **[Audio File Found? (Rẽ nhánh 4)]:** Kiểm tra nguồn dữ liệu âm thanh trên Server hoặc Cache.
+  - **Ngách "Yes":** Tải và phát file MP3 gốc (do chủ quán upload).
+  - **Ngách "No":** Chuyển sang quy trình AI: Dịch mô tả và dùng bộ đọc máy (TTS) của thiết bị để phát.
+- **[Xác thực Lượt tham quan]:** Ghi nhận `PoiVisitLog` với loại kích hoạt là `GPS_TRIGGER`.
+- **[API Call Success? (Rẽ nhánh 5 - Outbox Strategy)]:** Gửi log về Backend để thống kê.
+  - **Ngách "Yes":** Log được cập nhật ngay lập tức vào database server.
+  - **Ngách "No":** (Do mất mạng/sóng yếu) Log được đóng gói vào `OutboxService`, lưu an toàn trong SQLite và tự động được "xả" (Flush) khi có sóng tốt.
+
+### Sơ đồ trình tự – Kích hoạt Geofence
+
+MainViewModel -> GeofenceService: Gọi CheckTriggeredAsync(location) mỗi khi nhận tọa độ mới.
+
+GeofenceService -> GeofenceService: Tính toán khoảng cách Haversine và áp dụng Multiplier/Hysteresis.
+
+GeofenceService -> GeofenceService: Kiểm tra khối rẽ nhánh (alt), xác thực Double-Hit (hits >= 2) để lọc nhiễu.
+
+GeofenceService -> MainViewModel: Trả về POI ID nếu khách thực sự bước vào vùng hàng rào.
+
+MainViewModel -> GeofenceCooldownStore: Kiểm tra thời gian chờ (cooldown 60s) để tránh phát âm thanh liên tục.
+
+MainViewModel -> NarrationService: Gửi POI vào hàng đợi thuyết minh tự động.
+
+MainViewModel -> AnalyticsController: Gửi log POST /api/analytics/log loại GPS_TRIGGER.
+
+AnalyticsController -> SQLite: Ghi nhận lượt tham quan vào database và trả về 200 OK.
+
+### Hộp logic chi tiết – Geofence
+- **Độ chính xác toán học:** Thuật toán Haversine sử dụng hằng số bán kính Trái đất $R = 6,371,000$ mét. Kết quả trả về là khoảng cách tuyệt đối giữa hai điểm tọa độ.
+- **Trạng thái cư trú (Occupancy):** Hệ thống duy trì một danh sách `insidePoiIds` trong RAM. Một POI chỉ được coi là "đã thoát" khi khoảng cách vượt quá ranh giới Hysteresis (1.2x bán kính).
+- **Hiệu năng thực thi:** Quá trình kiểm tra 50 POI chỉ mất < 5ms trên các thiết bị di động tầm trung nhờ vào việc tối ưu hóa truy vấn LINQ và tính toán số thực trực tiếp.
+- **Logic ưu tiên (Priority Overlap):** Khi khách đứng giữa hai quán ăn, quán có `Priority` lớn hơn (ví dụ: quán tài trợ hoặc quán đặc trưng) sẽ được hệ thống ưu tiên chiếm quyền phát thuyết minh trước.
+
+---
+
+# Chương 5 – Các tính năng MVP
+
+## Tổng quan
+Lớp MVP cung cấp giao diện quản trị web (React 19) và giao diện ứng dụng di động để quản lý POI, bảng điều khiển thống kê, tạo/quét mã QR và bản đồ tương tác. Mọi thao tác đều thông qua các controller ASP.NET Core 10, SignalR hub `VinhKhanhHub`, và các dịch vụ client MAUI.
+
+---
+### 5.1 CRUD POI (Quản trị Web)
+#### Giải thích Sơ đồ hoạt động – Tạo POI
+Sơ đồ mô tả quy trình từ lúc Admin nhập liệu cho đến khi POI mới được đồng bộ tới mọi thiết bị di động thông qua SignalR.
+
+**Giai đoạn 1: Chuẩn bị và Nhập liệu**
+- **[Mở Editor]:** Admin hoặc Chủ quán truy cập trang quản trị và chọn "Tạo POI mới".
+- **[Fill Form]:** Nhập các trường thông tin bắt buộc: Tên quán, mô tả, tọa độ (X, Y), bán kính kích hoạt và độ ưu tiên.
+- **[Media Selection]:** Lựa chọn tệp hình ảnh minh họa và file âm thanh thuyết minh từ máy tính.
+
+**Giai đoạn 2: Xử lý Media và Xác thực**
+- **[Upload Media? (Rẽ nhánh 1)]:** Kiểm tra xem người dùng có tải lên tệp tin âm thanh/hình ảnh hay không.
+  - **Ngách "Yes":** Gọi **[POST /api/audio/upload]** để lưu trữ file vào hệ thống và lấy URL.
+  - **Ngách "No":** Sử dụng các file mặc định hoặc bỏ qua.
+- **[Auto TTS? (Rẽ nhánh 2)]:** Kiểm tra tùy chọn tự động tạo thuyết minh từ văn bản.
+  - **Ngách "Yes":** Gọi **[POST /api/audio/generate-tts]** để server tự tạo file âm thanh từ văn bản mô tả.
+  - **Ngách "No":** Bỏ qua bước này.
+- **[Validate Coordinate (Rẽ nhánh 3)]:** Kiểm tra logic tọa độ.
+  - **Ngách "Valid":** Tọa độ nằm trong phạm vi phố Vĩnh Khánh. Chuyển sang lưu database.
+  - **Ngách "Invalid":** Hiển thị thông báo lỗi yêu cầu Admin nhập lại tọa độ chính xác.
+
+**Giai đoạn 3: Lưu trữ và Phát tán**
+- **[POST /api/poi]:** Gửi toàn bộ gói dữ liệu (bao gồm URL media) về Backend.
+- **[Success? (Rẽ nhánh 4)]:** Kiểm tra phản hồi từ server.
+  - **Ngách "Yes":** Server tự động sinh mã QR định danh duy nhất (VK-POI-XXXX).
+  - **Ngách "No":** Hiển thị lỗi hệ thống.
+- **[VinhKhanhHub Broadcast]:** Server phát một sự kiện `PoiCreated` tới tất cả các app di động đang kết nối để chúng cập nhật bản đồ ngay lập tức mà không cần tải lại trang.
+
+### Sơ đồ trình tự – Tạo POI (Web CMS)
+
+Owner -> React UI: Nhập liệu thông tin quán và nhấn Submit form.
+
+React UI -> Media Services: Thực hiện upload audio/image (nếu có) và nhận URL lưu trữ.
+
+React UI -> PoiController: Gửi yêu cầu POST /api/poi kèm thông tin media.
+
+PoiController -> SQLite: Xác thực dữ liệu, lưu POI và tự động sinh mã QR (VK-POI-XXXX).
+
+PoiController -> VinhKhanhHub: Phát sự kiện Broadcast "PoiCreated" tới tất cả các client đang kết nối.
+
+VinhKhanhHub -> MAUI Clients: Tự động cập nhật Marker mới trên bản đồ thời gian thực.
+
+#### Hộp logic chi tiết – Quản lý POI
+- **Toàn vẹn dữ liệu:** Tọa độ được xác thực trong phạm vi thành phố; bán kính giới hạn tối đa 500m.
+- **Tạo mã QR:** `EnsureQrCodeAsync()` tạo chuỗi định danh `VK-POI-<guid>`.
+- **Media Handling:** Ảnh được lưu trên Azure Blob; âm thanh được tải lên hoặc tạo qua TTS phía máy chủ.
+- **SignalR Real-Time:** Đảm bảo ứng dụng di động thấy POI mới ngay lập tức mà không cần poll.
+
+---
+### 5.2 Bảng điều khiển thống kê (Analytics)
+#### Giải thích Sơ đồ hoạt động – Tải thống kê
+Sơ đồ mô tả cách thức hệ thống tổng hợp dữ liệu từ hàng triệu bản ghi log để hiển thị thành các biểu đồ trực quan cho Admin.
+
+**Giai đoạn 1: Truy vấn Dữ liệu Tổng hợp**
+- **[Admin Dashboard]:** Admin truy cập trang chủ quản trị.
+- **[GET /api/admin/summary]:** Client gọi API để lấy các con số tổng quát (Tổng số POI, tổng lượt khách, số lượng Tour).
+- **[DB Aggregation]:** Server thực hiện lệnh COUNT và SUM trên các bảng liên quan để trả về kết quả nhanh chóng.
+
+**Giai đoạn 2: Phân tích Xu hướng và Top POI**
+- **[GET /api/analytics/top]:** Lấy danh sách các quán có lượt tham quan nhiều nhất trong vòng 7 ngày qua.
+- **[Render BarChart]:** Sử dụng thư viện Recharts để vẽ biểu đồ cột thể hiện mức độ phổ biến của các quán ăn.
+
+**Giai đoạn 3: Hiển thị Bản đồ nhiệt (Heatmap)**
+- **[GET /api/analytics/heatmap]:** API lấy danh sách hàng nghìn tọa độ di chuyển gần đây của người dùng.
+- **[Render Leaflet Heatmap]:** Vẽ các vùng màu (đỏ/vàng/xanh) lên bản đồ để Admin biết khu vực nào đang tập trung đông khách tham quan nhất.
+
+### Sơ đồ trình tự – Tải thống kê (Analytics)
+
+Admin -> React UI: Truy cập màn hình Dashboard quản trị.
+
+React UI -> AnalyticsController: Gọi đồng thời các API (Summary, Top POIs, Heatmap).
+
+AnalyticsController -> SQLite: Thực hiện các truy vấn Aggregation (COUNT, SUM, GROUP BY).
+
+AnalyticsController -> React UI: Trả về tập dữ liệu JSON tinh gọn.
+
+React UI -> Recharts / Leaflet: Vẽ biểu đồ cột và bản đồ nhiệt từ dữ liệu nhận được.
+
+#### Hộp logic chi tiết – Thống kê
+- **Tối ưu hóa tổng hợp:** Sử dụng các truy vấn SQL đơn lẻ với `GROUP BY` và đánh chỉ mục trên `RecordedAt`.
+- **Heatmap Data Size:** Giới hạn trong 10 phút cuối, khoảng vài nghìn điểm → JSON nhẹ.
+- **Cache Invalidation:** TanStack Query `invalidateQueries('analytics')` khi có lượt tham quan POI mới.
+
+---
+### 5.3 Mã QR – Quét & Tạo
+#### Giải thích Sơ đồ hoạt động – Luồng quét QR
+Sơ đồ mô tả quy trình xử lý camera và logic kiểm tra phía server khi khách tham quan quét mã tại quán.
+
+**Giai đoạn 1: Kích hoạt Camera và Nhận diện**
+- **[Open Scanner]:** Người dùng mở tính năng quét QR trên app MAUI.
+- **[QR Detected? (Rẽ nhánh 1)]:** ZXing quét liên tục luồng video.
+  - **Ngách "Yes":** Nhận dạng mã và chuyển sang bước tiếp theo.
+  - **Ngách "No":** Tiếp tục quét (Loop).
+- **[Cooldown Active? (Rẽ nhánh 2)]:** Chống quét trùng lặp trong thời gian ngắn.
+  - **Ngách "Yes":** Bỏ qua yêu cầu hiện tại để tránh spam.
+  - **Ngách "No":** Khóa Semaphore và gửi yêu cầu xác thực.
+
+**Giai đoạn 2: Xác thực và Lấy thông tin**
+- **[GET /api/poi/qrcode/<code>]:** Gửi mã lên server.
+- **[POI Found? (Rẽ nhánh 3)]:** Kiểm tra trong SQLite.
+  - **Ngách "Yes":** Trả về thông tin chi tiết quán (tên, audio, v.v.).
+  - **Ngách "No":** Hiển thị thông báo "Mã QR không hợp lệ".
+
+**Giai đoạn 3: Phản hồi và Thuyết minh**
+- **[PlayPoiAsync]:** Ứng dụng di động tự động phát thuyết minh.
+- **[Log Visit]:** Ghi nhận lượt tham quan loại `QR_SCAN`.
+
+### Sơ đồ trình tự – Luồng quét QR (Mobile)
+
+User -> ZXing Scanner: Thực hiện quét mã QR tại quán ăn.
+
+QrScanPage -> Semaphore Lock: Kiểm tra Cooldown (3s) để tránh việc kích hoạt quét kép.
+
+QrScanPage -> PoiController: Gửi mã code qua API GET /api/poi/qrcode/<code>.
+
+PoiController -> SQLite: Tìm kiếm thông tin POI theo mã định danh định dạng VK-POI-XXXX.
+
+PoiController -> QrScanPage: Trả về đối tượng POI DTO hoặc thông báo mã không hợp lệ.
+
+QrScanPage -> NarrationService: Tự động kích hoạt phát thuyết minh qua hàm PlayPoiAsync.
+
+QrScanPage -> Analytics: Gửi log truy cập loại QR_SCAN về server để thống kê.
+
+#### Hộp logic chi tiết – Quét QR
+- **Debounce & SemaphoreSlim** ngăn chặn việc kích hoạt kép trong vòng 3 giây.
+- **Fallback Manual Entry** hiển thị khi quyền camera bị từ chối hoặc mã QR không đọc được.
+- **Outbox Pattern** đảm bảo các log quét QR không bị mất khi mạng yếu.
+
+---
+### 5.4 Xem bản đồ – Bản đồ tương tác
+#### Giải thích Sơ đồ hoạt động – Tải bản đồ & Tương tác
+Sơ đồ mô tả cách kết hợp giữa dữ liệu tĩnh (POI) và dữ liệu động (vị trí GPS của người dùng) trên một màn hình bản đồ duy nhất.
+
+**Giai đoạn 1: Khởi tạo và Tải dữ liệu Cache**
+- **[Navigate to Map]:** Người dùng mở tab Bản đồ.
+- **[Load POIs from Cache]:** App ưu tiên đọc dữ liệu các quán từ SQLite cục bộ để hiển thị ngay lập tức, giúp bản đồ mượt mà không bị trễ.
+
+**Giai đoạn 2: Vẽ các lớp (Layers) bản đồ**
+- **[POI Layer]:** Vẽ các biểu tượng (Icon) vị trí các quán ăn.
+- **[Geofence Layer]:** Vẽ các vòng tròn bán kính xung quanh quán (để người dùng biết mình sắp vào vùng thuyết minh chưa).
+- **[User Location Layer]:** Vẽ biểu tượng "Mũi tên" hoặc "Chấm xanh" thể hiện vị trí người dùng dựa trên GPS.
+
+**Giai đoạn 3: Tương tác và Cập nhật thời gian thực**
+- **[LocationUpdated Event]:** Khi người dùng di chuyển.
+- **[Inside Geofence? (Rẽ nhánh 1)]:** Kiểm tra va chạm bản đồ.
+  - **Ngách "Yes":** Hiển thị hiệu ứng nhấn mạnh trên Marker POI.
+  - **Ngách "No":** Marker ở trạng thái bình thường.
+- **[POI Marker Tapped? (Rẽ nhánh 2)]:** Người dùng chạm vào quán.
+  - **Ngách "Yes":** Hiển thị Popup thông tin nhanh.
+  - **Ngách "No":** Không có hành động.
+
+### Sơ đồ trình tự – Tải bản đồ & Tương tác
+
+MAUI App -> LocalDbService: Tải danh sách POI từ SQLite máy khách để hiển thị nhanh.
+
+MAUI App -> Mapsui Control: Khởi tạo các lớp (Layers) Marker, Geofence và User Location.
+
+GpsService -> MainViewModel: Gửi tọa độ GPS thực tế qua Messenger mỗi 3 giây.
+
+MainViewModel -> Mapsui Control: Cập nhật vị trí "Chấm xanh" của người dùng trên bản đồ.
+
+User -> POI Marker: Chạm vào Marker quán ăn để xem nhanh thông tin Popup.
+
+MainViewModel -> UI: Hiển thị Popup và nút phát thuyết minh thủ công (Manual Play).
+
+#### Hộp logic chi tiết – Tương tác bản đồ
+- **Touch Handling:** Mapsui cung cấp hit-testing; app dịch tọa độ màn hình sang ID POI.
+
+---
+
+# Chương 6 – Các tính năng AI
+## Tổng quan
+Lớp AI cung cấp sức mạnh cho chatbot đa ngôn ngữ, chuỗi dự phòng dịch thuật, và tổng hợp giọng nói thuyết minh POI. Nó điều phối các dịch vụ Gemini 1.5 Flash, Ollama llama 3.2, LibreTranslate và Microsoft Translator thông qua `ResilientTranslationService`.
+
+---
+### 6.1 Chatbot AI
+#### Giải thích Sơ đồ hoạt động – Tương tác Chatbot
+Sơ đồ mô tả quy trình từ khi người dùng đặt câu hỏi cho đến khi server AI xử lý ngữ cảnh và trả về câu trả lời thông minh.
+
+**Giai đoạn 1: Khởi tạo và Nhập liệu**
+- **[Open Chat]:** Người dùng mở tab Chat trên app.
+- **[Load History]:** Hệ thống tự động tải tối đa 10 tin nhắn gần nhất để AI hiểu được luồng hội thoại trước đó.
+- **[User Input]:** Người dùng nhập câu hỏi (về món ăn, địa điểm, hoặc lịch sử phố) và nhấn gửi.
+
+**Giai đoạn 2: Xử lý Ngữ cảnh và Gọi AI**
+- **[System Prompt Build]:** Server chuẩn bị bộ khung câu lệnh (Prompt).
+- **[Engine Selection (Rẽ nhánh 1)]:** Hệ thống tự động chọn engine AI khả dụng.
+  - **Ngách "Gemini":** Ưu tiên gọi Gemini 1.5 Flash (Cloud) để có câu trả lời chất lượng nhất.
+  - **Ngách "Ollama Fallback":** Nếu Gemini lỗi/mất mạng, hệ thống tự động chuyển sang Ollama (Local LLM).
+- **[AI Chat Request]:** Thực hiện cuộc gọi API tới engine đã chọn.
+- **[Response Valid? (Rẽ nhánh 2)]:** Kiểm tra tính hợp lệ của câu trả lời.
+  - **Ngách "Yes":** Đóng gói dữ liệu trả về cho App di động.
+  - **Ngách "No":** Gọi lại (Retry) hoặc thông báo lỗi cho người dùng.
+
+**Giai đoạn 3: Phản hồi và Cập nhật UI**
+- **[Response Handling]:** Server nhận kết quả và kiểm tra tính hợp lệ.
+- **[Update UI]:** Hiển thị câu trả lời của AI lên màn hình người dùng với hiệu ứng mượt mà.
+
+### Sơ đồ trình tự – Tương tác Chatbot AI
+
+User -> ChatPage: Nhập câu hỏi và nhấn nút Gửi.
+
+ChatViewModel -> AiController: Gửi tin nhắn kèm theo 10 tin nhắn gần nhất làm ngữ cảnh (History).
+
+AiController -> AI Selection: Kiểm tra khối rẽ nhánh (alt) để ưu tiên Gemini hoặc chuyển sang Ollama (Fallback).
+
+AI Engine -> AiController: Trả về câu trả lời định dạng Markdown phù hợp với ngữ cảnh POI/Tour.
+
+AiController -> ChatViewModel: Truyền kết quả và cập nhật giao diện tin nhắn cho người dùng.
+
+#### Hộp logic chi tiết – Chatbot
+- **Prompt Engineering:** Bao gồm dữ liệu POI/Tour để AI có nhận thức về ngữ cảnh.
+- **Engine Fallback:** Tự động đảo lỗi giữa Gemini và Ollama giúp hệ thống luôn sẵn sàng 24/7.
+
+---
+### 6.2 Chuỗi dự phòng dịch thuật (Translation Fallback)
+#### Giải thích Sơ đồ hoạt động – Dịch vụ dịch thuật bền bỉ
+Sơ đồ mô tả cơ chế "không bao giờ bỏ cuộc" của hệ thống khi dịch thuật nội dung đa ngôn ngữ cho khách du lịch.
+
+**Giai đoạn 1: Tiếp nhận và Kiểm tra**
+- **[Translation Request]:** Nhận yêu cầu dịch văn bản.
+- **[Language Equality Check]:** Nếu ngôn ngữ đích giống ngôn ngữ nguồn, hệ thống trả về ngay lập tức.
+
+**Giai đoạn 2: Chuỗi dự phòng (Fallback Chain)**
+- **[Gemini Attempt (Rẽ nhánh 1)]:** Thử dịch bằng Gemini 1.5 Flash.
+  - **Ngách "Success":** Trả kết quả ngay lập tức cho client.
+  - **Ngách "Fail":** Chuyển sang bước tiếp theo trong chuỗi.
+- **[Ollama Attempt (Rẽ nhánh 2)]:** Gọi Ollama (Local LLM).
+  - **Ngách "Success":** Trả kết quả.
+  - **Ngách "Fail":** Tiếp tục dự phòng.
+- **[Libre/Microsoft Attempt (Rẽ nhánh 3)]:** Sử dụng các dịch vụ dịch thuật truyền thống.
+  - **Ngách "Success":** Trả kết quả cuối cùng.
+  - **Ngách "Fail":** Trả về mã lỗi 503 nếu tất cả đều thất bại.
+
+**Giai đoạn 3: Trả về kết quả**
+- **[Final Result]:** Trả về bản dịch tốt nhất thu được từ chuỗi.
+- **[Error 503]:** Chỉ trả về lỗi nếu tất cả các dịch vụ trong chuỗi đều thất bại.
+
+### Sơ đồ trình tự – Chuỗi dự phòng dịch thuật (Fallback Chain)
+
+Client -> TranslationService: Gửi yêu cầu dịch văn bản mô tả POI.
+
+TranslationService -> Gemini Engine: Thử nghiệm dịch thuật chất lượng cao (Primary Attempt).
+
+Gemini Engine -> TranslationService: Trả về kết quả dịch thuật thành công.
+
+TranslationService -> Ollama Engine: Thực hiện Fallback rẽ nhánh (alt) nếu Gemini gặp lỗi kết nối.
+
+TranslationService -> Traditional Services: Sử dụng LibreTranslate hoặc Microsoft làm dự phòng cuối cùng.
+
+TranslationService -> Client: Trả về bản dịch tốt nhất hoặc mã lỗi 503 nếu tất cả thất bại.
+
+---
+### 6.3 Tổng hợp giọng nói (TTS)
+#### Giải thích Sơ đồ hoạt động – Luồng TTS
+Sơ đồ mô tả quy trình app di động quyết định phát file âm thanh có sẵn hay tự động tạo giọng đọc máy.
+
+**Giai đoạn 1: Kiểm tra tài nguyên âm thanh**
+- **[Narration Trigger]:** Khi khách vào vùng POI, app bắt đầu quy trình thuyết minh.
+- **[Audio Exist? (Rẽ nhánh 1)]:** App kiểm tra xem có file MP3 thu âm sẵn hay không.
+  - **Ngách "Yes":** Tải file trực tiếp từ server để phát chất lượng cao.
+  - **Ngách "No":** Chuyển sang quy trình AI (Dịch + TTS).
+
+**Giai đoạn 2: Xử lý nội dung âm thanh**
+- **[Download MP3 (Ngách Yes)]:** Tải dữ liệu âm thanh từ server.
+- **[Auto Translation (Ngách No)]:** Hệ thống tự động dịch văn bản mô tả sang ngôn ngữ của khách.
+
+**Giai đoạn 3: Phát âm thanh và Ghi log**
+- **[SpeakAsync]:** Sử dụng bộ máy TTS của thiết bị (Android/iOS) để đọc văn bản với tốc độ 0.92x.
+- **[Recently Played Cache]:** Tránh phát lặp trong 25 giây nếu khách vẫn đứng yên tại chỗ.
+- **[Log Visit]:** Ghi nhận lượt tham quan và gửi về server.
+
+### Sơ đồ trình tự – Phát thuyết minh & TTS (Narration Flow)
+
+NarrationService -> Audio Manager: Kiểm tra sự tồn tại của tệp AudioUrl của POI.
+
+Audio Manager -> NarrationService: Trả về kết quả rẽ nhánh (alt) Có/Không có tệp âm thanh.
+
+NarrationService -> Plugin.Maui.Audio: Thực hiện phát file MP3 trực tiếp từ server (Nếu có).
+
+NarrationService -> TranslationService: Yêu cầu dịch văn bản nếu không có file âm thanh gốc.
+
+TranslationService -> Device TTS: Sử dụng bộ đọc máy của thiết bị để phát âm thanh (Tốc độ 0.92f).
+
+NarrationService -> NarrationService: Ghi nhận POI vào bộ nhớ tạm để tránh phát lặp trong 25 giây.
+
+---
+
+# Chương 7 – Quản lý người dùng & Xác thực
+## Tổng quan
+Chương này bao gồm lớp bảo mật bao gồm xác thực, kiểm soát truy cập (Admin/Owner), quản lý mật khẩu và khởi tạo dữ liệu (seeding).
+
+---
+### 7.1 Xác thực (Đăng nhập)
+#### Giải thích Sơ đồ hoạt động – Đăng nhập
+Sơ đồ mô tả quy trình kiểm tra danh tính và cấp quyền truy cập thông qua mã thông báo JWT.
+
+**Giai đoạn 1: Nhập liệu và Gửi yêu cầu**
+- **[Input Credentials]:** Người dùng nhập Username và Password trên giao diện Web hoặc App.
+- **[POST /api/auth/login]:** Gửi yêu cầu xác thực về server qua HTTPS.
+
+**Giai đoạn 2: Xác minh phía Server**
+- **[Account Active? (Rẽ nhánh 1)]:** Kiểm tra trạng thái tài khoản `IsActive`.
+  - **Ngách "Yes":** Tiếp tục kiểm tra mật khẩu.
+  - **Ngách "No":** Trả về lỗi "Tài khoản bị khóa".
+- **[Password Verify? (Rẽ nhánh 2)]:** So sánh mật khẩu bằng `BCrypt.Verify`.
+  - **Ngách "Success":** Tạo mã JWT Token và phân quyền (Role).
+  - **Ngách "Fail":** Trả về lỗi "Sai mật khẩu".
+
+**Giai đoạn 3: Lưu trữ và Điều hướng**
+- **[Response Token]:** Trả về mã JWT kèm thông tin cơ bản.
+- **[Store Token]:** Lưu Token vào bộ nhớ máy.
+- **[Navigate]:** Chuyển hướng người dùng vào trang Dashboard.
+
+### Sơ đồ trình tự – Đăng nhập JWT
+
+User -> Login Page: Nhập thông tin tài khoản và mật khẩu.
+
+Login Page -> AuthController: Gửi yêu cầu xác thực qua API POST /api/auth/login.
+
+AuthController -> SQLite: Kiểm tra trạng thái IsActive và xác thực mật khẩu qua BCrypt.Verify.
+
+AuthController -> JWT Service: Khởi tạo mã Token kèm quyền hạn (Role) có thời hạn 24h.
+
+AuthController -> Login Page: Trả về mã JWT và thông tin người dùng cơ bản.
+
+Login Page -> Storage: Lưu Token vào SecureStorage và điều hướng người dùng tới Dashboard.
+
+---
+### 7.4 Quản lý mật khẩu (Đổi/Đặt lại)
+#### Giải thích Sơ đồ hoạt động – Quên mật khẩu
+Sơ đồ mô tả luồng reset mật khẩu nhanh chóng cho Chủ quán (Owner).
+
+**Giai đoạn 1: Yêu cầu Đặt lại**
+- **[Forgot Password Form]:** Nhập Username và mật khẩu mới mong muốn.
+- **[POST /api/auth/forgot-password]:** Gửi yêu cầu thay đổi mật khẩu.
+
+**Giai đoạn 2: Kiểm tra và Cập nhật**
+- **[User Exists? (Rẽ nhánh 1)]:** Kiểm tra Username trong SQLite.
+  - **Ngách "Yes":** Chuyển sang băm mật khẩu mới.
+  - **Ngách "No":** Trả về lỗi "Người dùng không tồn tại".
+- **[BCrypt Hash]:** Băm mật khẩu mới trước khi lưu.
+- **[Update DB]:** Cập nhật mã băm mới vào database.
+
+**Giai đoạn 3: Hoàn tất**
+- **[Redirect to Login]:** Thông báo thành công và yêu cầu đăng nhập lại.
+
+### Sơ đồ trình tự – Đăng ký & Reset mật khẩu
+
+User -> Auth UI: Nhập thông tin đăng ký hoặc mật khẩu mới.
+
+Auth UI -> AuthController: Gửi yêu cầu xác thực (POST /api/auth/register hoặc forgot-password).
+
+AuthController -> SQLite: Kiểm tra tính duy nhất của Username hoặc sự tồn tại của tài khoản.
+
+AuthController -> BCrypt: Thực hiện băm (hash) mật khẩu để đảm bảo bảo mật.
+
+AuthController -> SQLite: Thực hiện lệnh INSERT hoặc UPDATE vào database.
+
+AuthController -> Auth UI: Thông báo kết quả thành công và chuyển hướng về trang Đăng nhập.
+
+---
+### 7.8 Khởi tạo dữ liệu (Seed Database)
+#### Giải thích Sơ đồ hoạt động – Logic Seed
+Sơ đồ mô tả quy trình tự động nạp dữ liệu nền giúp hệ thống sẵn sàng hoạt động ngay sau khi cài đặt.
+
+**Giai đoạn 1: Kích hoạt và Di trú**
+- **[Admin Trigger]:** Quản trị viên hệ thống gọi API để bắt đầu nạp dữ liệu.
+- **[Migrate DB]:** Nâng cấp cấu trúc Database lên phiên bản mới nhất.
+
+**Giai đoạn 2: Nạp dữ liệu mặc định**
+- **[Check Existing]:** Tránh nạp trùng lặp dữ liệu.
+- **[Insert Default POIs/Tours]:** Nạp danh sách quán ăn và lộ trình tham quan mẫu.
+
+**Giai đoạn 3: Báo cáo kết quả**
+- **[Return Counts]:** Trả về số lượng các bản ghi đã được nạp.
+
+### Sơ đồ trình tự – Seed Database (Admin)
+
+Admin -> AdminController: Gọi yêu cầu khởi tạo qua API POST /api/admin/seed (Dev/Staging).
+
+AdminController -> SQLite: Thực hiện Database.MigrateAsync() để đồng bộ cấu trúc bảng.
+
+AdminController -> DbSeeder: Nạp tài khoản Admin mặc định và dữ liệu POI/Tour mẫu.
+
+DbSeeder -> SQLite: Thực hiện lệnh chèn dữ liệu hàng loạt vào các bảng.
+
+AdminController -> Admin: Trả về báo cáo số lượng bản ghi đã được khởi tạo thành công.
+
+---
+
+# Chương 8 – Cài đặt & Đồng bộ Offline
+## Tổng quan
+Cài đặt cho phép người dùng tùy chỉnh trải nghiệm và đảm bảo dữ liệu sẵn có khi ngoại tuyến thông qua đồng bộ hóa SQLite.
+
+---
+### 8.1 Cài đặt Ngôn ngữ & GPS
+#### Giải thích Sơ đồ hoạt động – Cập nhật cài đặt
+Sơ đồ mô tả cách các thay đổi cấu hình được áp dụng ngay lập tức.
+
+**Giai đoạn 1: Thay đổi giao diện**
+- **[Language Selection]:** Chọn ngôn ngữ mới. App tải lại văn bản giao diện.
+- **[GPS Radius Slider]:** Kéo thanh điều chỉnh bán kính (0.5x - 2.0x).
+
+**Giai đoạn 2: Lưu trữ và Thông báo**
+- **[Save to Preferences]:** Lưu cấu hình vào bộ nhớ thiết bị.
+- **[LanguageChangedMessage]:** Phát tin nhắn nội bộ cập nhật dữ liệu.
+
+**Giai đoạn 3: Áp dụng Live**
+- **[Geofence Update]:** Dịch vụ Geofence áp dụng thông số mới ngay lập tức.
+
+---
+### 8.4 Đồng bộ dữ liệu (Sync Now)
+#### Giải thích Sơ đồ hoạt động – Đồng bộ ngay
+Sơ đồ mô tả quy trình làm mới dữ liệu từ server về database SQLite cục bộ.
+
+**Giai đoạn 1: Yêu cầu Đồng bộ**
+- **[Sync Button Click]:** Người dùng nhấn nút đồng bộ.
+- **[Fetch All Data]:** Gọi API lấy POIs và Tours mới nhất.
+
+**Giai đoạn 2: Cập nhật SQLite**
+- **[Clear and Replace]:** Xóa dữ liệu cũ và chèn dữ liệu mới nguyên tử.
+
+**Giai đoạn 3: Hoàn tất**
+- **[Update UI Status]:** Hiển thị thời gian đồng bộ cuối cùng.
+
+### Sơ đồ trình tự – Đồng bộ dữ liệu (Offline Sync)
+
+User -> SettingsPage: Nhấn nút "Đồng bộ ngay" trên ứng dụng di động.
+
+SettingsPage -> PoiController: Gọi API GET /api/poi để lấy dữ liệu mới nhất từ server.
+
+PoiController -> SettingsPage: Trả về danh sách POI DTO kèm theo thông tin bản dịch.
+
+SettingsPage -> LocalDbService: Thực hiện Transaction xóa dữ liệu cũ và ghi mới vào SQLite máy khách.
+
+SettingsPage -> OutboxService: Gọi hàm Flush() để bắt đầu quy trình đẩy log tồn đọng.
+
+OutboxService -> AnalyticsController: Gửi tuần tự các log di chuyển/tham quan từ SQLite lên server.
+
+---
+
+# Chương 9 – Tính năng Tour
+## Tổng quan
+Tour cung cấp các lộ trình được hướng dẫn qua Vĩnh Khánh. Quản trị viên có thể quản lý các lộ trình này qua CMS.
+
+---
+### 9.1 Theo dõi Tour (Di động)
+#### Giải thích Sơ đồ hoạt động – Đi theo Tour
+Sơ đồ mô tả trải nghiệm khách tham quan khi đi theo một lộ trình có sẵn.
+
+**Giai đoạn 1: Lựa chọn và Bắt đầu**
+- **[Select Tour]:** Chọn một Tour từ danh sách.
+- **[Start Tour]:** Nhấn nút bắt đầu. App chuyển sang chế độ dẫn đường.
+- **[Render Route]:** Vẽ đường đi và các điểm dừng lên bản đồ.
+
+**Giai đoạn 2: Giám sát GPS và Điểm dừng**
+- **[GPS Tracking]:** Liên tục kiểm tra vị trí người dùng.
+- **[Inside Current Stop? (Rẽ nhánh 1)]:** So sánh tọa độ với Geofence của điểm dừng hiện tại.
+  - **Ngách "Yes":** Tự động phát thuyết minh POI và đánh dấu hoàn thành điểm này.
+  - **Ngách "No":** Tiếp tục dẫn đường tới điểm hiện tại.
+- **[More Stops? (Rẽ nhánh 2)]:** Kiểm tra danh sách lộ trình.
+  - **Ngách "Yes":** Tự động chỉ đường tới điểm dừng tiếp theo.
+  - **Ngách "No":** Kết thúc Tour.
+
+**Giai đoạn 3: Tiến trình và Hoàn tất**
+- **[Next Stop]:** App tự động chỉ đường tới điểm dừng tiếp theo.
+- **[Tour Finished]:** Thông báo hoàn thành Tour và ghi log analytics.
+
+### Sơ đồ trình tự – Theo dõi lộ trình Tour
+
+User -> ToursPage: Lựa chọn một lộ trình tham quan và nhấn nút Bắt đầu.
+
+ToursPage -> MainViewModel: Kích hoạt chế độ Tour, vẽ đường dẫn (Route) và các điểm dừng (Stops).
+
+GeofenceService -> MainViewModel: Phát tín hiệu khi tọa độ khách bước vào phạm vi điểm dừng hiện tại.
+
+MainViewModel -> NarrationService: Tự động kích hoạt phát thuyết minh cho quán ăn thuộc điểm dừng.
+
+MainViewModel -> Tour Logic: Đánh dấu hoàn thành điểm dừng và cập nhật chỉ dẫn tới Stop tiếp theo.
+
+MainViewModel -> User: Hiển thị thông báo "Tour hoàn thành" khi đã đi qua toàn bộ lộ trình.
+
+---
+### 9.2 Quản lý Tour (Admin)
+#### Giải thích Sơ đồ hoạt động – Tạo Tour
+Sơ đồ mô tả cách Admin thiết kế một lộ trình tham quan mới.
+
+**Giai đoạn 1: Khởi tạo lộ trình**
+- **[Add Tour Info]:** Nhập tên Tour, mô tả và tải ảnh đại diện.
+- **[Select POIs]:** Chọn các quán ăn thành viên.
+
+**Giai đoạn 2: Sắp xếp thứ tự**
+- **[Assign StopOrder]:** Kéo thả để sắp xếp thứ tự tham quan các quán.
+
+**Giai đoạn 3: Lưu trữ**
+- **[POST /api/tour]:** Gửi dữ liệu về server lưu vào database.
+- **[VinhKhanhHub Broadcast]:** Thông báo cho các app di động về Tour mới.
+
+### Sơ đồ trình tự – Quản lý Tour (Admin)
+
+Admin -> React UI: Chọn danh sách các POI và thực hiện sắp xếp thứ tự tham quan (StopOrder).
+
+React UI -> TourController: Gửi yêu cầu POST /api/tour kèm theo danh sách các TourStops.
+
+TourController -> SQLite: Thực hiện Transaction lưu thông tin Tour và liên kết các điểm dừng.
+
+TourController -> VinhKhanhHub: Phát sự kiện Broadcast "TourCreated" tới tất cả mobile client.
+
+VinhKhanhHub -> MAUI Clients: Tự động cập nhật và tải về dữ liệu Tour mới nhất.
+
+---
+
+# Chương 10 – Chi tiết POI & Âm thanh
+---
+### 10.1 Chi tiết POI & Phát lại
+#### Giải thích Sơ đồ hoạt động – Xem chi tiết và Thuyết minh
+Sơ đồ mô tả quy trình hiển thị thông tin và điều khiển âm thanh cho một quán ăn cụ thể.
+
+**Giai đoạn 1: Tải dữ liệu chi tiết**
+- **[Open POI Detail]:** Người dùng nhấn vào một quán.
+- **[Data Cached? (Rẽ nhánh 1)]:** Kiểm tra SQLite cục bộ.
+  - **Ngách "Yes":** Load ngay lập tức để tiết kiệm mạng.
+  - **Ngách "No":** Gọi API server để lấy thông tin mới nhất.
+
+**Giai đoạn 2: Hiển thị và Phối hợp Âm thanh**
+- **[Render UI]:** Hiển thị nội dung theo ngôn ngữ khách chọn.
+- **[Audio Config (Rẽ nhánh 2)]:** Kiểm tra sự tồn tại của file MP3.
+  - **Ngách "Audio File":** Hiện nút Play và chuẩn bị luồng stream.
+  - **Ngách "TTS Only":** Hiện nút phát bộ đọc máy (AI).
+
+**Giai đoạn 3: Phát âm thanh thủ công**
+- **[Manual Play]:** Khách nhấn nút phát.
+- **[Is Success? (Rẽ nhánh 3)]:** Kết quả phát thuyết minh.
+  - **Ngách "Yes":** Ghi log lượt tham quan `Manual Trigger`.
+  - **Ngách "No":** Hiển thị lỗi tải âm thanh.
+
+---
+### 10.2 Quản lý Âm thanh (Chủ quán)
+#### Giải thích Sơ đồ hoạt động – Tải lên Âm thanh
+Sơ đồ mô tả quy trình Chủ quán tự cập nhật file thuyết minh chất lượng cao.
+
+**Giai đoạn 1: Lựa chọn file**
+- **[Pick Audio File]:** Chủ quán chọn file.
+- **[Size Valid? (Rẽ nhánh 1)]:** Kiểm tra dung lượng (< 10MB).
+  - **Ngách "Yes":** Cho phép chuyển sang bước tải lên.
+  - **Ngách "No":** Yêu cầu nén lại file hoặc chọn file khác.
+
+**Giai đoạn 2: Tải lên hệ thống**
+- **[POST /api/audio/upload]:** Gửi tệp lên server.
+- **[Upload Success? (Rẽ nhánh 2)]:** Phản hồi từ Storage.
+  - **Ngách "Yes":** Nhận URL đường dẫn file.
+  - **Ngách "No":** Thông báo lỗi "Tải lên thất bại".
+
+**Giai đoạn 3: Liên kết dữ liệu**
+- **[Link to POI]:** URL âm thanh được gán vào POI.
+
+---
+
+# Chương 11 – Bản dịch & Quản lý hàng loạt
+---
+### 11.1 Bản dịch POI
+#### Giải thích Sơ đồ hoạt động – Quy trình dịch thuật nội dung
+Sơ đồ mô tả cách Chủ quán địa phương hóa thông tin quán ăn sang nhiều ngôn ngữ khác nhau.
+
+**Giai đoạn 1: Chuẩn bị nội dung gốc**
+- **[Source Text]:** Lấy văn bản tiếng Việt làm nội dung gốc.
+- **[Language Selected? (Rẽ nhánh 1)]:** Kiểm tra lựa chọn ngôn ngữ đích.
+  - **Ngách "Yes":** Chuyển sang dịch AI.
+  - **Ngách "No":** Báo lỗi yêu cầu chọn ngôn ngữ.
+
+**Giai đoạn 2: Hỗ trợ dịch AI**
+- **[AI Auto-Translate]:** Gọi dịch vụ Gemini.
+- **[Result Satisfied? (Rẽ nhánh 2)]:** Admin kiểm duyệt.
+  - **Ngách "Yes":** Chấp nhận bản dịch.
+  - **Ngách "No":** Chỉnh sửa thủ công các từ chuyên ngành.
+
+**Giai đoạn 3: Lưu trữ và Cập nhật phiên bản**
+- **[POST /api/poi/translation]:** Lưu bản dịch.
+- **[Bump ContentVersion]:** Tăng số hiệu phiên bản để app di động biết cần phải tải lại dữ liệu mới.
+
+### Sơ đồ trình tự – Dịch thuật nội dung (Owner)
+
+Owner -> CMS UI: Lựa chọn ngôn ngữ đích và nội dung văn bản cần dịch thuật.
+
+CMS UI -> AiController: Gửi yêu cầu lấy gợi ý bản dịch từ trí tuệ nhân tạo Gemini.
+
+AiController -> Owner: Trả về bản dịch gợi ý để người dùng kiểm tra và chỉnh sửa.
+
+Owner -> CMS UI: Nhấn nút Lưu sau khi đã hoàn thiện nội dung bản dịch đa ngôn ngữ.
+
+CMS UI -> PoiController: Gửi yêu cầu lưu trữ qua API POST /api/poi/translation.
+
+PoiController -> SQLite: Cập nhật bảng PoiTranslations và tăng giá trị ContentVersion của POI.
+
+PoiController -> VinhKhanhHub: Thông báo cho các thiết bị di động biết dữ liệu đã có bản cập nhật mới.
+
+---
+
+# Chương 12 – Sơ đồ trạng thái (State Diagrams)
+## Tổng quan
+Chương này trực quan hóa vòng đời của các thành phần hệ thống khác nhau.
+
+---
+### 12.1 Trạng thái dịch vụ GPS
+- **Idle (Rảnh):** Ứng dụng khởi động.
+- **Tracking:** Đang lấy dữ liệu mỗi 3 giây.
+- **Lost:** Mất tín hiệu GPS trong >30 giây.
+- **MockMode:** Di chuyển giả lập để kiểm thử.
+
+### 12.2 Trạng thái Geofence POI
+- **Outside:** Khách tham quan ở xa POI.
+- **Approaching:** Khách vào bán kính.
+- **Triggered:** Đã kích hoạt thuyết minh.
+- **Cooldown:** Đang trong thời gian chờ (mặc định 60 giây).
+
+---
+
+# Chương 13 – Sơ đồ lớp (Class Diagrams)
+## Tổng quan
+Cấu trúc chi tiết của các mô hình domain và dịch vụ.
+
+---
+### 13.1 Mô hình Domain (Domain Models)
+- **AppUser:** Quản lý tài khoản và quyền.
+- **Poi:** Thông tin quán ăn, tọa độ và cấu hình hàng rào.
+- **PoiTranslation:** Nội dung đa ngôn ngữ cho từng POI.
+- **Tour & TourStop:** Cấu trúc lộ trình tham quan.
+
+### 13.2 Các dịch vụ Backend
+- **ResilientTranslationService:** Chuỗi dự phòng dịch AI.
+- **VinhKhanhHub:** Hub SignalR cho thông báo thời gian thực.
+
+---
+
+# Chương 14 – Kiến trúc hệ thống
+## Tổng quan
+Cái nhìn tổng thể về cách các thành phần kết nối với nhau.
+
+- **Clients:** App MAUI (Android/iOS), Web Admin (React).
+- **Backend:** ASP.NET Core 10 API.
+- **Database:** SQLite cho dữ liệu chính, Redis cho cache.
+- **AI Services:** Kết hợp Gemini (Cloud) và Ollama (Local).
+
+---
+
+# Chương 15 – Cấu trúc Cơ sở dữ liệu
+- **Pois:** Lưu thông tin cơ bản và tọa độ.
+- **PoiTranslations:** Lưu tên và mô tả theo từng ngôn ngữ.
+- **Tours & TourStops:** Lưu lộ trình và các điểm dừng.
+- **MovementLogs:** Lưu vết di chuyển GPS để vẽ bản đồ nhiệt.
+
+---
+
+# Chương 16 – Các Endpoint API chính
+- **/api/auth:** Đăng nhập, đổi mật khẩu.
+- **/api/poi:** CRUD quán ăn, mã QR, bản dịch.
+- **/api/tour:** Quản lý lộ trình tham quan.
+- **/api/analytics:** Log lượt khách, bản đồ nhiệt.
+- **/api/ai:** Chatbot và dịch thuật.
+
+---
+
+# Chương 17 – Tập hợp công nghệ (Tech Stack)
+- **Backend:** .NET 10, EF Core, SignalR.
+- **Mobile:** .NET MAUI, Mapsui (Bản đồ).
+- **Web:** React 19, Tailwind CSS, TanStack Query.
+- **AI:** Google Gemini, Ollama.
+
+---
+
+# Chương 18 – Các yêu cầu phi chức năng (NFR)
+- **Hiệu năng:** Gom nhóm GPS (30s/25 điểm) để tiết kiệm pin.
+- **Offline-First:** Hoạt động bình thường qua SQLite khi mất mạng.
+- **Bảo mật:** Xác thực JWT, băm mật khẩu BCrypt.
+- **Hằng số:** Bán kính 15m, Cooldown 60s, Tốc độ TTS 0.92x.
+
+---
+**Kết thúc Tài liệu Kỹ thuật Vĩnh Khánh**
+**Nguồn sự thật: VinhKhanh-PRD-Final1 copy.html**
+**Được tạo vào: 2026-04-24**

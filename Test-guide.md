@@ -60,3 +60,5 @@ Kiểm thử bằng máy thật là bắt buộc khi bạn muốn test thực t�
 - **Lỗi trắng màn hình / Đứng hình khi load danh sách Quán ăn:** 99% là do điện thoại không thể kết nối tới IP máy tính. Bạn hãy kiểm tra lại kết nối chung Wi-Fi và tắt thử Tường lửa Windows (Windows Defender Firewall) trong chốc lát để test.
 - **Nếu đang code mà IP Wi-Fi bị nhảy:** Đôi khi bạn cắm lại mạng hoặc đổi quán Cafe, IP của máy tính sẽ bị thay đổi. Đừng quên mở file `ApiClientService.cs` ra cập nhật lại IP mới!
 - Nếu khi Build báo lỗi liên quan tới `System.IO.IOException: The process cannot access the file ...` là do hệ điều hành đang khoá file thừa từ lần chạy trước. Chỉ cần tắt ứng dụng trên điện thoại, Clean Solution và bấm F5 lại là được.
+
+https://vinh-khanh-food-street-gvhceeg4gbakhjgc.eastasia-01.azurewebsites.net/
