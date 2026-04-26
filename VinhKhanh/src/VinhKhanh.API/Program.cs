@@ -46,16 +46,23 @@ try
 
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
     {
-        // Ưu tiên PostgreSQL nếu có chuỗi kết nối Default trong appsettings hoặc Env Vars
-        var connStr = builder.Configuration.GetConnectionString("Default");
-        if (!string.IsNullOrWhiteSpace(connStr) && !connStr.Contains("DATABASE_HOST"))
+        // 1. Ưu tiên Azure SQL (SQL Server) nếu có chuỗi kết nối "SqlServer"
+        var sqlServerStr = builder.Configuration.GetConnectionString("SqlServer");
+        if (!string.IsNullOrWhiteSpace(sqlServerStr) && !sqlServerStr.Contains("YOUR_SERVER"))
+        {
+            Console.WriteLine("[STARTUP] Using Azure SQL (SQL Server)");
+            options.UseSqlServer(sqlServerStr);
+        }
+        // 2. Dự phòng sang PostgreSQL (Giữ lại logic cũ để linh hoạt)
+        else if (!string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("Default")) && 
+                 !builder.Configuration.GetConnectionString("Default")!.Contains("DATABASE_HOST"))
         {
             Console.WriteLine("[STARTUP] Using PostgreSQL Database");
-            options.UseNpgsql(connStr);
+            options.UseNpgsql(builder.Configuration.GetConnectionString("Default"));
         }
+        // 3. Mặc định dùng SQLite cho Local Debug
         else
         {
-            // Dự phòng sang SQLite cho bản Deploy ban đầu hoặc Local Debug
             var sqlite = builder.Configuration.GetConnectionString("Sqlite") ?? "Data Source=app.db";
             Console.WriteLine($"[STARTUP] Using SQLite Database: {sqlite}");
             options.UseSqlite(sqlite);

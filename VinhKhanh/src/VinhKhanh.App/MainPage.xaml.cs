@@ -9,6 +9,7 @@ using Mapsui.Tiling;
 using Mapsui.Nts;
 using NetTopologySuite.Geometries;
 using Position = Mapsui.UI.Maui.Position;
+using VinhKhanh.Shared.DTOs;
 using VinhKhanh.App.Models;
 using VinhKhanh.App.Services;
 using VinhKhanh.App.ViewModels;
