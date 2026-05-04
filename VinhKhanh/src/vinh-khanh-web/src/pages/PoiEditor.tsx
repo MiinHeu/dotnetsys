@@ -523,21 +523,24 @@ export function PoiEditor() {
         </label>
 
         {isAdmin && (
-          <label className="text-sm">
-            Chủ sở hữu (Dành cho Admin)
-            <select
-              className="mt-1 w-full rounded border px-2 py-2 dark:border-stone-600 dark:bg-stone-800"
-              value={form.ownerUserId ?? ''}
-              onChange={(e) => setForm({ ...form, ownerUserId: e.target.value ? parseInt(e.target.value) : null })}
-            >
-              <option value="">-- Không có chủ sở hữu --</option>
-              {owners.map(o => (
-                <option key={o.id} value={o.id}>
-                  [{o.displayId || '---'}] {o.fullName || o.username} ({o.username})
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm">
+              Chủ sở hữu (Dành cho Admin)
+              <select
+                className="mt-1 w-full rounded border px-2 py-2 dark:border-stone-600 dark:bg-stone-800"
+                value={form.ownerUserId ?? ''}
+                onChange={(e) => setForm({ ...form, ownerUserId: e.target.value ? parseInt(e.target.value) : null })}
+              >
+                <option value="">-- Không có chủ sở hữu --</option>
+                {owners.map(o => (
+                  <option key={o.id} value={o.id}>
+                    [{o.displayId || '---'}] {o.fullName || o.username} ({o.username})
+                  </option>
+                ))}
+              </select>
+            </label>
+            {ownerMessage && <p className="text-xs text-red-500">{ownerMessage}</p>}
+          </div>
         )}
 
         <label className="text-sm">
