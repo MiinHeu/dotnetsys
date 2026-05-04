@@ -35,7 +35,10 @@ try
 
     builder.Services.AddOpenApi();
     builder.Services.AddMemoryCache();
-    builder.Services.AddControllers()
+    builder.Services.AddControllers(options => 
+        {
+            options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+        })
         .AddJsonOptions(options =>
         {
             // Prevent runtime 500 when entities have circular navigation references (EF)
