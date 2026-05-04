@@ -165,17 +165,47 @@ try
         var forceDefaultCredentials = builder.Configuration.GetValue<bool>("Seed:ForceDefaultCredentials");
         try
         {
-            if (db.Database.IsNpgsql() || db.Database.IsSqlServer())
+            if (db.Database.IsNpgsql())
             {
-                Console.WriteLine($"[STARTUP] Applying Entity Framework Migrations for {db.Database.ProviderName}...");
+                Console.WriteLine("[STARTUP] Applying Entity Framework Migrations for PostgreSQL...");
                 await db.Database.MigrateAsync();
             }
             else
             {
-                Console.WriteLine("[STARTUP] Initializing Database (EnsureCreated) for SQLite...");
+                Console.WriteLine($"[STARTUP] Initializing Database (EnsureCreated) for {db.Database.ProviderName}...");
                 db.Database.EnsureCreated();
+                try
+                {
+                    // Test if the Address column exists (Mobile V2.0 update)
+                    db.Database.ExecuteSqlRaw("SELECT Address FROM Pois");
+                }
+                catch
+                {
+                    Console.WriteLine($"[STARTUP] Patching {db.Database.ProviderName} schema for Mobile V2.0...");
+                    if (db.Database.IsSqlServer())
+                    {
+                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD Address NVARCHAR(256);");
+                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD PhoneNumber NVARCHAR(32);");
+                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD OperatingHours NVARCHAR(64);");
+                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD Rating FLOAT NOT NULL DEFAULT 5.0;");
+                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD ImagesJson NVARCHAR(MAX);");
+                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD MenuJson NVARCHAR(MAX);");
+                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD TagsJson NVARCHAR(MAX);");
+                    }
+                    else // SQLite
+                    {
+                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD COLUMN Address TEXT;");
+                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD COLUMN PhoneNumber TEXT;");
+                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD COLUMN OperatingHours TEXT;");
+                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD COLUMN Rating REAL NOT NULL DEFAULT 5.0;");
+                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD COLUMN ImagesJson TEXT;");
+                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD COLUMN MenuJson TEXT;");
+                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD COLUMN TagsJson TEXT;");
+                    }
+                }
             }
         }
+
         catch (Exception ex)
         {
             Console.WriteLine($"[STARTUP] Database initialization failed: {ex.Message}");
