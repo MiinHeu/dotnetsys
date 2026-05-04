@@ -164,9 +164,9 @@ try
         var forceDefaultCredentials = builder.Configuration.GetValue<bool>("Seed:ForceDefaultCredentials");
         try
         {
-            if (db.Database.IsNpgsql())
+            if (db.Database.IsNpgsql() || db.Database.IsSqlServer())
             {
-                Console.WriteLine("[STARTUP] Applying Entity Framework Migrations for PostgreSQL...");
+                Console.WriteLine($"[STARTUP] Applying Entity Framework Migrations for {db.Database.ProviderName}...");
                 await db.Database.MigrateAsync();
             }
             else
