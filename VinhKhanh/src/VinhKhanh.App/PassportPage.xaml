@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:VinhKhanh.App.ViewModels"
+             x:Class="VinhKhanh.App.PassportPage"
+             Title="Hộ Chiếu Ẩm Thực"
+             BackgroundColor="{AppThemeBinding Light=#FAFAFA, Dark=#121212}">
+
+    <Grid RowDefinitions="Auto, *">
+        <!-- Header -->
+        <Frame Grid.Row="0" CornerRadius="0" Padding="25, 60, 25, 30" HasShadow="True" BorderColor="Transparent">
+            <Frame.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#8B4513" Offset="0" />
+                    <GradientStop Color="#A0522D" Offset="1" />
+                </LinearGradientBrush>
+            </Frame.Background>
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Passport" FontSize="14" TextColor="#DEB887" FontAttributes="Bold" TextTransform="Uppercase"/>
+                <Label Text="Hộ Chiếu Vĩnh Khánh" FontSize="28" FontAttributes="Bold" TextColor="White" />
+                <Label Text="Thu thập con dấu tại mỗi điểm dừng chân" FontSize="15" TextColor="#F5DEB3" />
+            </VerticalStackLayout>
+        </Frame>
+
+        <ScrollView Grid.Row="1" Padding="20">
+            <VerticalStackLayout Spacing="25">
+                <!-- Progress Card -->
+                <Frame CornerRadius="20" Padding="20" HasShadow="True" BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}" BorderColor="Transparent">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <VerticalStackLayout Grid.Column="0" Spacing="5">
+                            <Label Text="Tiến độ khám phá" FontSize="18" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#111827, Dark=White}"/>
+                            <Label Text="{Binding ProgressText}" FontSize="14" TextColor="#FF4500" FontAttributes="Bold"/>
+                        </VerticalStackLayout>
+                        <Label Grid.Column="1" Text="🏆" FontSize="40" VerticalOptions="Center"/>
+                    </Grid>
+                </Frame>
+
+                <!-- Stamp Grid -->
+                <CollectionView ItemsSource="{Binding Stamps}" 
+                                ItemsLayout="VerticalGrid, 2">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="8" CornerRadius="15" Padding="15" HasShadow="False"
+                                   BorderColor="{AppThemeBinding Light=#E5E7EB, Dark=#333333}"
+                                   BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}">
+                                <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
+                                    <Grid WidthRequest="80" HeightRequest="80">
+                                        <!-- Gray placeholder for unvisited -->
+                                        <Ellipse Fill="#F3F4F6" Stroke="#D1D5DB" StrokeThickness="2" IsVisible="{Binding IsVisited, Converter={StaticResource InvertedBoolConverter}}"/>
+                                        <Label Text="🔒" FontSize="30" HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding IsVisited, Converter={StaticResource InvertedBoolConverter}}"/>
+                                        
+                                        <!-- Colored stamp for visited -->
+                                        <Ellipse Fill="#FFF0E6" Stroke="#FF4500" StrokeThickness="3" IsVisible="{Binding IsVisited}"/>
+                                        <Label Text="🍱" FontSize="40" HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding IsVisited}"/>
+                                    </Grid>
+                                    
+                                    <Label Text="{Binding Name}" 
+                                           FontSize="14" 
+                                           FontAttributes="Bold" 
+                                           HorizontalTextAlignment="Center"
+                                           TextColor="{AppThemeBinding Light=#374151, Dark=#D1D5DB}"
+                                           MaxLines="1"
+                                           LineBreakMode="TailTruncation"/>
+                                </VerticalStackLayout>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

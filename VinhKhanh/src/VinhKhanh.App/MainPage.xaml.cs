@@ -245,7 +245,7 @@ public partial class MainPage : ContentPage
 		}
 	}
 
-	private void UpdateTourPath()
+	private async void UpdateTourPath()
 	{
 		// 1. Don dep Layer cu
 		if (_tourLayer != null)
@@ -261,19 +261,33 @@ public partial class MainPage : ContentPage
 			return;
 		}
 
-		// 2. Tao LineString tu danh sach stops (NTS style)
-		var coordinates = new List<Coordinate>();
-		var points = new List<Mapsui.MPoint>();
-		
+		// Thu thập tọa độ các điểm dừng
+		var waypoints = new List<(double Lon, double Lat)>();
 		foreach (var stop in tour.Stops.OrderBy(s => s.StopOrder))
 		{
 			if (stop.Poi == null) continue;
-			var sm = SphericalMercator.FromLonLat(stop.Poi.Longitude, stop.Poi.Latitude);
-			coordinates.Add(new Coordinate(sm.x, sm.y));
-			points.Add(new Mapsui.MPoint(sm.x, sm.y));
+			waypoints.Add((stop.Poi.Longitude, stop.Poi.Latitude));
 		}
 
-		if (coordinates.Count < 2) return;
+		if (waypoints.Count < 2) return;
+
+		// 2. Gọi Routing API để vẽ đường đi bộ thực tế
+		var routingService = MauiProgram.Services.GetRequiredService<RoutingService>();
+		var routePoints = await routingService.GetWalkingRouteAsync(waypoints);
+
+		var coordinates = new List<Coordinate>();
+		var mapPoints = new List<Mapsui.MPoint>();
+
+		// Nếu gọi API thất bại, fallback về đường chim bay (đường thẳng)
+		var sourcePoints = routePoints ?? waypoints;
+
+		foreach (var pt in sourcePoints)
+		{
+			var sm = SphericalMercator.FromLonLat(pt.Lon, pt.Lat);
+			coordinates.Add(new Coordinate(sm.x, sm.y));
+			mapPoints.Add(new Mapsui.MPoint(sm.x, sm.y));
+		}
+
 		var lineString = new NetTopologySuite.Geometries.LineString(coordinates.ToArray());
 
 		// 3. Tao Layer moi voi Style mau cam
@@ -287,7 +301,7 @@ public partial class MainPage : ContentPage
 				Line = new Pen
 				{
 					Color = Mapsui.Styles.Color.Orange,
-					Width = 4,
+					Width = 5,
 					PenStyle = PenStyle.Solid,
 					PenStrokeCap = PenStrokeCap.Round
 				}
@@ -298,12 +312,12 @@ public partial class MainPage : ContentPage
 		StreetMap.RefreshGraphics();
 
 		// 4. Tu dong Zoom de thay tron ven lo trinh
-		if (points.Count > 0)
+		if (mapPoints.Count > 0)
 		{
-			var minX = points.Min(p => p.X);
-			var minY = points.Min(p => p.Y);
-			var maxX = points.Max(p => p.X);
-			var maxY = points.Max(p => p.Y);
+			var minX = mapPoints.Min(p => p.X);
+			var minY = mapPoints.Min(p => p.Y);
+			var maxX = mapPoints.Max(p => p.X);
+			var maxY = mapPoints.Max(p => p.Y);
 			
 			// Them padding 10%
 			var dx = (maxX - minX) * 0.2;

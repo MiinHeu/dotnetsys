@@ -3,57 +3,106 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:res="clr-namespace:VinhKhanh.App.Resources.Strings"
              x:Class="VinhKhanh.App.LanguageSelectionPage"
-             BackgroundColor="#F8FAFC">
+             BackgroundColor="{AppThemeBinding Light=#F4F6F8, Dark=#1A1A1A}"
+             NavigationPage.HasNavigationBar="False">
 
-    <Grid Padding="32" RowDefinitions="Auto,*,Auto" RowSpacing="24">
+    <Grid RowDefinitions="Auto,*" Padding="24, 60, 24, 24">
         
-        <VerticalStackLayout Grid.Row="0" Spacing="8" Margin="0,48,0,0">
-            <Image Source="appicon.png" WidthRequest="100" HeightRequest="100" HorizontalOptions="Center" />
+        <!-- Header -->
+        <VerticalStackLayout Grid.Row="0" Spacing="10" Margin="0,0,0,40">
+            <Label Text="🌍" FontSize="60" HorizontalOptions="Center" Margin="0,0,0,10"/>
             <Label Text="{x:Static res:AppResources.LanguageSelectionTitle}" 
-                   FontSize="28" FontAttributes="Bold" TextColor="#0F172A" HorizontalOptions="Center"/>
+                   FontSize="32" 
+                   FontAttributes="Bold" 
+                   TextColor="{AppThemeBinding Light=#111827, Dark=#FFFFFF}" 
+                   HorizontalOptions="Center"/>
             <Label Text="{x:Static res:AppResources.LanguageSelectionDesc}" 
-                   FontSize="16" TextColor="#475569" HorizontalOptions="Center"/>
+                   FontSize="16" 
+                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#A1A1AA}" 
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center"/>
         </VerticalStackLayout>
         
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Spacing="16" VerticalOptions="Center">
-                <Button Text="English" 
-                        Clicked="OnLangSelected" 
-                        CommandParameter="en"
-                        Style="{StaticResource DefaultLangButtonStyle}"/>
-                <Button Text="Tiếng Việt" 
-                        Clicked="OnLangSelected" 
-                        CommandParameter="vi"
-                        Style="{StaticResource DefaultLangButtonStyle}"/>
-                <Button Text="中文" 
-                        Clicked="OnLangSelected" 
-                        CommandParameter="zh"
-                        Style="{StaticResource DefaultLangButtonStyle}"/>
-                <Button Text="한국어" 
-                        Clicked="OnLangSelected" 
-                        CommandParameter="ko"
-                        Style="{StaticResource DefaultLangButtonStyle}"/>
-                <Button Text="日本語" 
-                        Clicked="OnLangSelected" 
-                        CommandParameter="ja"
-                        Style="{StaticResource DefaultLangButtonStyle}"/>
+        <!-- Language Cards -->
+        <ScrollView Grid.Row="1" ShowsVerticalScrollIndicator="False">
+            <VerticalStackLayout Spacing="16">
+                
+                <!-- English -->
+                <Frame Style="{StaticResource LangCardStyle}">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnLangSelected" CommandParameter="en" />
+                    </Frame.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Label Grid.Column="0" Text="🇬🇧" FontSize="30" VerticalOptions="Center" Margin="0,0,20,0"/>
+                        <Label Grid.Column="1" Text="English" Style="{StaticResource LangTextStyle}"/>
+                    </Grid>
+                </Frame>
+
+                <!-- Tiếng Việt -->
+                <Frame Style="{StaticResource LangCardStyle}">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnLangSelected" CommandParameter="vi" />
+                    </Frame.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Label Grid.Column="0" Text="🇻🇳" FontSize="30" VerticalOptions="Center" Margin="0,0,20,0"/>
+                        <Label Grid.Column="1" Text="Tiếng Việt" Style="{StaticResource LangTextStyle}"/>
+                    </Grid>
+                </Frame>
+
+                <!-- 中文 -->
+                <Frame Style="{StaticResource LangCardStyle}">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnLangSelected" CommandParameter="zh" />
+                    </Frame.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Label Grid.Column="0" Text="🇨🇳" FontSize="30" VerticalOptions="Center" Margin="0,0,20,0"/>
+                        <Label Grid.Column="1" Text="中文" Style="{StaticResource LangTextStyle}"/>
+                    </Grid>
+                </Frame>
+
+                <!-- 한국어 -->
+                <Frame Style="{StaticResource LangCardStyle}">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnLangSelected" CommandParameter="ko" />
+                    </Frame.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Label Grid.Column="0" Text="🇰🇷" FontSize="30" VerticalOptions="Center" Margin="0,0,20,0"/>
+                        <Label Grid.Column="1" Text="한국어" Style="{StaticResource LangTextStyle}"/>
+                    </Grid>
+                </Frame>
+
+                <!-- 日本語 -->
+                <Frame Style="{StaticResource LangCardStyle}">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnLangSelected" CommandParameter="ja" />
+                    </Frame.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Label Grid.Column="0" Text="🇯🇵" FontSize="30" VerticalOptions="Center" Margin="0,0,20,0"/>
+                        <Label Grid.Column="1" Text="日本語" Style="{StaticResource LangTextStyle}"/>
+                    </Grid>
+                </Frame>
+
             </VerticalStackLayout>
         </ScrollView>
-        
     </Grid>
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <Style x:Key="DefaultLangButtonStyle" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="#E2E8F0" />
-                <Setter Property="TextColor" Value="#0F172A" />
-                <Setter Property="CornerRadius" Value="12" />
-                <Setter Property="HeightRequest" Value="60" />
-                <Setter Property="FontSize" Value="18" />
+            <Style x:Key="LangCardStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#FFFFFF, Dark=#2A2A2A}" />
+                <Setter Property="CornerRadius" Value="16" />
+                <Setter Property="Padding" Value="24, 20" />
+                <Setter Property="HasShadow" Value="True" />
+                <Setter Property="BorderColor" Value="Transparent" />
+                <Setter Property="Margin" Value="4, 0" />
+            </Style>
+            
+            <Style x:Key="LangTextStyle" TargetType="Label">
+                <Setter Property="TextColor" Value="{AppThemeBinding Light=#1F2937, Dark=#F9FAFB}" />
+                <Setter Property="FontSize" Value="20" />
                 <Setter Property="FontAttributes" Value="Bold" />
-                <Setter Property="BorderWidth" Value="0" />
+                <Setter Property="VerticalOptions" Value="Center" />
             </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
-
 </ContentPage>

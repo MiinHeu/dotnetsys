@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { api, type Poi } from '@/lib/api'
-import { Route, Users, TrendingUp, BarChart3, UserCog, UtensilsCrossed, Smartphone } from 'lucide-react'
+import { Route, Users, TrendingUp, BarChart3, UserCog, UtensilsCrossed, Smartphone, Clock, Repeat } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
@@ -41,6 +41,12 @@ export function Dashboard() {
   const ownersQ = useQuery({
     queryKey: ['owners'],
     queryFn: async () => (await api.get<{ id: number; username: string }[]>('/api/auth/owners')).data,
+  })
+
+  const sessionStats = useQuery({
+    queryKey: ['sessions', 'stats'],
+    queryFn: async () =>
+      (await api.get<{ avgDurationMinutes: number; returningRate: number }>('/api/admin/sessions/stats?days=30')).data,
   })
 
   const chartData =
@@ -95,6 +101,22 @@ export function Dashboard() {
       bg: 'bg-green-600',
       isLive: true
     },
+    {
+      label: 'Thời gian tham quan',
+      value: sessionStats.isLoading ? '...' : `${sessionStats.data?.avgDurationMinutes ?? 0} ph`,
+      sub: 'Trung bình',
+      desc: 'Thời gian trung bình mỗi phiên hoạt động',
+      icon: Clock,
+      bg: 'bg-purple-600',
+    },
+    {
+      label: 'Tỷ lệ quay lại',
+      value: sessionStats.isLoading ? '...' : `${sessionStats.data?.returningRate ?? 0} %`,
+      sub: 'Returning visitors',
+      desc: 'Tỷ lệ du khách quay lại sau phiên đầu tiên',
+      icon: Repeat,
+      bg: 'bg-indigo-600',
+    },
   ]
 
   const actions = [
@@ -120,7 +142,7 @@ export function Dashboard() {
         </div>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
         {cards.map(({ label, value, sub, desc, bg, icon: Icon }) => (
           <div
             key={label}

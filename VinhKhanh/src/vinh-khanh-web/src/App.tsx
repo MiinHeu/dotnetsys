@@ -12,9 +12,11 @@ import { PoiEditor } from "./pages/PoiEditor";
 import { AdminMap } from "./pages/AdminMap";
 import { ToursAdmin } from "./pages/ToursAdmin";
 import { TourEditor } from "./pages/TourEditor";
+import { Translations } from "./pages/Translations";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { HeatmapPage } from "./pages/HeatmapPage";
+import { SessionsPage } from "./pages/SessionsPage";
 import { AudioPage } from "./pages/AudioPage";
 import { ChangePassword } from "./pages/ChangePassword";
 import { UserManagement } from "./pages/UserManagement";
@@ -50,6 +52,7 @@ export default function App() {
         <Route path="/map" element={<AdminMap />} />
         <Route path="/tours" element={<ToursAdmin />} />
         <Route path="/tours/:id" element={<TourEditor />} />
+        <Route path="/translations" element={<Translations />} />
         <Route path="/audio" element={<AudioPage />} />
         <Route path="/download" element={<DownloadPage />} />
         <Route path="/change-password" element={<ChangePassword />} />
@@ -60,6 +63,7 @@ export default function App() {
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/heatmap" element={<HeatmapPage />} />
             <Route path="/history" element={<HistoryPage />} />
+            <Route path="/sessions" element={<SessionsPage />} />
             <Route path="/users" element={<UserManagement />} />
           </>
         )}

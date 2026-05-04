@@ -17,7 +17,7 @@ namespace VinhKhanh.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.6")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -77,6 +77,12 @@ namespace VinhKhanh.Infrastructure.Migrations
                     b.Property<string>("DisplayId")
                         .HasColumnType("text");
 
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FullName")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -98,6 +104,77 @@ namespace VinhKhanh.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("AppUsers", (string)null);
+                });
+
+            modelBuilder.Entity("VinhKhanh.Infrastructure.Data.DeviceSession", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AppVersion")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("DeviceModel")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("DevicePlatform")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<double>("DistanceMeters")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime?>("EndedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsReturning")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LanguageUsed")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTime>("LastHeartbeatAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Manufacturer")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("OsVersion")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int>("PoisVisited")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DevicePlatform");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("StartedAt");
+
+                    b.ToTable("DeviceSessions", (string)null);
                 });
 
             modelBuilder.Entity("VinhKhanh.Infrastructure.Data.MovementLog", b =>
@@ -141,6 +218,10 @@ namespace VinhKhanh.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Address")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
                     b.Property<string>("AudioViUrl")
                         .HasColumnType("text");
 
@@ -163,6 +244,9 @@ namespace VinhKhanh.Infrastructure.Migrations
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
 
+                    b.Property<string>("ImagesJson")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -178,10 +262,17 @@ namespace VinhKhanh.Infrastructure.Migrations
                     b.Property<double>("MapY")
                         .HasColumnType("double precision");
 
+                    b.Property<string>("MenuJson")
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("character varying(250)");
+
+                    b.Property<string>("OperatingHours")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("OwnerInfo")
                         .HasColumnType("text");
@@ -189,12 +280,22 @@ namespace VinhKhanh.Infrastructure.Migrations
                     b.Property<int?>("OwnerUserId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<int>("Priority")
                         .HasColumnType("integer");
 
                     b.Property<string>("QrCode")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<double>("Rating")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("TagsJson")
+                        .HasColumnType("text");
 
                     b.Property<double>("TriggerRadiusMeters")
                         .HasColumnType("double precision");
@@ -222,59 +323,114 @@ namespace VinhKhanh.Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            Category = 0,
+                            Address = "534 Vĩnh Khánh, Phường 10, Quận 4, TP.HCM",
+                            Category = 2,
                             ContentVersion = 1,
-                            CooldownSeconds = 60,
-                            CreatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Com tam dac trung Sai Gon 30 nam.",
+                            CooldownSeconds = 30,
+                            CreatedAt = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Quan oc noi tieng nhat khu vuc voi mon oc huong xot trung muoi.",
+                            ImagesJson = "[\"https://cdn.tgdd.vn/Files/2021/08/10/1374136/an-sap-quan-4-voi-quan-oc-oanh-ngon-nuc-tieng-202108101416557675.jpg\"]",
                             IsActive = true,
                             Latitude = 10.7531,
                             Longitude = 106.678,
                             MapX = 15.0,
                             MapY = 40.0,
-                            Name = "Quan Com Tam Ba Ghien",
-                            Priority = 9,
+                            MenuJson = "[{\"name\":\"Ốc hương xào bơ tỏi\",\"price\":150000}, {\"name\":\"Càng ghẹ rang muối\",\"price\":180000}, {\"name\":\"Sò điệp nướng mỡ hành\",\"price\":120000}]",
+                            Name = "Oc Oanh Vinh Khanh",
+                            OperatingHours = "15:00 - 23:00",
+                            Priority = 10,
                             QrCode = "VK-POI-001",
-                            TriggerRadiusMeters = 15.0,
-                            UpdatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc)
+                            Rating = 4.7999999999999998,
+                            TriggerRadiusMeters = 20.0,
+                            UpdatedAt = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = 2,
-                            Category = 1,
+                            Address = "Đoạn 1 Vĩnh Khánh, Phường 8, Quận 4, TP.HCM",
+                            Category = 5,
                             ContentVersion = 1,
                             CooldownSeconds = 60,
-                            CreatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Banh canh cua tuoi boc day, 40 nam.",
+                            CreatedAt = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Lau bo truyen thong voi nuoc dung dam da, thit bo tuoi ngon.",
+                            ImagesJson = "[\"https://cdn.tgdd.vn/Files/2021/11/24/1399899/cung-kham-pha-quan-lau-bo-khu-nha-chay-cuc-noi-tieng-tai-quan-4-202111241103031024.jpg\"]",
                             IsActive = true,
                             Latitude = 10.753299999999999,
                             Longitude = 106.6781,
                             MapX = 30.0,
                             MapY = 40.0,
-                            Name = "Banh Canh Cua Ba Suong",
+                            MenuJson = "[{\"name\":\"Lẩu bò thập cẩm\",\"price\":250000}, {\"name\":\"Bò nướng ngói\",\"price\":150000}]",
+                            Name = "Lau Bo Khu Nha Chay",
+                            OperatingHours = "16:00 - 02:00",
                             Priority = 8,
                             QrCode = "VK-POI-002",
+                            Rating = 4.5,
                             TriggerRadiusMeters = 15.0,
-                            UpdatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = 3,
-                            Category = 3,
+                            Address = "Ngã 3 Vĩnh Khánh - Hoàng Diệu, Quận 4, TP.HCM",
+                            Category = 5,
                             ContentVersion = 1,
                             CooldownSeconds = 120,
-                            CreatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Khu vuc tap trung hang che.",
+                            CreatedAt = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Sushi binh dan nhung chat luong, thu hut rat dong gioi tre.",
+                            ImagesJson = "[\"https://static.vinwonders.com/production/sushi-vien-quan-4-1.jpg\"]",
                             IsActive = true,
                             Latitude = 10.754,
                             Longitude = 106.6785,
                             MapX = 75.0,
                             MapY = 40.0,
-                            Name = "Khu Che Cuoi Pho",
+                            MenuJson = "[{\"name\":\"Sushi cá hồi\",\"price\":10000}, {\"name\":\"Maki lươn nhật\",\"price\":15000}]",
+                            Name = "Sushi Vien Vinh Khanh",
+                            OperatingHours = "17:00 - 22:30",
                             Priority = 5,
                             QrCode = "VK-POI-003",
-                            TriggerRadiusMeters = 20.0,
-                            UpdatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc)
+                            Rating = 4.2000000000000002,
+                            TriggerRadiusMeters = 15.0,
+                            UpdatedAt = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Category = 0,
+                            ContentVersion = 1,
+                            CooldownSeconds = 60,
+                            CreatedAt = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Com tam dem ngon nhat khu vuc, suon nuong thom phuc.",
+                            IsActive = true,
+                            Latitude = 10.753500000000001,
+                            Longitude = 106.6782,
+                            MapX = 45.0,
+                            MapY = 40.0,
+                            Name = "Com Tam Tu Map",
+                            Priority = 0,
+                            QrCode = "VK-POI-004",
+                            Rating = 5.0,
+                            TriggerRadiusMeters = 10.0,
+                            UpdatedAt = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Category = 3,
+                            ContentVersion = 1,
+                            CooldownSeconds = 60,
+                            CreatedAt = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Che khuc bach va cac loai che giai nhiet truyen thong.",
+                            IsActive = true,
+                            Latitude = 10.7538,
+                            Longitude = 106.6784,
+                            MapX = 60.0,
+                            MapY = 40.0,
+                            Name = "Che Hien Khanh",
+                            Priority = 3,
+                            QrCode = "VK-POI-005",
+                            Rating = 5.0,
+                            TriggerRadiusMeters = 15.0,
+                            UpdatedAt = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 
@@ -397,12 +553,12 @@ namespace VinhKhanh.Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Com tam -> Banh canh -> Che",
                             EstimatedMinutes = 60,
                             IsActive = true,
                             Name = "Tour Am Thuc 1 Gio Vinh Khanh",
-                            UpdatedAt = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2026, 4, 21, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 

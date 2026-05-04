@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router'
 import React, { useEffect, useState } from 'react'
+import type { AxiosError } from 'axios'
 import { api, type Poi } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
- 
-type PoiTranslation = NonNullable<Poi['translations']>[number]
 
+type PoiTranslation = NonNullable<Poi['translations']>[number]
 
 type GeoPoint = {
   lat: number
@@ -30,13 +30,20 @@ const empty: Poi = {
   mapX: 50,
   mapY: 50,
   triggerRadiusMeters: 15,
-  priority: 0,
-  cooldownSeconds: 60,
+  priority: 5,
+  cooldownSeconds: 10,
   qrCode: null,
   imageUrl: null,
   audioViUrl: null,
   category: 0,
   isActive: true,
+  address: '',
+  phoneNumber: '',
+  operatingHours: '',
+  rating: 5,
+  imagesJson: '[]',
+  menuJson: '[]',
+  tagsJson: '[]',
   translations: [],
 }
 
@@ -150,6 +157,15 @@ async function translateText(text: string, language: TtsLanguage): Promise<strin
   return translated
 }
 
+function extractApiErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && err.message) {
+    const maybeAxios = err as AxiosError<{ message?: string }>
+    const apiMessage = maybeAxios.response?.data?.message
+    if (apiMessage && apiMessage.trim()) return apiMessage.trim()
+  }
+  return fallback
+}
+
 export function PoiEditor() {
   const { id } = useParams()
   const isNew = id === 'new'
@@ -163,6 +179,7 @@ export function PoiEditor() {
   const [ttsBusy, setTtsBusy] = useState(false)
   const [ttsMessage, setTtsMessage] = useState('')
   const [audioBusy, setAudioBusy] = useState(false)
+  const [ownerMessage, setOwnerMessage] = useState('')
   const [previewBusy, setPreviewBusy] = useState(false)
   const [ttsLangCode, setTtsLangCode] = useState('vi')
   const [owners, setOwners] = useState<any[]>([])
@@ -183,6 +200,12 @@ export function PoiEditor() {
     queryFn: async () => (await api.get<Poi>(`/api/poi/${id}`)).data,
   })
 
+  const ownersQ = useQuery({
+    queryKey: ['owners'],
+    enabled: role === 'Admin',
+    queryFn: async () => (await api.get<{ id: number; username: string }[]>('/api/auth/owners')).data,
+  })
+
   useEffect(() => {
     if (!poiQ.data) return
 
@@ -195,6 +218,15 @@ export function PoiEditor() {
       setGeoMessage(`Địa chỉ hiện tại: ${poiQ.data.ownerInfo}`)
     }
   }, [poiQ.data])
+
+  useEffect(() => {
+    if (role !== 'Admin') return
+    if (!ownersQ.data || ownersQ.data.length === 0) return
+    setForm((current) => {
+      if (current.ownerUserId != null) return current
+      return { ...current, ownerUserId: ownersQ.data[0].id }
+    })
+  }, [ownersQ.data, role])
 
   const resolveAddressToCoordinates = async () => {
     const address = form.ownerInfo?.trim() ?? ''
@@ -223,6 +255,18 @@ export function PoiEditor() {
         if (!address) throw new Error('Vui lòng nhập địa chỉ / số nhà trước khi lưu.')
 
         let payload = form
+        if (role === 'Admin') {
+          if ((ownersQ.data?.length ?? 0) === 0) {
+            setOwnerMessage('Chưa có tài khoản chủ quán. Hãy tạo Owner trước khi lưu POI.')
+            throw new Error('Chưa có tài khoản chủ quán. Hãy tạo Owner trước khi lưu POI.')
+          }
+          if (!payload.ownerUserId) {
+            setOwnerMessage('Vui lòng chọn chủ quán trước khi lưu.')
+            throw new Error('Vui lòng chọn chủ quán trước khi lưu.')
+          }
+          setOwnerMessage('')
+        }
+
         if (!Number.isFinite(form.latitude) || !Number.isFinite(form.longitude) || !address) {
           const point = await geocodeAddress(address)
           payload = {
@@ -242,17 +286,19 @@ export function PoiEditor() {
         }
       } catch (err) {
         console.error('POI save error:', err)
-        throw err
+        throw new Error(extractApiErrorMessage(err, 'Không lưu được POI. Vui lòng kiểm tra dữ liệu.'))
       }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pois'] })
       navigate('/pois')
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       console.error('Mutation error:', err)
-      const message = err.response?.data?.message || 'Có lỗi xảy ra khi lưu dữ liệu.'
-      alert(message)
+      const message = err.message || ''
+      if (message.toLowerCase().includes('chủ quán') || message.toLowerCase().includes('owner')) {
+        setOwnerMessage(message)
+      }
     },
   })
 
@@ -293,7 +339,7 @@ export function PoiEditor() {
     setPreviewBusy(true)
     try {
       const { language, text } = await prepareNarrationText()
-      setTtsMessage(`Đang lấy giọng đọc ${language.label} từ Azure...`)
+      setTtsMessage(`Đang lấy giọng đọc ${language.label} từ VoiceRSS...`)
 
       const response = await api.post('/api/tts/synthesize', {
         text,
@@ -305,7 +351,7 @@ export function PoiEditor() {
       const url = window.URL.createObjectURL(blob)
       const audio = new Audio(url)
 
-      setTtsMessage(`Đang nghe thử ${language.label} (Azure)...`)
+      setTtsMessage(`Đang nghe thử ${language.label} (VoiceRSS)...`)
       await audio.play()
       setTtsMessage(`Đã nghe thử ${language.label}. Nếu ổn, bạn có thể bấm Xuất mp3.`)
     } catch (err: unknown) {
@@ -449,7 +495,8 @@ export function PoiEditor() {
 
   if (!isNew && poiQ.isLoading) return <p>Đang tải...</p>
 
-  const isFormValid = form.name.trim().length > 0 && (form.ownerInfo?.trim().length ?? 0) > 0
+  const isFormValid = form.name.trim().length > 0 && (form.ownerInfo?.trim().length ?? 0) > 0 &&
+    (role !== 'Admin' || (!!form.ownerUserId && (ownersQ.data?.length ?? 0) > 0))
   const currentLanguage = ttsLanguages.find((item) => item.code === ttsLangCode) ?? ttsLanguages[0]
   const currentAudioUrl =
     ttsLangCode === 'vi' ? form.audioViUrl : (findTranslation(form, ttsLangCode)?.audioUrl ?? null)
@@ -643,214 +690,235 @@ export function PoiEditor() {
             value={form.qrCode ?? ''}
             onChange={(e) => setForm({ ...form, qrCode: e.target.value.trim() || null })}
           />
+          {!isNew && form.qrCode && (
+            <div className="mt-3 flex flex-col items-start gap-3">
+              <img
+                src={`/api/poi/${id}/qrcode`}
+                alt={`QR code cho ${form.name}`}
+                className="h-40 w-40 rounded border border-stone-200 bg-white p-1"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
+              <a
+                href={`/api/poi/${id}/qrcode`}
+                download={`QR-${form.qrCode ?? id}.png`}
+                className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
+              >
+                Tải ảnh QR về in
+              </a>
+            </div>
+          )}
+          {isNew && (
+            <p className="mt-2 text-xs text-stone-400">Lưu POI trước, sau đó quay lại để xem ảnh QR.</p>
+          )}
         </label>
 
-        {!isNew && form.qrCode && (
-          <div className="rounded-lg border border-stone-200 p-4">
-            <h3 className="text-sm font-semibold text-stone-800">Hình ảnh Mã QR</h3>
-            <div className="mt-3 flex items-start gap-4">
-              <div className="h-32 w-32 items-center justify-center overflow-hidden rounded border bg-white">
-                <img
-                  src={`/api/poi/${id}/qrcode?t=${new Date().getTime()}`}
-                  alt="POI QR Code"
-                  className="h-full w-full object-contain"
-                />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-stone-500">
-                  Mã định danh: <span className="font-mono font-bold text-blue-600">{form.qrCode}</span>
-                </p>
-                <button
-                  type="button"
-                  className="mt-3 rounded-lg bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
-                  onClick={() => {
-                    window.open(`/api/poi/${id}/qrcode`, '_blank')
-                  }}
-                >
-                  📥 Tải mã QR (Mở Tab mới để in)
-                </button>
-              </div>
+      {!isNew && form.qrCode && (
+        <div className="rounded-lg border border-stone-200 p-4">
+          <h3 className="text-sm font-semibold text-stone-800">Hình ảnh Mã QR</h3>
+          <div className="mt-3 flex items-start gap-4">
+            <div className="h-32 w-32 items-center justify-center overflow-hidden rounded border bg-white">
+              <img
+                src={`/api/poi/${id}/qrcode?t=${new Date().getTime()}`}
+                alt="POI QR Code"
+                className="h-full w-full object-contain"
+              />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs text-stone-500">
+                Mã định danh: <span className="font-mono font-bold text-blue-600">{form.qrCode}</span>
+              </p>
+              <button
+                type="button"
+                className="mt-3 rounded-lg bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
+                onClick={() => {
+                  window.open(`/api/poi/${id}/qrcode`, '_blank')
+                }}
+              >
+                📥 Tải mã QR (Mở Tab mới để in)
+              </button>
             </div>
           </div>
-        )}
-
-        <div className="rounded-lg border border-stone-200 p-4">
-          <h3 className="text-sm font-semibold text-stone-800">Hiển thị trên bản đồ nội bộ</h3>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <label className="text-sm">
-              Map X %
-              <input
-                type="number"
-                className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
-                value={form.mapX}
-                onChange={(e) => setForm({ ...form, mapX: Number(e.target.value) })}
-              />
-            </label>
-            <label className="text-sm">
-              Map Y %
-              <input
-                type="number"
-                className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
-                value={form.mapY}
-                onChange={(e) => setForm({ ...form, mapY: Number(e.target.value) })}
-              />
-            </label>
-          </div>
         </div>
+      )}
 
-        <div className="grid grid-cols-2 gap-2">
+      <div className="rounded-lg border border-stone-200 p-4">
+        <h3 className="text-sm font-semibold text-stone-800">Hiển thị trên bản đồ nội bộ</h3>
+        <div className="mt-3 grid grid-cols-2 gap-2">
           <label className="text-sm">
-            Bán kính kích hoạt (m)
+            Map X %
             <input
               type="number"
               className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
-              value={form.triggerRadiusMeters}
-              onChange={(e) => setForm({ ...form, triggerRadiusMeters: Number(e.target.value) })}
+              value={form.mapX}
+              onChange={(e) => setForm({ ...form, mapX: Number(e.target.value) })}
             />
           </label>
           <label className="text-sm">
-            Ưu tiên
-            <select
-              className="mt-1 w-full rounded border px-2 py-1.5 dark:border-stone-600 dark:bg-stone-800 disabled:opacity-50"
-              value={form.priority}
-              onChange={(e) => setForm({ ...form, priority: Number(e.target.value) })}
-              disabled={!isAdmin}
-            >
-              <option value={0}>Thấp / Bình thường</option>
-              <option value={10}>Cao / Ưu tiên</option>
-            </select>
+            Map Y %
+            <input
+              type="number"
+              className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
+              value={form.mapY}
+              onChange={(e) => setForm({ ...form, mapY: Number(e.target.value) })}
+            />
           </label>
         </div>
+      </div>
 
+      <div className="grid grid-cols-2 gap-2">
         <label className="text-sm">
-          Cooldown (giây)
+          Bán kính kích hoạt (m)
           <input
             type="number"
             className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
-            value={form.cooldownSeconds}
-            onChange={(e) => setForm({ ...form, cooldownSeconds: Number(e.target.value) })}
+            value={form.triggerRadiusMeters}
+            onChange={(e) => setForm({ ...form, triggerRadiusMeters: Number(e.target.value) })}
           />
         </label>
-
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold">Hình ảnh Quán ăn</label>
-          <div className="flex items-center gap-4">
-            {form.imageUrl && (
-              <div className="relative h-20 w-20 overflow-hidden rounded-lg border">
-                <img src={form.imageUrl} className="h-full w-full object-cover" />
-              </div>
-            )}
-            <div className="flex-1">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-                id="image-upload"
-              />
-              <label
-                htmlFor="image-upload"
-                className="inline-block cursor-pointer rounded-lg bg-orange-100 px-4 py-2 text-sm font-medium text-orange-700 hover:bg-orange-200"
-              >
-                {imageBusy ? 'Đang tải lên...' : 'Chọn ảnh từ máy'}
-              </label>
-              <p className="mt-1 text-xs text-stone-500">Hỗ trợ: JPG, PNG, WEBP. Tối đa 10MB.</p>
-            </div>
-          </div>
-        </div>
-
         <label className="text-sm">
-          Audio VI URL
+          Ưu tiên
           <input
+            type="number"
             className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
-            value={form.audioViUrl ?? ''}
-            onChange={(e) => setForm({ ...form, audioViUrl: e.target.value || null })}
+            value={form.priority}
+            onChange={(e) => setForm({ ...form, priority: Number(e.target.value) })}
           />
         </label>
-
-        {currentAudioUrl && (
-          <div className="rounded-lg border border-stone-200 p-4">
-            <p className="text-sm font-semibold text-stone-800">
-              Nghe thử audio hiện tại ({currentLanguage.label})
-            </p>
-            <audio className="mt-3 w-full" controls src={currentAudioUrl} />
-            <button
-              type="button"
-              className="mt-3 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-50"
-              onClick={async () => {
-                try {
-                  setAudioBusy(true)
-                  const audio = new Audio(currentAudioUrl ?? '')
-                  await audio.play()
-                } finally {
-                  setAudioBusy(false)
-                }
-              }}
-              disabled={audioBusy}
-            >
-              {audioBusy ? 'Đang phát...' : 'Nghe file mp3 đã xuất'}
-            </button>
-          </div>
-        )}
-
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={form.isActive}
-            onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-          />
-          Đang hoạt động
-        </label>
-
-        {!isNew && form.contentVersion != null && (
-          <p className="text-xs text-stone-500">
-            Phiên bản nội dung (đồng bộ app): <span className="font-mono">{form.contentVersion}</span>
-          </p>
-        )}
       </div>
 
-      {save.error && (
-        <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/20">
-          <strong>Lỗi:</strong> {(save.error as Error).message}
+      <label className="text-sm">
+        Cooldown (giây)
+        <input
+          type="number"
+          className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
+          value={form.cooldownSeconds}
+          onChange={(e) => setForm({ ...form, cooldownSeconds: Number(e.target.value) })}
+        />
+      </label>
+
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-semibold">Hình ảnh Quán ăn</label>
+        <div className="flex items-center gap-4">
+          {form.imageUrl && (
+            <div className="relative h-20 w-20 overflow-hidden rounded-lg border">
+              <img src={form.imageUrl} className="h-full w-full object-cover" />
+            </div>
+          )}
+          <div className="flex-1">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              id="image-upload"
+            />
+            <label
+              htmlFor="image-upload"
+              className="inline-block cursor-pointer rounded-lg bg-orange-100 px-4 py-2 text-sm font-medium text-orange-700 hover:bg-orange-200"
+            >
+              {imageBusy ? 'Đang tải lên...' : 'Chọn ảnh từ máy'}
+            </label>
+            <p className="mt-1 text-xs text-stone-500">Hỗ trợ: JPG, PNG, WEBP. Tối đa 10MB.</p>
+          </div>
         </div>
-      )}
+      </div>
 
-      {!isFormValid && (
-        <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-700 dark:border-yellow-700 dark:bg-yellow-900/20">
-          Vui lòng điền <strong>Tên</strong> và <strong>Địa chỉ</strong> POI.
-        </div>
-      )}
+      <label className="text-sm">
+        Audio VI URL
+        <input
+          className="mt-1 w-full rounded border px-2 py-1 dark:border-stone-600 dark:bg-stone-800"
+          value={form.audioViUrl ?? ''}
+          onChange={(e) => setForm({ ...form, audioViUrl: e.target.value || null })}
+        />
+      </label>
 
-      {save.isPending && <p className="text-sm text-blue-600">Đang lưu...</p>}
-
-      <div className="flex gap-2">
-        <button
-          type="button"
-          className="rounded-lg bg-orange-600 px-4 py-2 text-white disabled:opacity-50"
-          onClick={() => save.mutate()}
-          disabled={save.isPending || geoBusy || (!isNew && !id) || !isFormValid}
-          title={!isFormValid ? 'Điền tên và địa chỉ POI trước' : ''}
-        >
-          Lưu
-        </button>
-        <button type="button" className="rounded-lg border px-4 py-2" onClick={() => navigate(-1)}>
-          Hủy
-        </button>
-        {!isNew && role === 'Admin' && (
+      {currentAudioUrl && (
+        <div className="rounded-lg border border-stone-200 p-4">
+          <p className="text-sm font-semibold text-stone-800">
+            Nghe thử audio hiện tại ({currentLanguage.label})
+          </p>
+          <audio className="mt-3 w-full" controls src={currentAudioUrl} />
           <button
             type="button"
-            className="ml-auto rounded-lg border border-red-300 px-4 py-2 text-red-700"
+            className="mt-3 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-50"
             onClick={async () => {
-              if (!confirm('Vô hiệu hóa POI này?')) return
-              await api.delete(`/api/poi/${id}`)
-              qc.invalidateQueries({ queryKey: ['pois'] })
-              navigate('/pois')
+              try {
+                setAudioBusy(true)
+                const audio = new Audio(currentAudioUrl ?? '')
+                await audio.play()
+              } finally {
+                setAudioBusy(false)
+              }
             }}
+            disabled={audioBusy}
           >
-            Vô hiệu hóa
+            {audioBusy ? 'Đang phát...' : 'Nghe file mp3 đã xuất'}
           </button>
-        )}
-      </div>
+        </div>
+      )}
+
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={form.isActive}
+          onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+        />
+        Đang hoạt động
+      </label>
+
+      {!isNew && form.contentVersion != null && (
+        <p className="text-xs text-stone-500">
+          Phiên bản nội dung (đồng bộ app): <span className="font-mono">{form.contentVersion}</span>
+        </p>
+      )}
     </div>
+
+      {
+    save.error && (
+      <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/20">
+        <strong>Lỗi:</strong> {(save.error as Error).message}
+      </div>
+    )
+  }
+
+  {
+    !isFormValid && (
+      <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-700 dark:border-yellow-700 dark:bg-yellow-900/20">
+        Vui lòng điền <strong>Tên</strong> và <strong>Địa chỉ</strong> POI.
+      </div>
+    )
+  }
+
+  { save.isPending && <p className="text-sm text-blue-600">Đang lưu...</p> }
+
+  <div className="flex gap-2">
+    <button
+      type="button"
+      className="rounded-lg bg-orange-600 px-4 py-2 text-white disabled:opacity-50"
+      onClick={() => save.mutate()}
+      disabled={save.isPending || geoBusy || (!isNew && !id) || !isFormValid}
+      title={!isFormValid ? 'Điền tên và địa chỉ POI trước' : ''}
+    >
+      Lưu
+    </button>
+    <button type="button" className="rounded-lg border px-4 py-2" onClick={() => navigate(-1)}>
+      Hủy
+    </button>
+    {!isNew && role === 'Admin' && (
+      <button
+        type="button"
+        className="ml-auto rounded-lg border border-red-300 px-4 py-2 text-red-700"
+        onClick={async () => {
+          if (!confirm('Vô hiệu hóa POI này?')) return
+          await api.delete(`/api/poi/${id}`)
+          qc.invalidateQueries({ queryKey: ['pois'] })
+          navigate('/pois')
+        }}
+      >
+        Vô hiệu hóa
+      </button>
+    )}
+  </div>
+    </div >
   )
 }

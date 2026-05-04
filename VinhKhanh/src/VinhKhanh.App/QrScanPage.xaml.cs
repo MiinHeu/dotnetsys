@@ -157,7 +157,11 @@ public partial class QrScanPage : ContentPage
 		}
 		catch (Exception ex)
 		{
-			MainThread.BeginInvokeOnMainThread(() => StatusLabel.Text = $"Loi: {ex.Message}");
+			MainThread.BeginInvokeOnMainThread(() => 
+			{
+				StatusLabel.Text = $"Loi: {ex.Message}. Kiem tra IP trong Settings.";
+				_isProcessing = false; // Cho phép quét lại nếu lỗi
+			});
 		}
 	}
 

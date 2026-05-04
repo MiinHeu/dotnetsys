@@ -10,6 +10,8 @@ public interface ILocalDbService
 	Task<int> CountPoisAsync();
 	Task<List<Tour>> GetToursAsync();
 	Task SaveToursAsync(List<Tour> tours);
+	Task<List<int>> GetVisitedPoiIdsAsync();
+	Task AddVisitedPoiAsync(int poiId);
 }
 
 public class LocalDbService : ILocalDbService
@@ -24,6 +26,7 @@ public class LocalDbService : ILocalDbService
 		_db = new SQLiteAsyncConnection(_dbPath);
 		await _db.CreateTableAsync<LocalPoi>();
 		await _db.CreateTableAsync<LocalTour>();
+		await _db.CreateTableAsync<VisitedPoi>();
 		return _db;
 	}
 
@@ -81,6 +84,23 @@ public class LocalDbService : ILocalDbService
 			EstimatedMinutes = t.EstimatedMinutes
 		}));
 	}
+
+	public async Task<List<int>> GetVisitedPoiIdsAsync()
+	{
+		var conn = await GetDbAsync();
+		var visited = await conn.Table<VisitedPoi>().ToListAsync();
+		return visited.Select(v => v.PoiId).ToList();
+	}
+
+	public async Task AddVisitedPoiAsync(int poiId)
+	{
+		var conn = await GetDbAsync();
+		var exists = await conn.Table<VisitedPoi>().Where(v => v.PoiId == poiId).CountAsync() > 0;
+		if (!exists)
+		{
+			await conn.InsertAsync(new VisitedPoi { PoiId = poiId, VisitedAt = DateTime.UtcNow });
+		}
+	}
 }
 
 // SQLite local models — nhẹ hơn domain models
@@ -101,7 +121,6 @@ public class LocalPoi
 	public string? ImageUrl { get; set; }
 }
 
-// FIX #1: LocalTour class — được định nghĩa đầy đủ
 [SQLite.Table("Tours")]
 public class LocalTour
 {
@@ -109,4 +128,11 @@ public class LocalTour
 	public string Name { get; set; } = "";
 	public string Description { get; set; } = "";
 	public int EstimatedMinutes { get; set; }
+}
+
+[SQLite.Table("VisitedPois")]
+public class VisitedPoi
+{
+	[SQLite.PrimaryKey] public int PoiId { get; set; }
+	public DateTime VisitedAt { get; set; }
 }

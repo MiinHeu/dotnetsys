@@ -83,7 +83,18 @@ try
     // Ưu tiên dùng Azure OpenAI cho AI Service
     builder.Services.AddScoped<GeminiAiService>();
     builder.Services.AddScoped<OllamaAiService>();
-    builder.Services.AddScoped<IAiService, GeminiAiService>();
+    // Cấu hình linh hoạt AI Service
+    var geminiKey = builder.Configuration["Gemini:ApiKey"];
+    if (string.IsNullOrWhiteSpace(geminiKey) || geminiKey.Contains("YOUR_GEMINI_API_KEY"))
+    {
+        Console.WriteLine("[STARTUP] Gemini API Key is missing. Falling back to Local OllamaAiService.");
+        builder.Services.AddScoped<IAiService, OllamaAiService>();
+    }
+    else
+    {
+        Console.WriteLine("[STARTUP] Using Cloud GeminiAiService for AI Chat.");
+        builder.Services.AddScoped<IAiService, GeminiAiService>();
+    }
     // Ưu tiên dùng Azure cho TTS
     builder.Services.AddScoped<VoiceRssTtsService>();
     builder.Services.AddScoped<AzureTtsService>();
@@ -153,9 +164,16 @@ try
         var forceDefaultCredentials = builder.Configuration.GetValue<bool>("Seed:ForceDefaultCredentials");
         try
         {
-            Console.WriteLine("[STARTUP] Initializing Database (EnsureCreated)...");
-            // Sử dụng EnsureCreated để tạo DB sạch từ Model hiên tại, bỏ qua Migration history
-            db.Database.EnsureCreated();
+            if (db.Database.IsNpgsql())
+            {
+                Console.WriteLine("[STARTUP] Applying Entity Framework Migrations for PostgreSQL...");
+                await db.Database.MigrateAsync();
+            }
+            else
+            {
+                Console.WriteLine("[STARTUP] Initializing Database (EnsureCreated) for SQLite...");
+                db.Database.EnsureCreated();
+            }
         }
         catch (Exception ex)
         {

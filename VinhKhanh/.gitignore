@@ -1,6 +1,4 @@
 
-cat >> .gitignore << 'EOF' 
-
 # .NET
 bin/
 obj/
@@ -29,9 +27,16 @@ build/
 # Rider
 .idea/
 
-
 # OS
 .DS_Store
 Thumbs.db
 
-EOF 
+# SQLite DB merge artifacts (không commit vào git)
+*.db-shm
+*.db-wal
+*.ours.db
+*.ours.db-shm
+*.ours.db-wal
+*.theirs.db
+*.theirs.db-shm
+*.theirs.db-wal

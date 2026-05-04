@@ -80,6 +80,14 @@ export type Poi = {
   contentVersion?: number
   category: number
   isActive: boolean
+  // Extended Fields V2.0
+  address?: string | null
+  phoneNumber?: string | null
+  operatingHours?: string | null
+  rating?: number
+  imagesJson?: string | null
+  menuJson?: string | null
+  tagsJson?: string | null
   translations?: Array<{
     languageCode: string
     name: string

@@ -2,26 +2,80 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.Maui.Controls"
-             xmlns:res="clr-namespace:VinhKhanh.App.Resources.Strings"
              x:Class="VinhKhanh.App.QrScanPage"
-             Title="{x:Static res:AppResources.TabScan}">
-    <Grid RowDefinitions="Auto,*,Auto" Padding="0">
-        <Label x:Name="StatusLabel"
-               Padding="12"
-               Text="{x:Static res:AppResources.QrScanHint}" />
+             Title="Quét QR"
+             BackgroundColor="Black">
 
+    <Grid>
+        <!-- Camera View -->
         <zxing:CameraBarcodeReaderView x:Name="Scanner"
-                                       Grid.Row="1"
                                        IsDetecting="True"
                                        BarcodesDetected="OnBarcodesDetected" />
 
-        <Grid Grid.Row="2" Padding="12" ColumnDefinitions="*,Auto" ColumnSpacing="8" BackgroundColor="#FFFFFF">
-            <Entry x:Name="ManualCodeEntry"
-                   Placeholder="{x:Static res:AppResources.QrPlaceholder}"
-                   ReturnType="Done"
-                   Completed="OnManualSubmit"
-                   ClearButtonVisibility="WhileEditing" />
-            <Button Grid.Column="1" Text="{x:Static res:AppResources.QrSubmitButton}" Clicked="OnManualSubmit" />
+        <!-- Scanner Overlay -->
+        <Grid BackgroundColor="Transparent">
+            <!-- Semi-transparent edges -->
+            <BoxView BackgroundColor="#80000000" VerticalOptions="Start" HeightRequest="150"/>
+            <BoxView BackgroundColor="#80000000" VerticalOptions="End" HeightRequest="200"/>
+            <Grid ColumnDefinitions="*, 250, *" VerticalOptions="Center">
+                <BoxView Grid.Column="0" BackgroundColor="#80000000" HeightRequest="250"/>
+                <!-- Scanning Frame -->
+                <Frame Grid.Column="1" HeightRequest="250" WidthRequest="250" 
+                       BackgroundColor="Transparent" 
+                       BorderColor="#FF5A1F" 
+                       CornerRadius="20" 
+                       Padding="0">
+                    <BoxView HeightRequest="2" BackgroundColor="#FF5A1F" VerticalOptions="Center" Opacity="0.5">
+                        <BoxView.Triggers>
+                            <EventTrigger Event="Loaded">
+                                <!-- Simple scan line animation placeholder (MAUI doesn't support easy repeat anim in XAML without toolkit) -->
+                            </EventTrigger>
+                        </BoxView.Triggers>
+                    </BoxView>
+                </Frame>
+                <BoxView Grid.Column="2" BackgroundColor="#80000000" HeightRequest="250"/>
+            </Grid>
+
+            <!-- Instructions -->
+            <VerticalStackLayout VerticalOptions="Start" Margin="30, 80" Spacing="10">
+                <Label Text="Quét mã QR tại điểm dừng" 
+                       HorizontalOptions="Center" 
+                       TextColor="White" 
+                       FontSize="20" 
+                       FontAttributes="Bold"/>
+                <Label x:Name="StatusLabel"
+                       Text="Hướng camera vào mã QR để phát thuyết minh tự động" 
+                       HorizontalOptions="Center" 
+                       TextColor="#DEE2E6" 
+                       FontSize="14" 
+                       HorizontalTextAlignment="Center"/>
+            </VerticalStackLayout>
+
+            <!-- Manual Input -->
+            <Frame VerticalOptions="End" 
+                   Margin="20, 40" 
+                   Padding="15" 
+                   CornerRadius="20" 
+                   BackgroundColor="#F8FAFC" 
+                   BorderColor="Transparent" 
+                   HasShadow="True">
+                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                    <Entry x:Name="ManualCodeEntry"
+                           Placeholder="Hoặc nhập mã số tại đây"
+                           TextColor="#111827"
+                           ReturnType="Done"
+                           Completed="OnManualSubmit"
+                           FontSize="15"/>
+                    <Button Grid.Column="1" 
+                            Text="Gửi" 
+                            Clicked="OnManualSubmit" 
+                            CornerRadius="10" 
+                            BackgroundColor="#FF5A1F"
+                            TextColor="White"
+                            HeightRequest="40"
+                            Padding="15,0"/>
+                </Grid>
+            </Frame>
         </Grid>
     </Grid>
 </ContentPage>

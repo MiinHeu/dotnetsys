@@ -39,6 +39,21 @@ public class Poi : IComparable<Poi>
 	public PoiCategory Category { get; set; } = PoiCategory.ComTam;
 	public bool IsActive { get; set; } = true;
 
+	// ── Dữ liệu mở rộng cho Mobile V2.0 ──
+	public string? Address { get; set; }
+	public string? PhoneNumber { get; set; }
+	public string? OperatingHours { get; set; } // Vd: "15:00 - 23:00"
+	public double Rating { get; set; } = 5.0;   // Đánh giá trung bình
+	
+	/// <summary>Lưu mảng URL ảnh dạng JSON ["url1", "url2"]</summary>
+	public string? ImagesJson { get; set; }     
+	
+	/// <summary>Lưu danh sách món ăn dạng JSON [{"name":"Ốc", "price":50000}]</summary>
+	public string? MenuJson { get; set; }       
+	
+	/// <summary>Lưu thẻ phân loại dạng JSON ["Hải sản", "Ăn vặt"]</summary>
+	public string? TagsJson { get; set; }
+
 	public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 	public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

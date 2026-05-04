@@ -15,16 +15,29 @@ public sealed class ApiClientService
 		Converters = { new JsonStringEnumConverter() }
 	};
 
+	private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(45) };
+	
 	public HttpClient CreateClient()
 	{
 		var baseUrl = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, GetDefaultApiBase());
 		if (!baseUrl.EndsWith('/')) baseUrl += "/";
-		return new HttpClient { BaseAddress = new Uri(baseUrl), Timeout = TimeSpan.FromSeconds(45) };
+		_http.BaseAddress = new Uri(baseUrl);
+		return _http;
 	}
 
 	public static string GetDefaultApiBase()
 	{
-		// Luôn ưu tiên Azure làm mặc định theo yêu cầu
+		// 1. Hỗ trợ giả lập (Emulator) để lập trình viên test cục bộ
+		if (DeviceInfo.DeviceType == DeviceType.Virtual)
+		{
+#if ANDROID
+			return "http://10.0.2.2:5283/";
+#else
+			return "http://localhost:5283/";
+#endif
+		}
+
+		// 2. Mặc định ưu tiên Azure cho máy thật/phiên bản phát hành (theo NewBranch)
 		return "https://vinh-khanh-food-street-gvhceeg4gbakhjgc.eastasia-01.azurewebsites.net/";
 	}
 
@@ -120,7 +133,6 @@ public sealed class ApiClientService
 		using var http = CreateClient();
 		var res = await http.PostAsJsonAsync("api/ai/chat", req, ct);
 		res.EnsureSuccessStatusCode();
-		
 		var json = await res.Content.ReadAsStringAsync(ct);
 		using var doc = JsonDocument.Parse(json);
 		return doc.RootElement.TryGetProperty("reply", out var r) ? r.GetString() : null;

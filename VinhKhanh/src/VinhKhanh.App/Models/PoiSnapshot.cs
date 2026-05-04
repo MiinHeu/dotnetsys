@@ -29,6 +29,15 @@ public partial class PoiSnapshot : ObservableObject
 	[JsonPropertyName("qrCode")] public string? QrCode { get; set; }
 	[JsonPropertyName("contentVersion")] public int ContentVersion { get; set; }
 	[JsonPropertyName("translations")] public List<PoiTranslationSnapshot>? Translations { get; set; }
+
+	// ── Dữ liệu mở rộng cho Mobile V2.0 ──
+	[JsonPropertyName("address")] public string? Address { get; set; }
+	[JsonPropertyName("phoneNumber")] public string? PhoneNumber { get; set; }
+	[JsonPropertyName("operatingHours")] public string? OperatingHours { get; set; }
+	[JsonPropertyName("rating")] public double Rating { get; set; }
+	[JsonPropertyName("imagesJson")] public string? ImagesJson { get; set; }
+	[JsonPropertyName("menuJson")] public string? MenuJson { get; set; }
+	[JsonPropertyName("tagsJson")] public string? TagsJson { get; set; }
 	
 	// Thuộc tính hiển thị thông minh (Tự động lấy ngôn ngữ hiện tại)
 	[JsonIgnore]

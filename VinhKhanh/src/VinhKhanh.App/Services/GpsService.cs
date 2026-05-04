@@ -9,13 +9,27 @@ public class GpsService : IGpsService
 {
 	private CancellationTokenSource? _cts;
 
+	// Lộ trình giả lập: đi dọc Phố Vĩnh Khánh, ngang qua tất cả 5 quán
 	private static readonly (double lat, double lon)[] RouteWaypoints =
 	[
-		(10.7535, 106.6782),
-		(10.7533, 106.6781),
-		(10.7531, 106.6780),
-		(10.7529, 106.6779),
-		(10.7528, 106.6778),
+		// Bắt đầu từ đầu phố — tiến về Cơm Tấm Tú Mập
+		(10.7537, 106.6783),   // Đang đi tới...
+		(10.7535, 106.6782),   // → Cơm Tấm Tú Mập (POI#4, bán kính 10m)
+		// Rẽ ngang — tiến về Chè Hiền Khánh
+		(10.7537, 106.6783),   // Đang đi tới...
+		(10.7538, 106.6784),   // → Chè Hiền Khánh (POI#5, bán kính 15m)
+		// Quay lại — tiến về Lẩu Bò Khu Nhà Cháy
+		(10.7535, 106.6782),   // Đang đi tới...
+		(10.7533, 106.6781),   // → Lẩu Bò Khu Nhà Cháy (POI#2, bán kính 15m)
+		// Tiếp tục — tiến về Ốc Oanh
+		(10.7532, 106.6780),   // Đang đi tới...
+		(10.7531, 106.6780),   // → Ốc Oanh Vĩnh Khánh (POI#1, bán kính 20m)
+		// Cuối cùng — tiến về Sushi Viên
+		(10.7535, 106.6783),   // Đang đi tới...
+		(10.7538, 106.6785),   // Đang đi tới...
+		(10.7540, 106.6785),   // → Sushi Viên Vĩnh Khánh (POI#3, bán kính 15m)
+		// Quay về điểm xuất phát
+		(10.7537, 106.6783),
 	];
 
 	public async Task StartTrackingAsync()

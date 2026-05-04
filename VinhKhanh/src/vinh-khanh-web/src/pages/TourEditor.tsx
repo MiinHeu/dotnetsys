@@ -51,7 +51,7 @@ export function TourEditor() {
     if (isNew && poisQ.data?.length && stops.length === 0) {
       setStops([{ poiId: poisQ.data[0].id, stopOrder: 1, stayMinutes: 15 }])
     }
-  }, [isNew, poisQ.data])
+  }, [isNew, poisQ.data, stops.length])
 
   const save = useMutation({
     mutationFn: async () => {

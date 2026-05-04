@@ -19,15 +19,29 @@ public partial class ChatPage : ContentPage
 		{
 			if (LangPicker.SelectedItem is string l) _vm.Lang = l;
 		};
-		ChatList.ItemsSource = _vm.Lines;
-		_vm.Lines.CollectionChanged += OnLinesChanged;
-		MsgEntry.SetBinding(Entry.TextProperty, new Binding(nameof(ChatViewModel.Input), source: _vm));
+		ChatList.ItemsSource = _vm.Messages;
+		_vm.Messages.CollectionChanged += OnLinesChanged;
 	}
 
-	private void OnLinesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+	private async void OnLinesChanged(object? sender, NotifyCollectionChangedEventArgs e)
 	{
-		if (_vm.Lines.Count > 0)
-			ChatList.ScrollTo(_vm.Lines[^1], position: ScrollToPosition.End, animate: true);
+		if (_vm.Messages.Count > 0)
+		{
+			var lastItem = _vm.Messages[^1];
+			// Đợi một chút để MAUI CollectionView kịp render item mới trên Android
+			await Task.Delay(50);
+			MainThread.BeginInvokeOnMainThread(() =>
+			{
+				try
+				{
+					ChatList.ScrollTo(lastItem, position: ScrollToPosition.End, animate: false);
+				}
+				catch
+				{
+					// Bỏ qua lỗi nếu ScrollTo vẫn thất bại do UI chưa sẵn sàng
+				}
+			});
+		}
 	}
 
 	private async void OnSend(object? sender, EventArgs e)

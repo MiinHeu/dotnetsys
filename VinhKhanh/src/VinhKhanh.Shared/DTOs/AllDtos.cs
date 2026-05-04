@@ -55,3 +55,27 @@ public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 public record ForgotPasswordRequest(string Username, string NewPassword);
 public record UpdateUserStatusRequest(bool IsActive);
 
+// ── Session Tracking DTOs ──
+
+/// <summary>App gửi lên khi mở app — thu thập thông tin thiết bị.</summary>
+public record SessionStartDto(
+	string SessionId,
+	string DeviceModel,
+	string DevicePlatform,
+	string OsVersion,
+	string AppVersion,
+	string Manufacturer,
+	string LanguageUsed);
+
+/// <summary>App gửi mỗi 60 giây — cập nhật trạng thái phiên.</summary>
+public record SessionHeartbeatDto(
+	string SessionId,
+	int PoisVisited,
+	double DistanceMeters);
+
+/// <summary>App gửi khi đóng app hoặc chuyển sang background.</summary>
+public record SessionEndDto(
+	string SessionId,
+	int PoisVisited,
+	double DistanceMeters);
+

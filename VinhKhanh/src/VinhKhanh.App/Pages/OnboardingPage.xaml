@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="VinhKhanh.App.Pages.OnboardingPage"
+             BackgroundColor="{AppThemeBinding Light=#FAFAFA, Dark=#121212}"
+             NavigationPage.HasNavigationBar="False">
+    
+    <Grid RowDefinitions="*, Auto, Auto">
+        
+        <!-- Carousel for Onboarding -->
+        <CarouselView x:Name="OnboardingCarousel" 
+                      Grid.Row="0"
+                      IndicatorView="Indicator"
+                      VerticalOptions="FillAndExpand">
+            <CarouselView.ItemsSource>
+                <x:Array Type="{x:Type x:String}">
+                    <x:String>1</x:String>
+                    <x:String>2</x:String>
+                    <x:String>3</x:String>
+                </x:Array>
+            </CarouselView.ItemsSource>
+            <CarouselView.ItemTemplate>
+                <DataTemplate>
+                    <Grid RowDefinitions="2*, 1*">
+                        <!-- We use text representation here instead of images for simplicity, but in production, real images or Lottie animations would be used -->
+                        <Frame Grid.Row="0" 
+                               Margin="40" 
+                               CornerRadius="20" 
+                               HasShadow="False"
+                               BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#1E1E1E}">
+                            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center">
+                                <Label Text="🎨" FontSize="80" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Frame>
+                        <VerticalStackLayout Grid.Row="1" Spacing="10" Padding="30, 0">
+                            <Label Text="Khám Phá Vĩnh Khánh" 
+                                   FontSize="28" 
+                                   FontAttributes="Bold" 
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="Trải nghiệm phố ẩm thực sầm uất nhất Sài Gòn với trợ lý du lịch ảo thông minh ngay trên tay bạn." 
+                                   FontSize="16" 
+                                   HorizontalTextAlignment="Center" 
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </DataTemplate>
+            </CarouselView.ItemTemplate>
+        </CarouselView>
+        
+        <!-- Indicators -->
+        <IndicatorView x:Name="Indicator" 
+                       Grid.Row="1"
+                       IndicatorColor="#D3D3D3"
+                       SelectedIndicatorColor="#FF4500"
+                       HorizontalOptions="Center"
+                       Margin="0, 10, 0, 20"/>
+        
+        <!-- Action Button -->
+        <Button x:Name="StartButton"
+                Grid.Row="2"
+                Text="Bắt đầu trải nghiệm"
+                FontAttributes="Bold"
+                FontSize="18"
+                TextColor="White"
+                BackgroundColor="#FF4500"
+                CornerRadius="25"
+                Margin="30, 0, 30, 40"
+                HeightRequest="55"
+                Clicked="OnStartClicked">
+            <Button.Shadow>
+                <Shadow Brush="#FF4500" Offset="0,5" Radius="10" Opacity="0.4" />
+            </Button.Shadow>
+        </Button>
+    </Grid>
+</ContentPage>

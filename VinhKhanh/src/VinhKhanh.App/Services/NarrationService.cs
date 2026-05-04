@@ -121,6 +121,13 @@ public sealed class NarrationService(
 				var apiRoot = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, ApiClientService.GetDefaultApiBase()).TrimEnd('/');
 				await PlayPoiAsync(poiSnapshot, language, apiRoot, _playCts.Token);
 				_recentlyPlayed[BuildKey(poi.Id, language)] = DateTime.UtcNow;
+
+				// Thêm khoảng nghỉ ngắn giữa các audio trong hàng đợi để trải nghiệm tự nhiên hơn
+				if (_queue.Count > 0)
+				{
+					logger.LogInformation("Gap between queued narrations: 3 seconds");
+					await Task.Delay(3000, _playCts.Token);
+				}
 			}
 		}
 		finally

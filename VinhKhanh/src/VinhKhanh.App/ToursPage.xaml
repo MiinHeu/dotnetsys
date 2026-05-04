@@ -1,57 +1,78 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:res="clr-namespace:VinhKhanh.App.Resources.Strings"
-             xmlns:viewModels="clr-namespace:VinhKhanh.App.ViewModels"
+             xmlns:vm="clr-namespace:VinhKhanh.App.ViewModels"
+             xmlns:models="clr-namespace:VinhKhanh.App.Models"
              x:Class="VinhKhanh.App.ToursPage"
-             Title="{x:Static res:AppResources.TabTours}"
-             BackgroundColor="#F8FAFC">
+             x:DataType="vm:ToursViewModel"
+             Title="Lộ trình"
+             BackgroundColor="{AppThemeBinding Light=#F4F6F8, Dark=#1A1A1A}">
 
     <Grid RowDefinitions="Auto,*">
-        <Border StrokeThickness="0" Background="#FFFFFF" Padding="20,24,20,16"
-                Shadow="{Shadow Brush=#000000, Offset='0,4', Opacity=0.03, Radius=4}">
-            <VerticalStackLayout Spacing="4">
-                <Label Text="{x:Static res:AppResources.ToursHeader}" FontSize="14" TextColor="#EA580C" FontAttributes="Bold" TextTransform="Uppercase"/>
-                <Label Text="{x:Static res:AppResources.ToursTitle}" FontSize="28" FontAttributes="Bold" TextColor="#0F172A" />
-                <Label Text="{x:Static res:AppResources.ToursSubtitle}" FontSize="15" TextColor="#475569" />
+        <!-- ... (Header stays the same) ... -->
+        <Frame Grid.Row="0" CornerRadius="0" Padding="20,40,20,20" HasShadow="True" BorderColor="Transparent">
+            <Frame.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#FF5A1F" Offset="0" />
+                    <GradientStop Color="#FF8C00" Offset="1" />
+                </LinearGradientBrush>
+            </Frame.Background>
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Khám Phá" FontSize="14" TextColor="#FFDAB9" FontAttributes="Bold" TextTransform="Uppercase"/>
+                <Label Text="Lộ Trình Đặc Sắc" FontSize="32" FontAttributes="Bold" TextColor="White" />
+                <Label Text="Khám phá tinh hoa ẩm thực phố Vĩnh Khánh" FontSize="16" TextColor="#FFF5EE" />
             </VerticalStackLayout>
-        </Border>
+        </Frame>
 
-        <RefreshView Grid.Row="1" Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
-            <CollectionView x:Name="TourList" ItemsSource="{Binding Tours}">
+        <!-- Tours List -->
+        <RefreshView Grid.Row="1" Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}" Margin="15,20,15,0">
+            <CollectionView x:Name="TourList" ItemsSource="{Binding Tours}" ShowsVerticalScrollIndicator="False">
                 <CollectionView.ItemsLayout>
-                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="20"/>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="15"/>
                 </CollectionView.ItemsLayout>
 
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Border Stroke="#E2E8F0" StrokeThickness="1"
-                                Background="#FFFFFF" StrokeShape="RoundRectangle 16"
-                                Shadow="{Shadow Brush=#000000, Offset='0,8', Opacity=0.05, Radius=12}">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:ToursViewModel}}, Path=SelectTourCommand}" CommandParameter="{Binding .}" />
-                            </Border.GestureRecognizers>
-                            <VerticalStackLayout Padding="20" Spacing="8">
-                                <Label Text="{Binding Name}" FontSize="20" FontAttributes="Bold" TextColor="#0F172A" />
-                                <Label Text="{Binding Description}" FontSize="15" TextColor="#334155" MaxLines="3" LineBreakMode="WordWrap" />
+                    <DataTemplate x:DataType="models:TourSnapshot">
+                        <Frame CornerRadius="20" Padding="0" HasShadow="True" 
+                               BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2A2A}"
+                               BorderColor="Transparent" Margin="5">
+                            
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer 
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ToursViewModel}}, Path=SelectTourCommand}" 
+                                    CommandParameter="{Binding .}"/>
+                            </Frame.GestureRecognizers>
 
-                                <HorizontalStackLayout Spacing="12" Margin="0,16,0,0">
-                                    <Border Stroke="#EA580C" StrokeThickness="1.5" Background="#FFF7ED" StrokeShape="RoundRectangle 8" Padding="12,6">
-                                        <Label Text="{Binding Stops.Count, StringFormat={x:Static res:AppResources.ToursItemStopsCount}}" FontSize="13" FontAttributes="Bold" TextColor="#EA580C" />
-                                    </Border>
-                                    <Border Stroke="#E2E8F0" StrokeThickness="1" Background="#F8FAFC" StrokeShape="RoundRectangle 8" Padding="12,6">
-                                        <Label Text="{Binding EstimatedMinutes, StringFormat={x:Static res:AppResources.ToursItemMinutes}}" FontSize="13" FontAttributes="Bold" TextColor="#475569" />
-                                    </Border>
-                                </HorizontalStackLayout>
-                            </VerticalStackLayout>
-                        </Border>
+                            <Grid ColumnDefinitions="100, *" HeightRequest="120">
+                                <!-- Icon / Image Placeholer -->
+                                <BoxView Grid.Column="0" BackgroundColor="#FFF0E6" CornerRadius="20,0,20,0"/>
+                                <Label Grid.Column="0" Text="🧭" FontSize="40" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                
+                                <!-- Info -->
+                                <VerticalStackLayout Grid.Column="1" Padding="15,15,15,10" Spacing="5">
+                                    <Label Text="{Binding Name}" FontSize="18" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" MaxLines="1" LineBreakMode="TailTruncation" />
+                                    <Label Text="{Binding Description}" FontSize="14" TextColor="{AppThemeBinding Light=#6B7280, Dark=#A1A1AA}" MaxLines="2" LineBreakMode="TailTruncation" />
+                                    
+                                    <HorizontalStackLayout Spacing="10" VerticalOptions="EndAndExpand">
+                                        <HorizontalStackLayout Spacing="4">
+                                            <Label Text="📍" FontSize="12" VerticalOptions="Center"/>
+                                            <Label Text="{Binding Stops.Count, StringFormat='{0} điểm'}" FontSize="13" FontAttributes="Bold" TextColor="#FF5A1F" VerticalOptions="Center"/>
+                                        </HorizontalStackLayout>
+                                        
+                                        <HorizontalStackLayout Spacing="4">
+                                            <Label Text="⏱" FontSize="12" VerticalOptions="Center"/>
+                                            <Label Text="{Binding EstimatedMinutes, StringFormat='{0} phút'}" FontSize="13" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#4B5563, Dark=#D1D5DB}" VerticalOptions="Center"/>
+                                        </HorizontalStackLayout>
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Frame>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
 
                 <CollectionView.EmptyView>
-                    <VerticalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center" Margin="0,80,0,0">
-                        <Label Text="{x:Static res:AppResources.ToursEmptyTitle}" TextColor="#475569" FontAttributes="Bold" FontSize="18" HorizontalOptions="Center" />
-                        <Label Text="{x:Static res:AppResources.ToursEmptySubtitle}" TextColor="#64748B" FontSize="14" HorizontalOptions="Center" />
+                    <VerticalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="Center" Margin="0,80,0,0">
+                        <Label Text="Chưa có lộ trình nào." TextColor="{AppThemeBinding Light=#475569, Dark=#A1A1AA}" FontAttributes="Bold" FontSize="18" HorizontalOptions="Center" />
+                        <Label Text="Hãy kéo xuống để làm mới." TextColor="{AppThemeBinding Light=#64748B, Dark=#6B7280}" FontSize="14" HorizontalOptions="Center" />
                     </VerticalStackLayout>
                 </CollectionView.EmptyView>
             </CollectionView>

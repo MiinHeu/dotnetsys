@@ -28,6 +28,18 @@ public class ApiIntegrationTests : IClassFixture<ApiWebApplicationFactory>
 		return token!;
 	}
 
+	private async Task<int> GetFirstOwnerIdAsync(string token)
+	{
+		var req = new HttpRequestMessage(HttpMethod.Get, "/api/auth/owners");
+		req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+		var res = await _client.SendAsync(req);
+		Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+		var json = await ReadJsonAsync(res);
+		Assert.True(json.ValueKind == JsonValueKind.Array && json.GetArrayLength() > 0);
+		return json[0].GetProperty("id").GetInt32();
+	}
+
 	[Fact]
 	public async Task Auth_Login_WithSeededUsers_ReturnsJwtTokens()
 	{
@@ -58,6 +70,7 @@ public class ApiIntegrationTests : IClassFixture<ApiWebApplicationFactory>
 	public async Task Poi_Qr_Nearby_And_Crud_Translation_Workflow_Works()
 	{
 		var token = await LoginAndGetTokenAsync();
+		var ownerId = await GetFirstOwnerIdAsync(token);
 		var listRes = await _client.GetAsync("/api/poi?lang=vi");
 		Assert.Equal(HttpStatusCode.OK, listRes.StatusCode);
 		var list = await ReadJsonAsync(listRes);
@@ -102,6 +115,7 @@ public class ApiIntegrationTests : IClassFixture<ApiWebApplicationFactory>
 				imageUrl = (string?)null,
 				audioViUrl = (string?)null,
 				qrCode = qr,
+				ownerUserId = ownerId,
 				category = 0,
 				isActive = true
 			})
@@ -130,6 +144,7 @@ public class ApiIntegrationTests : IClassFixture<ApiWebApplicationFactory>
 				imageUrl = (string?)null,
 				audioViUrl = (string?)null,
 				qrCode = qr,
+				ownerUserId = ownerId,
 				category = 0,
 				isActive = true
 			})

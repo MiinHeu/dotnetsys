@@ -17,7 +17,14 @@ public partial class SettingsPage : ContentPage
 	{
 		var url = ApiUrlEntry.Text?.Trim();
 		if (!string.IsNullOrEmpty(url))
+		{
+			if (!url.StartsWith("http"))
+			{
+				await DisplayAlert("Lỗi", "Địa chỉ API phải bắt đầu bằng http:// hoặc https://", "OK");
+				return;
+			}
 			Microsoft.Maui.Storage.Preferences.Set(AppPreferences.ApiBaseUrl, url);
+		}
 
 		var m = RadiusMultEntry.Text?.Trim();
 		if (!string.IsNullOrEmpty(m))
@@ -25,8 +32,6 @@ public partial class SettingsPage : ContentPage
 
 		Microsoft.Maui.Storage.Preferences.Set(AppPreferences.MockGpsEnabled, MockGpsSwitch.IsToggled);
 
-#pragma warning disable CS0618 // Type or member is obsolete
-		await DisplayAlert("Đã lưu", "Khởi động lại theo dõi GPS nếu đang bật.", "OK");
-#pragma warning restore CS0618 // Type or member is obsolete
+		await DisplayAlert("Thành công", "Cài đặt đã được lưu. Vui lòng khởi động lại GPS nếu đang bật.", "Tuyệt vời");
 	}
 }

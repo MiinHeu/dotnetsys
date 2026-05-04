@@ -26,9 +26,19 @@ public partial class PoiDetailViewModel(
 				OnPoiDetailChanged(value);
 				OnPropertyChanged(nameof(DisplayName));
 				OnPropertyChanged(nameof(DisplayDescription));
+				OnPropertyChanged(nameof(Images));
+				OnPropertyChanged(nameof(MenuItems));
 			}
 		}
 	}
+
+	public List<string> Images => string.IsNullOrWhiteSpace(PoiDetail?.ImagesJson) 
+		? new List<string>() 
+		: System.Text.Json.JsonSerializer.Deserialize<List<string>>(PoiDetail.ImagesJson) ?? new List<string>();
+
+	public List<string> MenuItems => string.IsNullOrWhiteSpace(PoiDetail?.MenuJson) 
+		? new List<string>() 
+		: System.Text.Json.JsonSerializer.Deserialize<List<string>>(PoiDetail.MenuJson) ?? new List<string>();
 
 	[ObservableProperty] private int _poiId;
 	[ObservableProperty] private bool _autoPlay;

@@ -7,6 +7,7 @@ using VinhKhanh.API.Hubs;
 using VinhKhanh.Shared;
 using VinhKhanh.Infrastructure.Data;
 using VinhKhanh.Shared.DTOs;
+using System.Security.Cryptography;
 
 namespace VinhKhanh.API.Controllers;
 
@@ -41,6 +42,30 @@ public class PoiController(
 	}
 
 	private bool IsOwnerRole => AuthClaims.IsOwner(HttpContext.User);
+
+	private static string GenerateQrCandidate()
+	{
+		var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(4));
+		return $"VK-POI-{token}";
+	}
+
+	private async Task<string> EnsureQrCodeAsync(string? requestedQrCode, int? excludingPoiId, CancellationToken ct)
+	{
+		var normalized = NormalizeQr(requestedQrCode);
+		if (!string.IsNullOrEmpty(normalized))
+			return normalized;
+
+		for (var attempt = 0; attempt < 20; attempt++)
+		{
+			var candidate = GenerateQrCandidate();
+			var exists = await db.Pois.IgnoreQueryFilters()
+				.AnyAsync(p => p.QrCode == candidate && (excludingPoiId == null || p.Id != excludingPoiId.Value), ct);
+			if (!exists)
+				return candidate;
+		}
+
+		throw new InvalidOperationException("Khong the tao ma QR duy nhat. Vui long thu lai.");
+	}
 
 	private bool CanAccessPoi(Poi poi)
 	{
@@ -206,6 +231,16 @@ public class PoiController(
 		{
 			poi.OwnerUserId = CurrentUserId;
 		}
+		else
+		{
+			if (poi.OwnerUserId == null)
+				return BadRequest(new { message = "Admin phai chon chu quan cho POI." });
+
+			var ownerExists = await db.AppUsers.AsNoTracking()
+				.AnyAsync(u => u.Id == poi.OwnerUserId && u.Role == "Owner" && u.IsActive, ct);
+			if (!ownerExists)
+				return BadRequest(new { message = "OwnerUserId khong hop le hoac chu quan da bi khoa." });
+		}
 
 		// Check trùng vị trí (cùng lat/lon với POI đã có, bất kể owner nào)
 		var existingAtLocation = await db.Pois.IgnoreQueryFilters()
@@ -216,6 +251,7 @@ public class PoiController(
 			return Conflict(new { message = "Vi tri nay da co POI khac." });
 		}
 
+		poi.QrCode = await EnsureQrCodeAsync(poi.QrCode, excludingPoiId: null, ct);
 		poi.QrCode = NormalizeQr(poi.QrCode);
 		NormalizeTranslations(poi.Translations, poi.Description);
 		poi.CreatedAt = DateTime.UtcNow;
@@ -258,7 +294,18 @@ public class PoiController(
 			var uid = CurrentUserId;
 			if (uid == null || poi.OwnerUserId != uid)
 				return Forbid();
+			updated.OwnerUserId = uid;
 		}
+		else if (updated.OwnerUserId != null)
+		{
+			var ownerExists = await db.AppUsers.AsNoTracking()
+				.AnyAsync(u => u.Id == updated.OwnerUserId && u.Role == "Owner" && u.IsActive, ct);
+			if (!ownerExists)
+				return BadRequest(new { message = "OwnerUserId khong hop le hoac chu quan da bi khoa." });
+		}
+
+		if (!IsOwnerRole && updated.OwnerUserId == null)
+			return BadRequest(new { message = "Admin phai chon chu quan cho POI." });
 
 		// Check trùng vị trí (trừ chính nó)
 		if (Math.Abs(updated.Latitude - poi.Latitude) > 1e-9 || Math.Abs(updated.Longitude - poi.Longitude) > 1e-9)
@@ -273,7 +320,7 @@ public class PoiController(
 			}
 		}
 
-		var newQr = NormalizeQr(updated.QrCode);
+		var newQr = await EnsureQrCodeAsync(updated.QrCode, id, ct);
 		if (newQr != poi.QrCode
 		    && !string.IsNullOrEmpty(newQr)
 		    && await db.Pois.IgnoreQueryFilters().AnyAsync(p => p.QrCode == newQr && p.Id != id, ct))

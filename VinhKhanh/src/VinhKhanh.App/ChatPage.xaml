@@ -1,15 +1,121 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:res="clr-namespace:VinhKhanh.App.Resources.Strings"
+             xmlns:dto="clr-namespace:VinhKhanh.Shared.DTOs;assembly=VinhKhanh.Shared"
              x:Class="VinhKhanh.App.ChatPage"
-             Title="{x:Static res:AppResources.TabChat}">
-    <Grid RowDefinitions="Auto,*,Auto" Padding="12" RowSpacing="8">
-        <Picker x:Name="LangPicker" Title="{x:Static res:AppResources.LanguagePickerTitle}" />
-        <CollectionView x:Name="ChatList" Grid.Row="1" />
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-            <Entry x:Name="MsgEntry" />
-            <Button Grid.Column="1" Text="{x:Static res:AppResources.ChatSendButton}" Clicked="OnSend" />
-        </Grid>
+             Title="Trợ lý AI"
+             BackgroundColor="{AppThemeBinding Light=#F3F4F6, Dark=#121212}">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="0">
+        
+        <!-- Header with Mascot -->
+        <Frame Grid.Row="0" 
+               CornerRadius="0" 
+               HasShadow="True" 
+               Padding="20, 50, 20, 15" 
+               BorderColor="Transparent"
+               BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1E1E1E}">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <Image Grid.Column="0" 
+                       Source="dotnet_bot.png" 
+                       WidthRequest="50" 
+                       HeightRequest="50" 
+                       VerticalOptions="Center"/>
+                
+                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Margin="15,0">
+                    <Label Text="Bé Vinh AI" 
+                           FontSize="20" 
+                           FontAttributes="Bold" 
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#FFFFFF}"/>
+                    <HorizontalStackLayout Spacing="5">
+                        <BoxView WidthRequest="8" HeightRequest="8" CornerRadius="4" BackgroundColor="#10B981" VerticalOptions="Center"/>
+                        <Label Text="Đang trực tuyến" FontSize="12" TextColor="#10B981"/>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+
+                <Picker Grid.Column="2" 
+                        x:Name="LangPicker" 
+                        Title="Ngôn ngữ" 
+                        FontSize="12" 
+                        WidthRequest="80"
+                        VerticalOptions="Center"/>
+            </Grid>
+        </Frame>
+
+        <!-- Chat List -->
+        <CollectionView Grid.Row="1" 
+                        x:Name="ChatList" 
+                        Padding="15"
+                        ItemsUpdatingScrollMode="KeepLastItemInView">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="dto:ChatMessage">
+                    <Grid Padding="0,5">
+                        <!-- Bot Message Template (Left) -->
+                        <Frame x:Name="MsgFrame"
+                               CornerRadius="18"
+                               Padding="15, 10"
+                               HasShadow="False"
+                               HorizontalOptions="Start"
+                               MaximumWidthRequest="300"
+                               BackgroundColor="{AppThemeBinding Light=#E5E7EB, Dark=#2D2D2D}">
+                            <Label Text="{Binding Content}" 
+                                   TextColor="{AppThemeBinding Light=#1F2937, Dark=#F3F4F6}" 
+                                   FontSize="15"/>
+                        </Frame>
+
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="UserStates">
+                                <VisualState x:Name="User">
+                                    <VisualState.StateTriggers>
+                                        <StateTrigger IsActive="{Binding IsUser}" />
+                                    </VisualState.StateTriggers>
+                                    <VisualState.Setters>
+                                        <Setter TargetName="MsgFrame" Property="HorizontalOptions" Value="End" />
+                                        <Setter TargetName="MsgFrame" Property="BackgroundColor" Value="#FF4500" />
+                                        <Setter TargetName="MsgFrame" Property="CornerRadius" Value="18" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Input Area -->
+        <Frame Grid.Row="2" 
+               Padding="15, 10, 15, 30" 
+               CornerRadius="0" 
+               HasShadow="True"
+               BorderColor="Transparent"
+               BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1E1E1E}">
+            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                <Border Grid.Column="0" 
+                        StrokeThickness="0" 
+                        BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#2D2D2D}" 
+                        Padding="15, 5" 
+                        StrokeShape="RoundRectangle 25">
+                    <Entry x:Name="MsgEntry" 
+                           Text="{Binding Input}" 
+                           Placeholder="Hỏi bé Vinh về món ăn..." 
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#FFFFFF}"
+                           PlaceholderColor="#9CA3AF"
+                           FontSize="15"
+                           HeightRequest="45"
+                           VerticalOptions="Center"/>
+                </Border>
+                
+                <Button Grid.Column="1" 
+                        Text="🚀" 
+                        FontSize="20"
+                        Clicked="OnSend" 
+                        CornerRadius="25" 
+                        WidthRequest="50" 
+                        HeightRequest="50"
+                        Padding="0"
+                        BackgroundColor="#FF4500"
+                        TextColor="White"/>
+            </Grid>
+        </Frame>
     </Grid>
 </ContentPage>

@@ -27,6 +27,7 @@
         <ShellContent x:Name="TabPois" Title="{x:Static res:AppResources.TabPois}" ContentTemplate="{DataTemplate local:PoiListPage}" Route="PoiListPage" />
         <ShellContent x:Name="TabTours" Title="{x:Static res:AppResources.TabTours}" ContentTemplate="{DataTemplate local:ToursPage}" Route="Tours" />
         <ShellContent x:Name="TabChat" Title="{x:Static res:AppResources.TabChat}" ContentTemplate="{DataTemplate local:ChatPage}" Route="Chat" />
+        <ShellContent x:Name="TabPassport" Title="Hộ Chiếu" ContentTemplate="{DataTemplate local:PassportPage}" Route="Passport" />
         <ShellContent x:Name="TabScan" Title="{x:Static res:AppResources.TabScan}" ContentTemplate="{DataTemplate local:QrScanPage}" Route="Qr" />
         <ShellContent x:Name="TabSettings" Title="{x:Static res:AppResources.TabSettings}" ContentTemplate="{DataTemplate local:SettingsPage}" Route="Settings" />
     </TabBar>

@@ -5,7 +5,6 @@
              xmlns:models="clr-namespace:VinhKhanh.App.Models"
              xmlns:res="clr-namespace:VinhKhanh.App.Resources.Strings"
              x:Class="VinhKhanh.App.PoiListPage"
-             x:DataType="vm:MainViewModel"
              Title="{Binding PageTitle}"
              BackgroundColor="White">
 

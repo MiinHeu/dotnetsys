@@ -54,10 +54,14 @@ public static class MauiProgram
 		// Realtime SignalR
 		builder.Services.AddSingleton<RealtimeService>();
 
+		// Session Tracking — thu thập thông tin thiết bị + heartbeat
+		builder.Services.AddSingleton<SessionTrackingService>();
+
 		// ── ViewModels ────────────────────────────────────────────────────────
 		builder.Services.AddSingleton<MainViewModel>();
 		builder.Services.AddSingleton<ToursViewModel>();
 		builder.Services.AddSingleton<ChatViewModel>();
+		builder.Services.AddTransient<PassportViewModel>();
 		builder.Services.AddTransient<PoiDetailViewModel>();
 		builder.Services.AddTransient<SettingsViewModel>();
 
@@ -68,6 +72,7 @@ public static class MauiProgram
 		builder.Services.AddTransient<ToursPage>();
 		builder.Services.AddTransient<PoiListPage>();
 		builder.Services.AddTransient<PoiDetailPage>();
+		builder.Services.AddTransient<PassportPage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

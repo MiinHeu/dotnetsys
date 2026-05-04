@@ -13,23 +13,36 @@ public class AppDownloadController : ControllerBase
         _env = env;
     }
 
-    [HttpGet("download")]
-    public IActionResult DownloadApk()
-    {
-        // Chạy linh hoạt trên cả local và production
-        string apkPath = Path.Combine(_env.ContentRootPath, "..", "VinhKhanh.App", "bin", "Release", "net10.0-android", "com.companyname.vinhkhanh.app-Signed.apk");
+	[HttpGet("download")]
+	public IActionResult DownloadApk()
+	{
+		// Chạy linh hoạt trên cả local và production
+		string apkPath = Path.Combine(_env.ContentRootPath, "..", "VinhKhanh.App", "bin", "Release", "net10.0-android", "com.companyname.vinhkhanh.app-Signed.apk");
 
-        if (!System.IO.File.Exists(apkPath))
-        {
-            // Fallback cho môi trường production nếu file được copy vào wwwroot/downloads
-            apkPath = Path.Combine(_env.WebRootPath, "downloads", "VinhKhanh_v1.0.apk");
-        }
+		if (!System.IO.File.Exists(apkPath))
+		{
+			// Fallback cho môi trường production nếu file được copy vào wwwroot/downloads
+			apkPath = Path.Combine(_env.WebRootPath, "downloads", "VinhKhanh_v1.0.apk");
+		}
 
-        if (!System.IO.File.Exists(apkPath))
-        {
-            return NotFound("Không tìm thấy file APK. Vui lòng build bản Release hoặc kiểm tra thư mục downloads.");
-        }
+		if (!System.IO.File.Exists(apkPath))
+		{
+			return NotFound("Không tìm thấy file APK. Vui lòng build bản Release hoặc kiểm tra thư mục downloads.");
+		}
 
-        return PhysicalFile(apkPath, "application/vnd.android.package-archive", "VinhKhanh_v1.0.apk");
-    }
+		return PhysicalFile(apkPath, "application/vnd.android.package-archive", "VinhKhanh_v1.0.apk");
+	}
+
+	[HttpGet("qr")]
+	public IActionResult GetQrCode()
+	{
+		var downloadUrl = $"{Request.Scheme}://{Request.Host}/api/app/download";
+		
+		using var qrGenerator = new QRCoder.QRCodeGenerator();
+		using var qrCodeData = qrGenerator.CreateQrCode(downloadUrl, QRCoder.QRCodeGenerator.ECCLevel.Q);
+		using var qrCode = new QRCoder.PngByteQRCode(qrCodeData);
+		var qrCodeImage = qrCode.GetGraphic(20);
+
+		return File(qrCodeImage, "image/png");
+	}
 }

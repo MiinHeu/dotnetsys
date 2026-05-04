@@ -21,6 +21,7 @@ public class ApplicationDbContext : DbContext
 
 	public DbSet<MovementLog> MovementLogs => Set<MovementLog>();
 	public DbSet<AppHistoryLog> AppHistoryLogs => Set<AppHistoryLog>();
+	public DbSet<DeviceSession> DeviceSessions => Set<DeviceSession>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
@@ -36,6 +37,7 @@ public class ApplicationDbContext : DbContext
 
 		modelBuilder.Entity<MovementLog>().ToTable("MovementLogs");
 		modelBuilder.Entity<AppHistoryLog>().ToTable("AppHistoryLogs");
+		modelBuilder.Entity<DeviceSession>().ToTable("DeviceSessions");
 
 		modelBuilder.Entity<Poi>(entity =>
 		{
@@ -45,6 +47,11 @@ public class ApplicationDbContext : DbContext
 			entity.Property(x => x.QrCode).HasMaxLength(64);
 
 			entity.HasQueryFilter(p => p.IsActive);
+
+			entity.Property(p => p.Address).HasMaxLength(256);
+			entity.Property(p => p.PhoneNumber).HasMaxLength(32);
+			entity.Property(p => p.OperatingHours).HasMaxLength(64);
+
 			entity.HasIndex(p => new { p.Latitude, p.Longitude });
 			entity.HasIndex(p => p.Category);
 			entity.HasIndex(p => p.ContentVersion);
@@ -164,6 +171,21 @@ public class ApplicationDbContext : DbContext
 			entity.HasIndex(x => x.EventType);
 		});
 
+		modelBuilder.Entity<DeviceSession>(entity =>
+		{
+			entity.HasKey(x => x.Id);
+			entity.Property(x => x.SessionId).IsRequired();
+			entity.Property(x => x.DeviceModel).HasMaxLength(128);
+			entity.Property(x => x.DevicePlatform).HasMaxLength(32);
+			entity.Property(x => x.OsVersion).HasMaxLength(32);
+			entity.Property(x => x.AppVersion).HasMaxLength(32);
+			entity.Property(x => x.Manufacturer).HasMaxLength(64);
+			entity.Property(x => x.LanguageUsed).HasMaxLength(10);
+			entity.HasIndex(x => x.SessionId);
+			entity.HasIndex(x => x.StartedAt);
+			entity.HasIndex(x => x.DevicePlatform);
+		});
+
 		// Seed minimal demo data (refine later).
 		// Seed realistic demo data for Vinh Khanh Food Street.
 		var seedTime = new DateTime(2026, 04, 21, 0, 0, 0, DateTimeKind.Utc);
@@ -183,6 +205,11 @@ public class ApplicationDbContext : DbContext
 				Category = PoiCategory.HaiSan,
 				QrCode = "VK-POI-001",
 				IsActive = true,
+				Address = "534 Vĩnh Khánh, Phường 10, Quận 4, TP.HCM",
+				OperatingHours = "15:00 - 23:00",
+				Rating = 4.8,
+				ImagesJson = "[\"https://cdn.tgdd.vn/Files/2021/08/10/1374136/an-sap-quan-4-voi-quan-oc-oanh-ngon-nuc-tieng-202108101416557675.jpg\"]",
+				MenuJson = "[{\"name\":\"Ốc hương xào bơ tỏi\",\"price\":150000}, {\"name\":\"Càng ghẹ rang muối\",\"price\":180000}, {\"name\":\"Sò điệp nướng mỡ hành\",\"price\":120000}]",
 				CreatedAt = seedTime,
 				UpdatedAt = seedTime
 			},
@@ -201,6 +228,11 @@ public class ApplicationDbContext : DbContext
 				Category = PoiCategory.DacSan,
 				QrCode = "VK-POI-002",
 				IsActive = true,
+				Address = "Đoạn 1 Vĩnh Khánh, Phường 8, Quận 4, TP.HCM",
+				OperatingHours = "16:00 - 02:00",
+				Rating = 4.5,
+				ImagesJson = "[\"https://cdn.tgdd.vn/Files/2021/11/24/1399899/cung-kham-pha-quan-lau-bo-khu-nha-chay-cuc-noi-tieng-tai-quan-4-202111241103031024.jpg\"]",
+				MenuJson = "[{\"name\":\"Lẩu bò thập cẩm\",\"price\":250000}, {\"name\":\"Bò nướng ngói\",\"price\":150000}]",
 				CreatedAt = seedTime,
 				UpdatedAt = seedTime
 			},
@@ -219,6 +251,11 @@ public class ApplicationDbContext : DbContext
 				Category = PoiCategory.DacSan,
 				QrCode = "VK-POI-003",
 				IsActive = true,
+				Address = "Ngã 3 Vĩnh Khánh - Hoàng Diệu, Quận 4, TP.HCM",
+				OperatingHours = "17:00 - 22:30",
+				Rating = 4.2,
+				ImagesJson = "[\"https://static.vinwonders.com/production/sushi-vien-quan-4-1.jpg\"]",
+				MenuJson = "[{\"name\":\"Sushi cá hồi\",\"price\":10000}, {\"name\":\"Maki lươn nhật\",\"price\":15000}]",
 				CreatedAt = seedTime,
 				UpdatedAt = seedTime
 			},

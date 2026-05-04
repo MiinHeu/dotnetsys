@@ -21,6 +21,9 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 	private readonly IGpsService _gps;
 	private readonly IGeofenceService _geofence;
 	private readonly IOutboxService _outbox;
+	private readonly SessionTrackingService _sessionTracking;
+
+	private readonly ILocalDbService _db;
 
 	private readonly List<MovementPointDto> _movementBuffer = [];
 	private DateTime _lastMovementFlush = DateTime.UtcNow;
@@ -34,7 +37,9 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		INarrationService narration,
 		IGpsService gps,
 		IGeofenceService geofence,
-		IOutboxService outbox)
+		IOutboxService outbox,
+		SessionTrackingService sessionTracking,
+		ILocalDbService db)
 	{
 		_api = api;
 		_cache = cache;
@@ -44,6 +49,8 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		_gps = gps;
 		_geofence = geofence;
 		_outbox = outbox;
+		_sessionTracking = sessionTracking;
+		_db = db;
 		SelectedLanguage = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "vi");
 		WeakReferenceMessenger.Default.Register(this);
 	}
@@ -197,28 +204,34 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 			}).ToList();
 
 		var triggered = await _geofence.CheckTriggeredAsync(loc, domainPois);
-		var best = triggered.FirstOrDefault();
 
-		if (best != null)
+		if (triggered.Count > 0)
 		{
+			// Hiển thị POI có Priority cao nhất trên giao diện
+			var best = triggered[0];
 			NearestPoiId = best.Id;
 			NearestLabel = best.Name;
-			_narration.InterruptIfHigherPriority(best.Priority);
-
-			if (!_cooldowns.CanTrigger(best.Id, best.CooldownSeconds))
-				return;
-
 			StatusMessage = string.Format(VinhKhanh.App.Resources.Strings.AppResources.PlaybackPoiLabel, NearestLabel);
-			await _narration.EnqueueAsync(best, SelectedLanguage);
-			_cooldowns.MarkTriggered(best.Id);
 
-			var visit = new VisitLogDto(best.Id, _session.SessionId, SelectedLanguage, "GPS", 1);
-			if (!await _api.TryPostAnalyticsVisitAsync(visit))
-				await _outbox.EnqueueVisitAsync(visit);
+			// Enqueue TẤT CẢ các POI đã trigger — NarrationService sẽ tự sắp xếp theo Priority
+			foreach (var poi in triggered)
+			{
+				if (!_cooldowns.CanTrigger(poi.Id, poi.CooldownSeconds))
+					continue;
 
-			var history = new AppHistoryLogDto(_session.SessionId, "GPS_TRIGGER", PoiId: best.Id, LanguageCode: SelectedLanguage);
-			if (!await _api.TryPostHistoryLogAsync(history))
-				await _outbox.EnqueueHistoryAsync(history);
+				await _narration.EnqueueAsync(poi, SelectedLanguage);
+				_cooldowns.MarkTriggered(poi.Id);
+				_sessionTracking.IncrementPoisVisited();
+				await _db.AddVisitedPoiAsync(poi.Id);
+
+				var visit = new VisitLogDto(poi.Id, _session.SessionId, SelectedLanguage, "GPS", 1);
+				if (!await _api.TryPostAnalyticsVisitAsync(visit))
+					await _outbox.EnqueueVisitAsync(visit);
+
+				var history = new AppHistoryLogDto(_session.SessionId, "GPS_TRIGGER", PoiId: poi.Id, LanguageCode: SelectedLanguage);
+				if (!await _api.TryPostHistoryLogAsync(history))
+					await _outbox.EnqueueHistoryAsync(history);
+			}
 		}
 		else
 		{
