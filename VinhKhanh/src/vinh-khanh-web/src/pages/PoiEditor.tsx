@@ -693,23 +693,6 @@ export function PoiEditor() {
             value={form.qrCode ?? ''}
             onChange={(e) => setForm({ ...form, qrCode: e.target.value.trim() || null })}
           />
-          {!isNew && form.qrCode && (
-            <div className="mt-3 flex flex-col items-start gap-3">
-              <img
-                src={`/api/poi/${id}/qrcode`}
-                alt={`QR code cho ${form.name}`}
-                className="h-40 w-40 rounded border border-stone-200 bg-white p-1"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-              />
-              <a
-                href={`/api/poi/${id}/qrcode`}
-                download={`QR-${form.qrCode ?? id}.png`}
-                className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
-              >
-                Tải ảnh QR về in
-              </a>
-            </div>
-          )}
           {isNew && (
             <p className="mt-2 text-xs text-stone-400">Lưu POI trước, sau đó quay lại để xem ảnh QR.</p>
           )}
