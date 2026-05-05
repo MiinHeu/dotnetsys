@@ -87,16 +87,23 @@ try
     builder.Services.AddScoped<GeminiAiService>();
     builder.Services.AddScoped<GroqAiService>();
     builder.Services.AddScoped<DeepSeekAiService>();
+    builder.Services.AddScoped<OpenRouterAiService>();
     builder.Services.AddScoped<OllamaAiService>();
 
-    // Cấu hình linh hoạt AI Service: Ưu tiên DeepSeek vì hoạt động tốt tại East Asia (Hong Kong)
+    // Cấu hình linh hoạt AI Service: Ưu tiên OpenRouter vì nó Miễn phí và không chặn Hong Kong
+    var openrouterKey = builder.Configuration["OpenRouter:ApiKey"];
     var deepseekKey = builder.Configuration["DeepSeek:ApiKey"];
     var groqKey = builder.Configuration["Groq:ApiKey"];
     var geminiKey = builder.Configuration["Gemini:ApiKey"];
 
-    if (!string.IsNullOrWhiteSpace(deepseekKey))
+    if (!string.IsNullOrWhiteSpace(openrouterKey))
     {
-        Console.WriteLine("[STARTUP] Using DeepSeekAiService for AI Chat (Recommended for Hong Kong).");
+        Console.WriteLine("[STARTUP] Using OpenRouterAiService (Recommended for Free & Global access).");
+        builder.Services.AddScoped<IAiService, OpenRouterAiService>();
+    }
+    else if (!string.IsNullOrWhiteSpace(deepseekKey))
+    {
+        Console.WriteLine("[STARTUP] Using DeepSeekAiService for AI Chat.");
         builder.Services.AddScoped<IAiService, DeepSeekAiService>();
     }
     else if (!string.IsNullOrWhiteSpace(groqKey))
