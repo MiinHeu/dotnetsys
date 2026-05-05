@@ -57,8 +57,8 @@ public sealed class SessionTrackingService : IDisposable
 
 		try
 		{
-			using var http = _api.CreateClient();
-			var res = await http.PostAsJsonAsync("api/session/start", dto);
+			var http = _api.CreateClient();
+			var res = await http.PostAsJsonAsync($"{_api.ApiRoot}/api/session/start", dto);
 			if (res.IsSuccessStatusCode)
 			{
 				Debug.WriteLine($"[SessionTracking] Session started: {dto.DeviceModel} ({dto.DevicePlatform} {dto.OsVersion})");
@@ -94,8 +94,8 @@ public sealed class SessionTrackingService : IDisposable
 
 		try
 		{
-			using var http = _api.CreateClient();
-			var res = await http.PostAsJsonAsync("api/session/end", dto);
+			var http = _api.CreateClient();
+			var res = await http.PostAsJsonAsync($"{_api.ApiRoot}/api/session/end", dto);
 			Debug.WriteLine($"[SessionTracking] Session ended: POIs={_poisVisited}, Distance={_totalDistanceMeters:F0}m, Status={res.StatusCode}");
 		}
 		catch (Exception ex)
@@ -145,8 +145,8 @@ public sealed class SessionTrackingService : IDisposable
 
 		try
 		{
-			using var http = _api.CreateClient();
-			await http.PostAsJsonAsync("api/session/heartbeat", dto);
+			var http = _api.CreateClient();
+			await http.PostAsJsonAsync($"{_api.ApiRoot}/api/session/heartbeat", dto);
 			Debug.WriteLine($"[SessionTracking] Heartbeat: POIs={_poisVisited}, Distance={_totalDistanceMeters:F0}m");
 		}
 		catch (Exception ex)

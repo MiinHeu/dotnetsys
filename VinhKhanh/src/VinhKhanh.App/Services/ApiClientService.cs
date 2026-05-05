@@ -141,7 +141,7 @@ public sealed class ApiClientService
 		_ = await TryPostAnalyticsVisitAsync(dto, ct);
 	}
 
-	public string ApiRoot => Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, GetDefaultApiBase()).TrimEnd('/');
+	public string ApiRoot => GetBaseUrl().TrimEnd('/');
 
 	public async Task<string?> ChatAsync(ChatRequest req, CancellationToken ct = default)
 	{
