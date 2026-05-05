@@ -208,25 +208,29 @@ try
                 catch
                 {
                     Console.WriteLine($"[STARTUP] Patching {db.Database.ProviderName} schema for Mobile V2.0...");
-                    if (db.Database.IsSqlServer())
+                    var columns = db.Database.IsSqlServer() 
+                        ? new[] { 
+                            "ALTER TABLE Pois ADD Address NVARCHAR(256);",
+                            "ALTER TABLE Pois ADD PhoneNumber NVARCHAR(32);",
+                            "ALTER TABLE Pois ADD OperatingHours NVARCHAR(64);",
+                            "ALTER TABLE Pois ADD Rating FLOAT NOT NULL DEFAULT 5.0;",
+                            "ALTER TABLE Pois ADD ImagesJson NVARCHAR(MAX);",
+                            "ALTER TABLE Pois ADD MenuJson NVARCHAR(MAX);",
+                            "ALTER TABLE Pois ADD TagsJson NVARCHAR(MAX);"
+                          }
+                        : new[] {
+                            "ALTER TABLE Pois ADD COLUMN Address TEXT;",
+                            "ALTER TABLE Pois ADD COLUMN PhoneNumber TEXT;",
+                            "ALTER TABLE Pois ADD COLUMN OperatingHours TEXT;",
+                            "ALTER TABLE Pois ADD COLUMN Rating REAL NOT NULL DEFAULT 5.0;",
+                            "ALTER TABLE Pois ADD COLUMN ImagesJson TEXT;",
+                            "ALTER TABLE Pois ADD COLUMN MenuJson TEXT;",
+                            "ALTER TABLE Pois ADD COLUMN TagsJson TEXT;"
+                          };
+
+                    foreach (var sql in columns)
                     {
-                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD Address NVARCHAR(256);");
-                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD PhoneNumber NVARCHAR(32);");
-                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD OperatingHours NVARCHAR(64);");
-                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD Rating FLOAT NOT NULL DEFAULT 5.0;");
-                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD ImagesJson NVARCHAR(MAX);");
-                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD MenuJson NVARCHAR(MAX);");
-                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD TagsJson NVARCHAR(MAX);");
-                    }
-                    else // SQLite
-                    {
-                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD COLUMN Address TEXT;");
-                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD COLUMN PhoneNumber TEXT;");
-                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD COLUMN OperatingHours TEXT;");
-                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD COLUMN Rating REAL NOT NULL DEFAULT 5.0;");
-                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD COLUMN ImagesJson TEXT;");
-                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD COLUMN MenuJson TEXT;");
-                        db.Database.ExecuteSqlRaw("ALTER TABLE Pois ADD COLUMN TagsJson TEXT;");
+                        try { db.Database.ExecuteSqlRaw(sql); } catch { /* Ignore if column exists */ }
                     }
                 }
             }
