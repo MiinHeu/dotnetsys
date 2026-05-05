@@ -28,25 +28,42 @@ public class GeminiAiService(
             // Build contents for Gemini
             var contents = new List<object>();
             
-            // Add history
+            // Add history with role alternation check
+            string lastRole = "";
             if (history != null)
             {
-                foreach (var msg in history)
+                foreach (var msg in history.Where(h => !string.IsNullOrWhiteSpace(h.Content)))
                 {
+                    var currentRole = msg.Role == "user" ? "user" : "model";
+                    
+                    // Gemini requires alternating roles. If same role, we skip or could merge.
+                    // For simplicity, we skip consecutive same-role messages.
+                    if (currentRole == lastRole) continue; 
+
                     contents.Add(new
                     {
-                        role = msg.Role == "user" ? "user" : "model",
+                        role = currentRole,
                         parts = new[] { new { text = msg.Content } }
                     });
+                    lastRole = currentRole;
                 }
             }
 
-            // Add current user prompt
-            var finalUserPrompt = $"[SYSTEM INSTRUCTION]\n{system}\n\n[USER]\n{user}";
+            // Ensure the next message is 'user'. If last was 'user', we must append to it or handle it.
+            var userText = $"[SYSTEM INSTRUCTION]\n{system}\n\n[USER]\n{user}";
+            if (lastRole == "user" && contents.Count > 0)
+            {
+                // Append to the last user message instead of adding a new one
+                // (Actually Gemini preferred way is alternating, so we just replace/append if needed)
+                // But usually, we can just ensure we don't send two users.
+                // Let's just remove the last user message from history if we are about to send a new user prompt.
+                contents.RemoveAt(contents.Count - 1);
+            }
+
             contents.Add(new
             {
                 role = "user",
-                parts = new[] { new { text = finalUserPrompt } }
+                parts = new[] { new { text = userText } }
             });
 
             var payload = new { contents };
