@@ -85,18 +85,27 @@ try
     builder.Services.AddScoped<ITranslationService, MicrosoftTranslatorService>();
     // Ưu tiên dùng Azure OpenAI cho AI Service
     builder.Services.AddScoped<GeminiAiService>();
+    builder.Services.AddScoped<GroqAiService>();
     builder.Services.AddScoped<OllamaAiService>();
-    // Cấu hình linh hoạt AI Service
+
+    // Cấu hình linh hoạt AI Service: Ưu tiên Groq vì Gemini bị chặn tại East Asia
+    var groqKey = builder.Configuration["Groq:ApiKey"];
     var geminiKey = builder.Configuration["Gemini:ApiKey"];
-    if (string.IsNullOrWhiteSpace(geminiKey) || geminiKey.Contains("YOUR_GEMINI_API_KEY"))
+
+    if (!string.IsNullOrWhiteSpace(groqKey))
     {
-        Console.WriteLine("[STARTUP] Gemini API Key is missing. Falling back to Local OllamaAiService.");
-        builder.Services.AddScoped<IAiService, OllamaAiService>();
+        Console.WriteLine("[STARTUP] Using GroqAiService for AI Chat (Preferred for East Asia).");
+        builder.Services.AddScoped<IAiService, GroqAiService>();
+    }
+    else if (!string.IsNullOrWhiteSpace(geminiKey) && !geminiKey.Contains("YOUR_GEMINI_API_KEY"))
+    {
+        Console.WriteLine("[STARTUP] Using GeminiAiService for AI Chat.");
+        builder.Services.AddScoped<IAiService, GeminiAiService>();
     }
     else
     {
-        Console.WriteLine("[STARTUP] Using Cloud GeminiAiService for AI Chat.");
-        builder.Services.AddScoped<IAiService, GeminiAiService>();
+        Console.WriteLine("[STARTUP] No Cloud AI Key found. Falling back to Local OllamaAiService.");
+        builder.Services.AddScoped<IAiService, OllamaAiService>();
     }
     // Ưu tiên dùng Azure cho TTS
     builder.Services.AddScoped<VoiceRssTtsService>();
