@@ -19,7 +19,15 @@ public sealed class ApiClientService
 	
 	public HttpClient CreateClient()
 	{
-		var baseUrl = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, GetDefaultApiBase());
+		var defaultUrl = GetDefaultApiBase();
+		var baseUrl = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, defaultUrl);
+
+		// Ép dùng Azure trên máy thật nếu URL mặc định là Azure (bỏ qua cache IP cũ nếu có)
+		if (DeviceInfo.DeviceType != DeviceType.Virtual && defaultUrl.Contains("azurewebsites.net"))
+		{
+			baseUrl = defaultUrl;
+		}
+
 		if (!baseUrl.EndsWith('/')) baseUrl += "/";
 		_http.BaseAddress = new Uri(baseUrl);
 		return _http;
