@@ -45,7 +45,7 @@
                      RefreshColor="#EA580C">
             
             <CollectionView ItemsSource="{Binding Tours}"
-                            Padding="20"
+                            Margin="20"
                             SelectionMode="None">
                 <CollectionView.ItemsLayout>
                     <LinearItemsLayout Orientation="Vertical" ItemSpacing="20"/>

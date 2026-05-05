@@ -61,7 +61,7 @@ public class GeminiAiService(
             {
                 var error = await response.Content.ReadAsStringAsync();
                 logger.LogError("Gemini Chat API Error: Status={Status}, Detail={Detail}", response.StatusCode, error);
-                return "Xin lỗi, có lỗi xảy ra khi kết nối với máy chủ AI.";
+                return $"Xin lỗi, có lỗi xảy ra khi kết nối với máy chủ AI (Lỗi: {(int)response.StatusCode}).";
             }
 
             var result = await response.Content.ReadFromJsonAsync<JsonElement>();

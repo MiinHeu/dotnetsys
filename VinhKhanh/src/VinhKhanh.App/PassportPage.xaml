@@ -23,7 +23,7 @@
 
         <!-- Stamps Grid -->
         <RefreshView Grid.Row="1" Command="{Binding RefreshCommand}" IsRefreshing="False" RefreshColor="#EA580C">
-            <CollectionView ItemsSource="{Binding Stamps}" Padding="15">
+            <CollectionView ItemsSource="{Binding Stamps}" Margin="15">
                 <CollectionView.ItemsLayout>
                     <GridItemsLayout Orientation="Vertical" Span="2" VerticalItemSpacing="15" HorizontalItemSpacing="15"/>
                 </CollectionView.ItemsLayout>

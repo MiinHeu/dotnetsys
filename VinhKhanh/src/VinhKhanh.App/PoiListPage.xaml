@@ -54,7 +54,7 @@
                      Command="{Binding RefreshCommand}">
             
             <CollectionView x:Name="PoisCollectionView"
-                            Padding="15"
+                            Margin="15"
                             SelectionMode="None">
                 <CollectionView.ItemsLayout>
                     <LinearItemsLayout Orientation="Vertical" ItemSpacing="15"/>

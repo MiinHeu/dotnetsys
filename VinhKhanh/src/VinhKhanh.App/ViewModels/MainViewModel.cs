@@ -143,7 +143,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		}
 		catch (Exception ex)
 		{
-			StatusMessage = VinhKhanh.App.Resources.Strings.AppResources.SyncStatusNetworkError;
+			StatusMessage = $"{VinhKhanh.App.Resources.Strings.AppResources.SyncStatusNetworkError}: {ex.Message}";
 			Debug.WriteLine(ex);
 			var local = await _cache.LoadPoisAsync();
 			ReplacePois(local);

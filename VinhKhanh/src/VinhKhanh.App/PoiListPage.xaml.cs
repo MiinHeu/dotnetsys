@@ -73,6 +73,7 @@ public partial class PoiListPage : ContentPage
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[PoiListPage] Error: {ex}");
+            await DisplayAlert("Lỗi dữ liệu", ex.Message, "OK");
         }
         finally
         {

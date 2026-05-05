@@ -30,29 +30,29 @@
         <CollectionView x:Name="ChatList"
                         Grid.Row="1" 
                         ItemsSource="{Binding Messages}" 
-                        Padding="15"
+                        Margin="15"
                         ItemsUpdatingScrollMode="KeepLastItemInView">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:ChatMessage">
-                    <Grid Padding="0,5">
-                        <!-- Bot Message -->
+                    <Grid Margin="0,5">
+                        <!-- Bot Message Container -->
                         <VerticalStackLayout HorizontalOptions="Start" 
                                              IsVisible="{Binding IsBot}" 
-                                             Spacing="2"
-                                             MaximumWidthRequest="280">
-                            <Label Text="Bé Vinh" FontSize="10" TextColor="#64748B" Margin="12,0"/>
-                            <Border BackgroundColor="#F1F5F9" StrokeThickness="0" StrokeShape="RoundRectangle 16,16,16,2" Padding="15,10">
-                                <Label Text="{Binding Content}" TextColor="#1E293B" FontSize="15" LineHeight="1.2"/>
+                                             Spacing="2" 
+                                             MaximumWidthRequest="300">
+                            <Label Text="Bé Vinh" FontSize="10" TextColor="#64748B" Margin="10,0"/>
+                            <Border BackgroundColor="#F1F5F9" StrokeThickness="0" StrokeShape="RoundRectangle 16,16,16,2" Padding="12,8">
+                                <Label Text="{Binding Content}" TextColor="#1E293B" FontSize="15" LineBreakMode="WordWrap"/>
                             </Border>
                         </VerticalStackLayout>
 
-                        <!-- User Message -->
+                        <!-- User Message Container -->
                         <VerticalStackLayout HorizontalOptions="End" 
                                              IsVisible="{Binding IsUser}" 
-                                             Spacing="2"
-                                             MaximumWidthRequest="280">
-                            <Border BackgroundColor="#EA580C" StrokeThickness="0" StrokeShape="RoundRectangle 16,16,2,16" Padding="15,10">
-                                <Label Text="{Binding Content}" TextColor="White" FontSize="15" LineHeight="1.2"/>
+                                             Spacing="2" 
+                                             MaximumWidthRequest="300">
+                            <Border BackgroundColor="#EA580C" StrokeThickness="0" StrokeShape="RoundRectangle 16,16,2,16" Padding="12,8">
+                                <Label Text="{Binding Content}" TextColor="White" FontSize="15" LineBreakMode="WordWrap"/>
                             </Border>
                         </VerticalStackLayout>
                     </Grid>
@@ -80,7 +80,7 @@
                         BackgroundColor="#EA580C"
                         TextColor="White"
                         FontAttributes="Bold"
-                        CornerRadius="22.5"
+                        CornerRadius="22"
                         HeightRequest="45"
                         WidthRequest="70"/>
             </Grid>
