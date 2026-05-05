@@ -2,75 +2,77 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="VinhKhanh.App.Pages.OnboardingPage"
-             BackgroundColor="{AppThemeBinding Light=#FAFAFA, Dark=#121212}"
-             NavigationPage.HasNavigationBar="False">
-    
-    <Grid RowDefinitions="*, Auto, Auto">
+             BackgroundColor="#0F172A">
+
+    <Grid RowDefinitions="*, Auto">
         
-        <!-- Carousel for Onboarding -->
+        <!-- Carousel for Steps -->
         <CarouselView x:Name="OnboardingCarousel" 
-                      Grid.Row="0"
+                      ItemsSource="{Binding Steps}"
                       IndicatorView="Indicator"
-                      VerticalOptions="FillAndExpand">
-            <CarouselView.ItemsSource>
-                <x:Array Type="{x:Type x:String}">
-                    <x:String>1</x:String>
-                    <x:String>2</x:String>
-                    <x:String>3</x:String>
-                </x:Array>
-            </CarouselView.ItemsSource>
+                      Loop="False">
             <CarouselView.ItemTemplate>
                 <DataTemplate>
-                    <Grid RowDefinitions="2*, 1*">
-                        <!-- We use text representation here instead of images for simplicity, but in production, real images or Lottie animations would be used -->
+                    <Grid RowDefinitions="*, Auto, Auto" Padding="40">
+                        <!-- Image/Icon Placeholder -->
                         <Frame Grid.Row="0" 
-                               Margin="40" 
-                               CornerRadius="20" 
-                               HasShadow="False"
-                               BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#1E1E1E}">
-                            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center">
-                                <Label Text="🎨" FontSize="80" HorizontalOptions="Center"/>
-                            </VerticalStackLayout>
+                               HeightRequest="250" 
+                               WidthRequest="250" 
+                               CornerRadius="125" 
+                               BackgroundColor="#1E293B" 
+                               BorderColor="Transparent"
+                               HorizontalOptions="Center" 
+                               VerticalOptions="Center">
+                            <Label Text="{Binding Icon}" 
+                                   FontSize="100" 
+                                   HorizontalOptions="Center" 
+                                   VerticalOptions="Center"/>
                         </Frame>
-                        <VerticalStackLayout Grid.Row="1" Spacing="10" Padding="30, 0">
-                            <Label Text="Khám Phá Vĩnh Khánh" 
-                                   FontSize="28" 
-                                   FontAttributes="Bold" 
-                                   HorizontalOptions="Center"
-                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
-                            <Label Text="Trải nghiệm phố ẩm thực sầm uất nhất Sài Gòn với trợ lý du lịch ảo thông minh ngay trên tay bạn." 
-                                   FontSize="16" 
-                                   HorizontalTextAlignment="Center" 
-                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"/>
-                        </VerticalStackLayout>
+
+                        <Label Grid.Row="1" 
+                               Text="{Binding Title}" 
+                               FontSize="28" 
+                               FontAttributes="Bold" 
+                               TextColor="White" 
+                               HorizontalOptions="Center" 
+                               HorizontalTextAlignment="Center"
+                               Margin="0,40,0,10"/>
+
+                        <Label Grid.Row="2" 
+                               Text="{Binding Description}" 
+                               FontSize="16" 
+                               TextColor="#94A3B8" 
+                               HorizontalOptions="Center" 
+                               HorizontalTextAlignment="Center" 
+                               LineBreakMode="WordWrap"/>
                     </Grid>
                 </DataTemplate>
             </CarouselView.ItemTemplate>
         </CarouselView>
-        
-        <!-- Indicators -->
-        <IndicatorView x:Name="Indicator" 
-                       Grid.Row="1"
-                       IndicatorColor="#D3D3D3"
-                       SelectedIndicatorColor="#FF4500"
-                       HorizontalOptions="Center"
-                       Margin="0, 10, 0, 20"/>
-        
-        <!-- Action Button -->
-        <Button x:Name="StartButton"
-                Grid.Row="2"
-                Text="Bắt đầu trải nghiệm"
-                FontAttributes="Bold"
-                FontSize="18"
-                TextColor="White"
-                BackgroundColor="#FF4500"
-                CornerRadius="25"
-                Margin="30, 0, 30, 40"
-                HeightRequest="55"
-                Clicked="OnStartClicked">
-            <Button.Shadow>
-                <Shadow Brush="#FF4500" Offset="0,5" Radius="10" Opacity="0.4" />
-            </Button.Shadow>
-        </Button>
+
+        <!-- Bottom Controls -->
+        <VerticalStackLayout Grid.Row="1" Padding="30, 0, 30, 50" Spacing="20">
+            <IndicatorView x:Name="Indicator"
+                           IndicatorColor="#1E293B"
+                           SelectedIndicatorColor="#EA580C"
+                           HorizontalOptions="Center" />
+
+            <Button x:Name="NextBtn"
+                    Text="Tiếp theo"
+                    Clicked="OnNextClicked"
+                    BackgroundColor="#EA580C"
+                    TextColor="White"
+                    CornerRadius="25"
+                    HeightRequest="50"
+                    FontAttributes="Bold"/>
+
+            <Button x:Name="SkipBtn"
+                    Text="Bỏ qua"
+                    Clicked="OnStartClicked"
+                    BackgroundColor="Transparent"
+                    TextColor="#94A3B8"
+                    FontAttributes="Bold"/>
+        </VerticalStackLayout>
+
     </Grid>
 </ContentPage>

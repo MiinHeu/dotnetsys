@@ -10,6 +10,7 @@ using Microsoft.Maui.Devices.Sensors;
 namespace VinhKhanh.App.Platforms.Android;
 
 [Service(ForegroundServiceType = ForegroundService.TypeLocation, Exported = false)]
+[System.Runtime.Versioning.SupportedOSPlatform("android26.0")]
 public class GpsForegroundService : Service
 {
 	private const string CHANNEL_ID = "VinhKhanhGps";
@@ -28,9 +29,16 @@ public class GpsForegroundService : Service
 			.SetSmallIcon(Resource.Drawable.notification_icon_background)
 			.SetOngoing(true)
 			.Build();
-
-		StartForeground(NOTIFICATION_ID, notification, ForegroundService.TypeLocation);
-
+		// Fix NoSuchMethodError: Only use the 3-parameter StartForeground on Android 10 (API 29) and above.
+		// Fallback to the 2-parameter StartForeground on Android 8 and 9 (like Samsung J8).
+		if (Build.VERSION.SdkInt >= BuildVersionCodes.Q)
+		{
+			StartForeground(NOTIFICATION_ID, notification, ForegroundService.TypeLocation);
+		}
+		else
+		{
+			StartForeground(NOTIFICATION_ID, notification);
+		}
 		_cts = new CancellationTokenSource();
 		Task.Run(() => TrackingLoopAsync(_cts.Token));
 

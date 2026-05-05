@@ -19,24 +19,33 @@ public partial class ChatViewModel : ObservableObject
 
 	public ObservableCollection<ChatMessage> Messages { get; } = new();
 
-	[ObservableProperty] private string _input = "";
+	[ObservableProperty] private string _currentMessage = "";
 	[ObservableProperty] private string _lang = "vi";
+	[ObservableProperty] private bool _isBusy;
 
 	[RelayCommand]
 	private async Task SendAsync()
 	{
-		if (string.IsNullOrWhiteSpace(Input)) return;
-		var q = Input.Trim();
-		Input = "";
+		if (string.IsNullOrWhiteSpace(CurrentMessage)) return;
+		if (IsBusy) return;
+
+		var q = CurrentMessage.Trim();
+		CurrentMessage = "";
 		Messages.Add(new ChatMessage { Content = q, IsUser = true });
+		
+		IsBusy = true;
 		try
 		{
 			var reply = await _api.ChatAsync(new ChatRequest(q, Lang));
-			Messages.Add(new ChatMessage { Content = string.IsNullOrWhiteSpace(reply) ? "(không phản hồi)" : reply, IsUser = false });
+			Messages.Add(new ChatMessage { Content = string.IsNullOrWhiteSpace(reply) ? "Bé Vinh hiện đang bận một chút, bạn thử lại sau nhé!" : reply, IsUser = false });
 		}
 		catch (Exception ex)
 		{
-			Messages.Add(new ChatMessage { Content = $"Lỗi: {ex.Message}", IsUser = false });
+			Messages.Add(new ChatMessage { Content = $"Rất tiếc, đã có lỗi xảy ra: {ex.Message}", IsUser = false });
+		}
+		finally
+		{
+			IsBusy = false;
 		}
 	}
 }

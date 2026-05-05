@@ -24,7 +24,7 @@
         </VerticalStackLayout>
         
         <!-- Language Cards -->
-        <ScrollView Grid.Row="1" ShowsVerticalScrollIndicator="False">
+        <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
             <VerticalStackLayout Spacing="16">
                 
                 <!-- English -->

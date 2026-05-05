@@ -36,8 +36,6 @@ public partial class MainPage : ContentPage
 		LangPicker.ItemsSource = new[] { "vi", "en", "zh", "ko", "ja" };
 		LangPicker.SelectedItem = _vm.SelectedLanguage;
 
-		InitializeMap();
-
 		_vm.PropertyChanged += (_, e) =>
 		{
 			if (e.PropertyName == nameof(MainViewModel.StatusMessage))
@@ -65,31 +63,42 @@ public partial class MainPage : ContentPage
 		{
 			try
 			{
+                // Khởi tạo bản đồ an toàn khi trang đã nạp xong
+                InitializeMap();
 				CenterMap(DefaultLatitude, DefaultLongitude);
 				await _vm.SyncPoisCommand.ExecuteAsync(null);
 				UpdatePins();
 			}
 			catch (Exception ex)
 			{
+                System.Diagnostics.Debug.WriteLine($"[ERROR] MainPage Loaded: {ex}");
 				StatusLabel.Text = VinhKhanh.App.Resources.Strings.AppResources.MapLoadingError;
-				System.Diagnostics.Debug.WriteLine($"MainPage Loaded error: {ex}");
 			}
 		};
 	}
 
 	private void InitializeMap()
 	{
-		if (StreetMap.Map.Layers.All(x => x.Name != "osm"))
-		{
-			var osm = OpenStreetMap.CreateTileLayer();
-			osm.Name = "osm";
-			StreetMap.Map.Layers.Add(osm);
-		}
+        if (StreetMap?.Map == null) return; // Kiểm tra an toàn
 
-		StreetMap.Map.Widgets.Clear();
-		StreetMap.UniqueCallout = true;
-		StreetMap.MyLocationEnabled = true;
-		StreetMap.MyLocationFollow = false;
+		try 
+		{
+			if (StreetMap.Map.Layers.All(x => x.Name != "osm"))
+			{
+				var osm = OpenStreetMap.CreateTileLayer();
+				osm.Name = "osm";
+				StreetMap.Map.Layers.Add(osm);
+			}
+
+			StreetMap.Map.Widgets.Clear();
+			StreetMap.UniqueCallout = true;
+			StreetMap.MyLocationEnabled = true;
+			StreetMap.MyLocationFollow = false;
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"[MainPage] InitializeMap Error: {ex}");
+		}
 	}
 
 	private void OnPoisChanged(object? sender, NotifyCollectionChangedEventArgs e)

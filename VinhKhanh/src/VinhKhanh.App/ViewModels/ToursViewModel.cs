@@ -20,15 +20,8 @@ public partial class ToursViewModel : ObservableObject
 		_mainVm = mainVm;
 	}
 
-	[RelayCommand]
-	private async Task SelectTour(TourSnapshot tour)
-	{
-		if (tour == null) return;
-		_mainVm.SelectedTour = tour;
-		await Shell.Current.GoToAsync("//MainPage");
-	}
 
-	public ObservableCollection<TourSnapshot> Tours { get; } = new();
+	public ObservableCollection<Tour> Tours { get; } = new();
 
 	[ObservableProperty] private string _lang = "vi";
 	[ObservableProperty] private string _status = "";
@@ -39,28 +32,50 @@ public partial class ToursViewModel : ObservableObject
 	{
 		if (IsBusy) return;
 		IsBusy = true;
-		Status = "Dang tai lo trinh...";
 
 		try
 		{
-			var language = string.IsNullOrWhiteSpace(Lang) ? "vi" : Lang.Trim().ToLowerInvariant();
-			var remote = await _api.GetToursAsync(language);
+			// 1. Load from Local DB first
+			var local = await _localDb.GetToursAsync();
+			ReplaceTours(local);
 
-			if (remote.Count > 0)
+			// 2. Fetch from Remote
+			var language = string.IsNullOrWhiteSpace(Lang) ? "vi" : Lang.Trim().ToLowerInvariant();
+			var remoteSnapshots = await _api.GetToursAsync(language);
+
+			if (remoteSnapshots.Count > 0)
 			{
-				ReplaceTours(remote);
-				await SaveToursToLocalCacheAsync(remote);
-				Status = $"Da tai {Tours.Count} lo trinh.";
-			}
-			else
-			{
-				await LoadFromLocalAsync("API tra ve rong");
+				var remoteEntities = remoteSnapshots.Select(t => new Tour
+				{
+					Id = t.Id,
+					Name = t.Name,
+					Description = t.Description,
+					EstimatedMinutes = t.EstimatedMinutes,
+					IsActive = true
+				}).ToList();
+
+				await _localDb.SaveToursAsync(remoteEntities);
+
+				// Luôn đồng bộ các Stops cho từng Tour để vẽ bản đồ
+				foreach (var t in remoteSnapshots)
+				{
+					if (t.Stops != null)
+					{
+						await _localDb.SaveTourStopsAsync(t.Id, t.Stops.Select(s => new TourStop
+						{
+							TourId = t.Id,
+							PoiId = s.Poi?.Id ?? 0,
+							StopOrder = s.StopOrder
+						}).ToList());
+					}
+				}
+
+				ReplaceTours(remoteEntities);
 			}
 		}
 		catch (Exception ex)
 		{
-			System.Diagnostics.Debug.WriteLine(ex);
-			await LoadFromLocalAsync("Loi ket noi");
+			System.Diagnostics.Debug.WriteLine($"[ToursViewModel] Load Error: {ex}");
 		}
 		finally
 		{
@@ -68,42 +83,29 @@ public partial class ToursViewModel : ObservableObject
 		}
 	}
 
-	private void ReplaceTours(IReadOnlyList<TourSnapshot> list)
+	private void ReplaceTours(IReadOnlyList<Tour> list)
 	{
 		Tours.Clear();
 		foreach (var t in list.OrderBy(x => x.Name))
 			Tours.Add(t);
 	}
 
-	private async Task SaveToursToLocalCacheAsync(IReadOnlyList<TourSnapshot> list)
+	[RelayCommand]
+	private async Task SelectTour(Tour tour)
 	{
-		var localModels = list.Select(t => new Tour
-		{
-			Id = t.Id,
-			Name = t.Name,
-			Description = t.Description,
-			EstimatedMinutes = t.EstimatedMinutes,
-			IsActive = true
-		}).ToList();
+		if (tour == null) return;
+		
+		// Map back to snapshot for MainViewModel (or update MainViewModel to use Tour)
+		var snapshot = new TourSnapshot 
+		{ 
+			Id = tour.Id, 
+			Name = tour.Name, 
+			Description = tour.Description, 
+			EstimatedMinutes = tour.EstimatedMinutes,
+			Stops = [] 
+		};
 
-		await _localDb.SaveToursAsync(localModels);
-	}
-
-	private async Task LoadFromLocalAsync(string reason)
-	{
-		var local = await _localDb.GetToursAsync();
-		var snapshots = local.Select(t => new TourSnapshot
-		{
-			Id = t.Id,
-			Name = t.Name,
-			Description = t.Description,
-			EstimatedMinutes = t.EstimatedMinutes,
-			Stops = []
-		}).ToList();
-
-		ReplaceTours(snapshots);
-		Status = snapshots.Count > 0
-			? $"{reason}: dang dung {snapshots.Count} lo trinh offline."
-			: $"{reason}: chua co du lieu offline.";
+		_mainVm.SelectedTour = snapshot;
+		await Shell.Current.GoToAsync("//MainPage");
 	}
 }

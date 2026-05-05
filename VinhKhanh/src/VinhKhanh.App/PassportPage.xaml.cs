@@ -11,11 +11,7 @@ public partial class PassportPage : ContentPage
         InitializeComponent();
         _vm = MauiProgram.Services.GetRequiredService<PassportViewModel>();
         BindingContext = _vm;
-    }
 
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-        _vm.RefreshCommand.Execute(null);
+        Loaded += async (_, _) => await _vm.RefreshCommand.ExecuteAsync(null);
     }
 }

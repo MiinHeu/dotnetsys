@@ -116,6 +116,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 			
 			// Luôn lưu và cập nhật danh sách (kể cả khi trống) để đảm bảo đồng bộ IsActive từ Server
 			await _cache.SavePoisAsync(remote);
+			await _db.SyncPoisAsync(remote); // Đảm bảo đồng bộ sang SQLite cho Passport/Tours
 			ReplacePois(remote);
 			
 			StatusMessage = string.Format(VinhKhanh.App.Resources.Strings.AppResources.SyncStatusSuccess, remote.Count);
@@ -129,6 +130,15 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 
 			await _api.PostHistoryLogAsync(new AppHistoryLogDto(_session.SessionId, "SYNC_POI",
 				LanguageCode: SelectedLanguage, Payload: $"count={Pois.Count}"));
+			
+			// Đồng bộ thêm cả Tours để các Tab khác không bị trống
+			try 
+			{
+				var toursVm = MauiProgram.Services.GetRequiredService<ToursViewModel>();
+				await toursVm.LoadAsync();
+			}
+			catch { /* Ignore if tours fail */ }
+
 			await FlushOutboxIfNeededAsync(force: true);
 		}
 		catch (Exception ex)

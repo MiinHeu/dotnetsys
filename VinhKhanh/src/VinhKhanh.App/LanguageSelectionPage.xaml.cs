@@ -11,9 +11,9 @@ public partial class LanguageSelectionPage : ContentPage
         InitializeComponent();
     }
 
-    private void OnLangSelected(object sender, EventArgs e)
+    private void OnLangSelected(object sender, TappedEventArgs e)
     {
-        if (sender is Button btn && btn.CommandParameter is string langCode)
+        if (e.Parameter is string langCode)
         {
             // Set user preference
             Microsoft.Maui.Storage.Preferences.Set(AppPreferences.UiLanguage, langCode);

@@ -1,78 +1,146 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:VinhKhanh.App.ViewModels"
-             xmlns:models="clr-namespace:VinhKhanh.App.Models"
              xmlns:res="clr-namespace:VinhKhanh.App.Resources.Strings"
+             xmlns:data="clr-namespace:VinhKhanh.Infrastructure.Data;assembly=VinhKhanh.Infrastructure"
              x:Class="VinhKhanh.App.PoiListPage"
-             Title="{Binding PageTitle}"
-             BackgroundColor="White">
+             Title="Quán Ăn Vĩnh Khánh"
+             BackgroundColor="#F8FAFC">
 
     <Grid RowDefinitions="Auto, *">
-        <!-- Header / Search -->
-        <Frame Grid.Row="0" Margin="10" Padding="0" HasShadow="False" CornerRadius="8" BorderColor="#E5E7EB">
-            <SearchBar x:Name="PoiSearchBar" 
-                       Placeholder="{Binding SearchPlaceholder}"
-                       TextChanged="OnSearchTextChanged"
-                       CancelButtonColor="#FF5A1F" />
+        
+        <!-- Header & Search Area -->
+        <Frame Grid.Row="0" 
+               Padding="20, 40, 20, 20" 
+               CornerRadius="0" 
+               HasShadow="True" 
+               BorderColor="Transparent"
+               BackgroundColor="#0F172A">
+            <VerticalStackLayout Spacing="15">
+                <Label Text="Khám Phá Ẩm Thực" 
+                       TextColor="#EA580C" 
+                       FontSize="12" 
+                       FontAttributes="Bold" 
+                       CharacterSpacing="1"/>
+                <Label Text="Các Quán Ăn Đặc Sắc" 
+                       TextColor="White" 
+                       FontSize="28" 
+                       FontAttributes="Bold"/>
+                
+                <Border Stroke="#334155" 
+                        StrokeThickness="1" 
+                        StrokeShape="RoundRectangle 25" 
+                        BackgroundColor="#1E293B" 
+                        Padding="15, 0">
+                    <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                        <Label Text="🔍" FontSize="18" VerticalOptions="Center"/>
+                        <Entry x:Name="SearchEntry"
+                               Placeholder="Tìm tên quán hoặc món ăn..."
+                               PlaceholderColor="#64748B"
+                               TextColor="White"
+                               FontSize="15"
+                               HeightRequest="45"
+                               WidthRequest="250"
+                               TextChanged="OnSearchTextChanged"/>
+                    </HorizontalStackLayout>
+                </Border>
+            </VerticalStackLayout>
         </Frame>
 
-        <!-- List -->
-        <RefreshView Grid.Row="1" x:Name="PoiRefreshView" RefreshColor="#FF5A1F" Command="{Binding RefreshCommand}">
-            <CollectionView x:Name="PoiCollectionView"
-                            Margin="10,0">
+        <!-- List View -->
+        <RefreshView Grid.Row="1" 
+                     x:Name="MainRefreshView" 
+                     RefreshColor="#EA580C" 
+                     Command="{Binding RefreshCommand}">
+            
+            <CollectionView x:Name="PoisCollectionView"
+                            Padding="15"
+                            SelectionMode="None">
                 <CollectionView.ItemsLayout>
-                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="12" />
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="15"/>
                 </CollectionView.ItemsLayout>
-                
+
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:PoiSnapshot">
-                        <Frame HasShadow="True" Padding="0" CornerRadius="12" BorderColor="Transparent" HeightRequest="110">
-                            <!-- Gesture Recognizer trực tiếp trên Frame -->
-                            <Frame.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnPoiTapped" CommandParameter="{Binding .}" />
-                            </Frame.GestureRecognizers>
-                            
-                            <Grid ColumnDefinitions="110, *">
-                                <!-- Image -->
-                                <Image Grid.Column="0" 
-                                       Source="{Binding ImageUrl, TargetNullValue='icon_restaurant_placeholder.png'}" 
-                                       Aspect="AspectFill" />
-                                
-                                <!-- Info -->
-                                <StackLayout Grid.Column="1" Padding="12" Spacing="4" VerticalOptions="Center">
-                                    <Label Text="{Binding DisplayName}" 
-                                           FontSize="16" 
+                    <DataTemplate x:DataType="data:Poi">
+                        <Border StrokeThickness="0" 
+                                StrokeShape="RoundRectangle 16"
+                                BackgroundColor="White"
+                                Padding="0"
+                                Margin="0,2">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPoiTapped" CommandParameter="{Binding .}"/>
+                            </Border.GestureRecognizers>
+                            <Border.Shadow>
+                                <Shadow Brush="Black" Offset="0,4" Opacity="0.05" Radius="10"/>
+                            </Border.Shadow>
+
+                            <Grid ColumnDefinitions="120, *" HeightRequest="130">
+                                <!-- Image with Placeholder -->
+                                <Border Grid.Column="0" StrokeThickness="0" StrokeShape="RoundRectangle 16,0,0,16">
+                                    <Image Source="{Binding ImageUrl, TargetNullValue='dotnet_bot.png'}" 
+                                           Aspect="AspectFill" 
+                                           HeightRequest="130" 
+                                           WidthRequest="120"/>
+                                </Border>
+
+                                <!-- Info Area -->
+                                <VerticalStackLayout Grid.Column="1" Padding="15, 12" Spacing="4">
+                                    <Label Text="{Binding Name}" 
+                                           FontSize="18" 
                                            FontAttributes="Bold" 
-                                           TextColor="#111827" 
-                                           MaxLines="1" 
-                                           LineBreakMode="TailTruncation" />
+                                           TextColor="#0F172A"
+                                           MaxLines="1"
+                                           LineBreakMode="TailTruncation"/>
                                     
-                                    <Label Text="{Binding Category}" 
+                                    <HorizontalStackLayout Spacing="5">
+                                        <Label Text="⭐" FontSize="12"/>
+                                        <Label Text="{Binding Rating, StringFormat='{0:F1}'}" 
+                                               FontSize="13" 
+                                               FontAttributes="Bold" 
+                                               TextColor="#EA580C"/>
+                                        <Label Text="•" TextColor="#CBD5E1"/>
+                                        <Label Text="{Binding PhoneNumber}" 
+                                               FontSize="13" 
+                                               TextColor="#64748B"/>
+                                    </HorizontalStackLayout>
+
+                                    <Label Text="{Binding Address}" 
                                            FontSize="13" 
-                                           TextColor="#FF5A1F" 
-                                           FontAttributes="Italic" />
-                                    
-                                    <Label Text="{Binding DisplayDescription}" 
-                                           FontSize="12" 
-                                           TextColor="#6B7280" 
-                                           MaxLines="2" 
-                                           LineBreakMode="TailTruncation" />
-                                </StackLayout>
+                                           TextColor="#475569"
+                                           MaxLines="1"
+                                           LineBreakMode="TailTruncation"
+                                           Margin="0,2,0,0"/>
+
+                                    <HorizontalStackLayout Spacing="8" Margin="0,5,0,0">
+                                        <Border BackgroundColor="#F1F5F9" StrokeThickness="0" StrokeShape="RoundRectangle 4" Padding="8,2">
+                                            <Label Text="GPS Narration" FontSize="10" TextColor="#475569" FontAttributes="Bold"/>
+                                        </Border>
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
                             </Grid>
-                        </Frame>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
-                
+
                 <CollectionView.EmptyView>
-                    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
-                        <Label Text="{Binding BindingContext.EmptyListText, Source={x:Reference PoiCollectionView}}" 
-                               FontSize="16" 
-                               HorizontalOptions="Center" 
-                               TextColor="#9CA3AF" />
-                        <Button Text="{Binding BindingContext.ReloadButtonText, Source={x:Reference PoiCollectionView}}" Clicked="OnReloadClicked" 
-                                BackgroundColor="#FF5A1F" 
-                                CornerRadius="20" />
+                    <VerticalStackLayout Spacing="15" Padding="40" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Label Text="📭" FontSize="60" HorizontalOptions="Center"/>
+                        <Label Text="Chưa có dữ liệu quán ăn" 
+                               FontSize="18" 
+                               FontAttributes="Bold" 
+                               TextColor="#64748B" 
+                               HorizontalOptions="Center"/>
+                        <Label Text="Hãy nhấn vào đây để tải dữ liệu mới nhất từ hệ thống." 
+                               FontSize="14" 
+                               TextColor="#94A3B8" 
+                               HorizontalTextAlignment="Center"
+                               HorizontalOptions="Center"/>
+                        <Button Text="Tải dữ liệu" 
+                                Clicked="OnReloadClicked" 
+                                BackgroundColor="#EA580C"
+                                CornerRadius="20"
+                                Padding="20,0"
+                                HeightRequest="40"/>
                     </VerticalStackLayout>
                 </CollectionView.EmptyView>
             </CollectionView>

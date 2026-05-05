@@ -29,7 +29,7 @@ public partial class PassportViewModel : ObservableObject
             var visitedIds = await _db.GetVisitedPoiIdsAsync();
 
             Stamps.Clear();
-            foreach (var poi in allPois.OrderBy(p => p.Priority).ThenBy(p => p.Name))
+            foreach (var poi in allPois.OrderByDescending(p => p.Priority).ThenBy(p => p.Name))
             {
                 Stamps.Add(new StampItem
                 {
@@ -53,4 +53,10 @@ public class StampItem
     public int PoiId { get; set; }
     public string Name { get; set; } = "";
     public bool IsVisited { get; set; }
+    
+    // UI Helpers
+    public string StatusText => IsVisited ? "ĐÃ GHÉ THĂM" : "CHƯA ĐẾN";
+    public string StatusColor => IsVisited ? "#10B981" : "#94A3B8";
+    public double StampOpacity => IsVisited ? 1.0 : 0.2;
+    public string StampBg => IsVisited ? "#FFF7ED" : "#F1F5F9";
 }

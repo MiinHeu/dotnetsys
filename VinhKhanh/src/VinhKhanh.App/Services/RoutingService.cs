@@ -9,6 +9,7 @@ public class RoutingService
     public RoutingService()
     {
         _httpClient = new HttpClient();
+        _httpClient.DefaultRequestHeaders.Add("User-Agent", "VinhKhanhApp/2.0 (Mobile; Android; iOS)");
     }
 
     /// <summary>

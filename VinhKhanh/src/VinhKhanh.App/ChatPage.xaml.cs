@@ -13,12 +13,6 @@ public partial class ChatPage : ContentPage
 		InitializeComponent();
 		_vm = MauiProgram.Services.GetRequiredService<ChatViewModel>();
 		BindingContext = _vm;
-		LangPicker.ItemsSource = new[] { "vi", "en", "zh", "ko", "ja" };
-		LangPicker.SelectedItem = _vm.Lang;
-		LangPicker.SelectedIndexChanged += (_, _) =>
-		{
-			if (LangPicker.SelectedItem is string l) _vm.Lang = l;
-		};
 		ChatList.ItemsSource = _vm.Messages;
 		_vm.Messages.CollectionChanged += OnLinesChanged;
 	}

@@ -1,121 +1,95 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:dto="clr-namespace:VinhKhanh.Shared.DTOs;assembly=VinhKhanh.Shared"
+             xmlns:vm="clr-namespace:VinhKhanh.App.ViewModels"
+             xmlns:models="clr-namespace:VinhKhanh.App.Models"
              x:Class="VinhKhanh.App.ChatPage"
-             Title="Trợ lý AI"
-             BackgroundColor="{AppThemeBinding Light=#F3F4F6, Dark=#121212}">
+             x:DataType="vm:ChatViewModel"
+             Title="Trợ Lý Bé Vinh"
+             BackgroundColor="#F8FAFC">
 
-    <Grid RowDefinitions="Auto,*,Auto" Padding="0">
+    <Grid RowDefinitions="Auto, *, Auto">
         
-        <!-- Header with Mascot -->
-        <Frame Grid.Row="0" 
-               CornerRadius="0" 
-               HasShadow="True" 
-               Padding="20, 50, 20, 15" 
-               BorderColor="Transparent"
-               BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1E1E1E}">
-            <Grid ColumnDefinitions="Auto, *, Auto">
-                <Image Grid.Column="0" 
-                       Source="dotnet_bot.png" 
-                       WidthRequest="50" 
-                       HeightRequest="50" 
-                       VerticalOptions="Center"/>
-                
-                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Margin="15,0">
-                    <Label Text="Bé Vinh AI" 
-                           FontSize="20" 
-                           FontAttributes="Bold" 
-                           TextColor="{AppThemeBinding Light=#111827, Dark=#FFFFFF}"/>
+        <!-- Header with Mascot Info -->
+        <Frame Grid.Row="0" Padding="15" CornerRadius="0" HasShadow="True" BorderColor="Transparent" BackgroundColor="White">
+            <HorizontalStackLayout Spacing="15" VerticalOptions="Center">
+                <Frame WidthRequest="50" HeightRequest="50" CornerRadius="25" Padding="0" IsClippedToBounds="True" BorderColor="#EA580C">
+                    <Image Source="dotnet_bot.png" Aspect="AspectFit" Margin="5"/>
+                </Frame>
+                <VerticalStackLayout VerticalOptions="Center">
+                    <Label Text="Bé Vinh AI" FontSize="18" FontAttributes="Bold" TextColor="#0F172A"/>
                     <HorizontalStackLayout Spacing="5">
-                        <BoxView WidthRequest="8" HeightRequest="8" CornerRadius="4" BackgroundColor="#10B981" VerticalOptions="Center"/>
-                        <Label Text="Đang trực tuyến" FontSize="12" TextColor="#10B981"/>
+                        <BoxView WidthRequest="8" HeightRequest="8" CornerRadius="4" Color="#10B981" VerticalOptions="Center"/>
+                        <Label Text="Đang trực tuyến" FontSize="12" TextColor="#64748B"/>
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
-
-                <Picker Grid.Column="2" 
-                        x:Name="LangPicker" 
-                        Title="Ngôn ngữ" 
-                        FontSize="12" 
-                        WidthRequest="80"
-                        VerticalOptions="Center"/>
-            </Grid>
+            </HorizontalStackLayout>
         </Frame>
 
-        <!-- Chat List -->
-        <CollectionView Grid.Row="1" 
-                        x:Name="ChatList" 
+        <!-- Messages List -->
+        <CollectionView x:Name="ChatList"
+                        Grid.Row="1" 
+                        ItemsSource="{Binding Messages}" 
                         Padding="15"
                         ItemsUpdatingScrollMode="KeepLastItemInView">
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="dto:ChatMessage">
+                <DataTemplate x:DataType="models:ChatMessage">
                     <Grid Padding="0,5">
-                        <!-- Bot Message Template (Left) -->
-                        <Frame x:Name="MsgFrame"
-                               CornerRadius="18"
-                               Padding="15, 10"
-                               HasShadow="False"
-                               HorizontalOptions="Start"
-                               MaximumWidthRequest="300"
-                               BackgroundColor="{AppThemeBinding Light=#E5E7EB, Dark=#2D2D2D}">
-                            <Label Text="{Binding Content}" 
-                                   TextColor="{AppThemeBinding Light=#1F2937, Dark=#F3F4F6}" 
-                                   FontSize="15"/>
-                        </Frame>
+                        <!-- Bot Message -->
+                        <VerticalStackLayout HorizontalOptions="Start" 
+                                             IsVisible="{Binding IsBot}" 
+                                             Spacing="2"
+                                             MaximumWidthRequest="280">
+                            <Label Text="Bé Vinh" FontSize="10" TextColor="#64748B" Margin="12,0"/>
+                            <Border BackgroundColor="#F1F5F9" StrokeThickness="0" StrokeShape="RoundRectangle 16,16,16,2" Padding="15,10">
+                                <Label Text="{Binding Content}" TextColor="#1E293B" FontSize="15" LineHeight="1.2"/>
+                            </Border>
+                        </VerticalStackLayout>
 
-                        <VisualStateManager.VisualStateGroups>
-                            <VisualStateGroup x:Name="UserStates">
-                                <VisualState x:Name="User">
-                                    <VisualState.StateTriggers>
-                                        <StateTrigger IsActive="{Binding IsUser}" />
-                                    </VisualState.StateTriggers>
-                                    <VisualState.Setters>
-                                        <Setter TargetName="MsgFrame" Property="HorizontalOptions" Value="End" />
-                                        <Setter TargetName="MsgFrame" Property="BackgroundColor" Value="#FF4500" />
-                                        <Setter TargetName="MsgFrame" Property="CornerRadius" Value="18" />
-                                    </VisualState.Setters>
-                                </VisualState>
-                            </VisualStateGroup>
-                        </VisualStateManager.VisualStateGroups>
+                        <!-- User Message -->
+                        <VerticalStackLayout HorizontalOptions="End" 
+                                             IsVisible="{Binding IsUser}" 
+                                             Spacing="2"
+                                             MaximumWidthRequest="280">
+                            <Border BackgroundColor="#EA580C" StrokeThickness="0" StrokeShape="RoundRectangle 16,16,2,16" Padding="15,10">
+                                <Label Text="{Binding Content}" TextColor="White" FontSize="15" LineHeight="1.2"/>
+                            </Border>
+                        </VerticalStackLayout>
                     </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
         <!-- Input Area -->
-        <Frame Grid.Row="2" 
-               Padding="15, 10, 15, 30" 
-               CornerRadius="0" 
-               HasShadow="True"
-               BorderColor="Transparent"
-               BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1E1E1E}">
+        <Frame Grid.Row="2" Padding="15" CornerRadius="0" HasShadow="False" BorderColor="#F1F5F9" BackgroundColor="White">
             <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
-                <Border Grid.Column="0" 
-                        StrokeThickness="0" 
-                        BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#2D2D2D}" 
-                        Padding="15, 5" 
-                        StrokeShape="RoundRectangle 25">
-                    <Entry x:Name="MsgEntry" 
-                           Text="{Binding Input}" 
-                           Placeholder="Hỏi bé Vinh về món ăn..." 
-                           TextColor="{AppThemeBinding Light=#111827, Dark=#FFFFFF}"
-                           PlaceholderColor="#9CA3AF"
+                <Border Grid.Column="0" Stroke="#E2E8F0" StrokeThickness="1" StrokeShape="RoundRectangle 25" Padding="15, 0">
+                    <Entry x:Name="ChatEntry"
+                           Text="{Binding CurrentMessage}"
+                           Placeholder="Hỏi Bé Vinh về món ngon..."
+                           PlaceholderColor="#94A3B8"
+                           TextColor="#1E293B"
                            FontSize="15"
                            HeightRequest="45"
-                           VerticalOptions="Center"/>
+                           ReturnCommand="{Binding SendCommand}"/>
                 </Border>
                 
-                <Button Grid.Column="1" 
-                        Text="🚀" 
-                        FontSize="20"
-                        Clicked="OnSend" 
-                        CornerRadius="25" 
-                        WidthRequest="50" 
-                        HeightRequest="50"
-                        Padding="0"
-                        BackgroundColor="#FF4500"
-                        TextColor="White"/>
+                <Button Grid.Column="1"
+                        Text="Gửi"
+                        Command="{Binding SendCommand}"
+                        BackgroundColor="#EA580C"
+                        TextColor="White"
+                        FontAttributes="Bold"
+                        CornerRadius="22.5"
+                        HeightRequest="45"
+                        WidthRequest="70"/>
             </Grid>
         </Frame>
+
+        <!-- Loading Overlay -->
+        <Grid Grid.Row="1" IsVisible="{Binding IsBusy}" BackgroundColor="#40FFFFFF">
+            <ActivityIndicator IsRunning="True" Color="#EA580C" VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="40"/>
+        </Grid>
+
     </Grid>
 </ContentPage>

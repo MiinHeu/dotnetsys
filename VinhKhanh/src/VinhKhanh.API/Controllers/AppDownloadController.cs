@@ -7,16 +7,26 @@ namespace VinhKhanh.API.Controllers;
 public class AppDownloadController : ControllerBase
 {
     private readonly IWebHostEnvironment _env;
+    private readonly IConfiguration _config;
 
-    public AppDownloadController(IWebHostEnvironment env)
+    public AppDownloadController(IWebHostEnvironment env, IConfiguration config)
     {
         _env = env;
+        _config = config;
     }
 
 	[HttpGet("download")]
 	public IActionResult DownloadApk()
 	{
-		// Chạy linh hoạt trên cả local và production
+		// 1. Kiểm tra cấu hình Dynamic URL trước
+		var dynamicUrl = _config["AppConfig:DynamicApkUrl"];
+		if (!string.IsNullOrWhiteSpace(dynamicUrl))
+		{
+			// Chuyển hướng người dùng đến đường link ngoài (Google Drive, S3, v.v.)
+			return Redirect(dynamicUrl);
+		}
+
+		// 2. Fallback: Trả file trực tiếp nếu không cấu hình QR Động
 		string apkPath = Path.Combine(_env.ContentRootPath, "..", "VinhKhanh.App", "bin", "Release", "net10.0-android", "com.companyname.vinhkhanh.app-Signed.apk");
 
 		if (!System.IO.File.Exists(apkPath))

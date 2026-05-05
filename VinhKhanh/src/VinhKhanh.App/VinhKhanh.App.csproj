@@ -102,4 +102,9 @@
 	  </Compile>
 	</ItemGroup>
 
+	<!-- Ép Visual Studio build đa cấu trúc CPU cho thiết bị thật (Fix lỗi ADB0020 trên Samsung J8) -->
+	<PropertyGroup Condition="$(TargetFramework.Contains('-android'))">
+		<RuntimeIdentifiers>android-arm;android-arm64;android-x86;android-x64</RuntimeIdentifiers>
+	</PropertyGroup>
+
 </Project>
