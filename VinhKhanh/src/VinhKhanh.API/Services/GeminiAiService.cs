@@ -21,79 +21,66 @@ public class GeminiAiService(
             return "Xin lỗi, hiện tại tôi không thể trả lời được do thiếu cấu hình AI trên Server.";
         }
 
-        var cleanKey = _apiKey.Trim();
+        // Clean inputs
+        var modelId = _model.Trim().ToLower();
+        var key = _apiKey.Trim();
 
-        try
+        // Build contents
+        var contents = new List<object>();
+        string lastRole = "";
+        if (history != null)
         {
-            // Build contents for Gemini
-            var contents = new List<object>();
-            
-            // Add history with role alternation check
-            string lastRole = "";
-            if (history != null)
+            foreach (var msg in history.Where(h => !string.IsNullOrWhiteSpace(h.Content)))
             {
-                foreach (var msg in history.Where(h => !string.IsNullOrWhiteSpace(h.Content)))
+                var currentRole = msg.Role?.ToLower() == "assistant" ? "model" : "user";
+                if (currentRole == lastRole) continue;
+                contents.Add(new { role = currentRole, parts = new[] { new { text = msg.Content } } });
+                lastRole = currentRole;
+            }
+        }
+
+        var userText = $"[SYSTEM INSTRUCTION]\n{system}\n\n[USER]\n{user}";
+        if (lastRole == "user" && contents.Count > 0) contents.RemoveAt(contents.Count - 1);
+        contents.Add(new { role = "user", parts = new[] { new { text = userText } } });
+
+        var payload = new { contents };
+
+        // Try v1beta then v1
+        string[] versions = { "v1beta", "v1" };
+        foreach (var ver in versions)
+        {
+            var url = $"https://generativelanguage.googleapis.com/{ver}/models/{modelId}:generateContent?key={key}";
+            try
+            {
+                using var http = httpClientFactory.CreateClient();
+                using var response = await http.PostAsJsonAsync(url, payload);
+
+                // If v1beta returns 404, we continue to v1
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound && ver == "v1beta") continue;
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    var currentRole = msg.Role == "user" ? "user" : "model";
-                    
-                    // Gemini requires alternating roles. If same role, we skip or could merge.
-                    // For simplicity, we skip consecutive same-role messages.
-                    if (currentRole == lastRole) continue; 
-
-                    contents.Add(new
-                    {
-                        role = currentRole,
-                        parts = new[] { new { text = msg.Content } }
-                    });
-                    lastRole = currentRole;
+                    var error = await response.Content.ReadAsStringAsync();
+                    logger.LogError("Gemini Error ({Ver}): Status={Status}, Detail={Detail}", ver, response.StatusCode, error);
+                    return $"Bé Vinh ({ver}) lỗi {(int)response.StatusCode}. Hãy kiểm tra Model ID '{modelId}' trên Azure.";
                 }
+
+                var result = await response.Content.ReadFromJsonAsync<JsonElement>();
+                var reply = result.GetProperty("candidates")[0]
+                    .GetProperty("content")
+                    .GetProperty("parts")[0]
+                    .GetProperty("text")
+                    .GetString()?.Trim();
+
+                return reply ?? "Không nhận được phản hồi.";
             }
-
-            // Ensure the next message is 'user'. If last was 'user', we must append to it or handle it.
-            var userText = $"[SYSTEM INSTRUCTION]\n{system}\n\n[USER]\n{user}";
-            if (lastRole == "user" && contents.Count > 0)
+            catch (Exception ex)
             {
-                // Append to the last user message instead of adding a new one
-                // (Actually Gemini preferred way is alternating, so we just replace/append if needed)
-                // But usually, we can just ensure we don't send two users.
-                // Let's just remove the last user message from history if we are about to send a new user prompt.
-                contents.RemoveAt(contents.Count - 1);
+                logger.LogError(ex, "Gemini Exception on {Ver}", ver);
+                if (ver == "v1") return $"Lỗi hệ thống: {ex.Message}";
             }
-
-            contents.Add(new
-            {
-                role = "user",
-                parts = new[] { new { text = userText } }
-            });
-
-            var payload = new { contents };
-
-            // Switch to v1beta API to support gemini-1.5-flash and newer models
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/{_model}:generateContent?key={cleanKey}";
-            
-            using var http = httpClientFactory.CreateClient();
-            using var response = await http.PostAsJsonAsync(url, payload);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                logger.LogError("Gemini Chat API Error: Status={Status}, Detail={Detail}, URL_Model={Model}", response.StatusCode, error, _model);
-                return $"Bé Vinh (v1beta) gặp lỗi kết nối (Mã: {(int)response.StatusCode}, Model: {_model}). Bạn hãy kiểm tra lại cấu hình trên Azure nhé.";
-            }
-
-            var result = await response.Content.ReadFromJsonAsync<JsonElement>();
-            var reply = result.GetProperty("candidates")[0]
-                .GetProperty("content")
-                .GetProperty("parts")[0]
-                .GetProperty("text")
-                .GetString()?.Trim();
-
-            return reply ?? "Không nhận được phản hồi từ AI.";
         }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Gemini Chat call failed.");
-            return "Xin lỗi, đã có lỗi hệ thống xảy ra.";
-        }
+
+        return "Không thể kết nối với Gemini AI.";
     }
 }
