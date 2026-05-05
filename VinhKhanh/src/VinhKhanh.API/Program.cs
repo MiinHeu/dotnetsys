@@ -86,15 +86,22 @@ try
     // Ưu tiên dùng Azure OpenAI cho AI Service
     builder.Services.AddScoped<GeminiAiService>();
     builder.Services.AddScoped<GroqAiService>();
+    builder.Services.AddScoped<DeepSeekAiService>();
     builder.Services.AddScoped<OllamaAiService>();
 
-    // Cấu hình linh hoạt AI Service: Ưu tiên Groq vì Gemini bị chặn tại East Asia
+    // Cấu hình linh hoạt AI Service: Ưu tiên DeepSeek vì hoạt động tốt tại East Asia (Hong Kong)
+    var deepseekKey = builder.Configuration["DeepSeek:ApiKey"];
     var groqKey = builder.Configuration["Groq:ApiKey"];
     var geminiKey = builder.Configuration["Gemini:ApiKey"];
 
-    if (!string.IsNullOrWhiteSpace(groqKey))
+    if (!string.IsNullOrWhiteSpace(deepseekKey))
     {
-        Console.WriteLine("[STARTUP] Using GroqAiService for AI Chat (Preferred for East Asia).");
+        Console.WriteLine("[STARTUP] Using DeepSeekAiService for AI Chat (Recommended for Hong Kong).");
+        builder.Services.AddScoped<IAiService, DeepSeekAiService>();
+    }
+    else if (!string.IsNullOrWhiteSpace(groqKey))
+    {
+        Console.WriteLine("[STARTUP] Using GroqAiService for AI Chat.");
         builder.Services.AddScoped<IAiService, GroqAiService>();
     }
     else if (!string.IsNullOrWhiteSpace(geminiKey) && !geminiKey.Contains("YOUR_GEMINI_API_KEY"))
