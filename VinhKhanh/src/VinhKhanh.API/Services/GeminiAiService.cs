@@ -15,21 +15,20 @@ public class GeminiAiService(
 
     public async Task<string> ChatAsync(string system, string user, List<MessageHistory>? history = null)
     {
-        if (string.IsNullOrWhiteSpace(_apiKey))
+        if (string.IsNullOrWhiteSpace(_apiKey) || _apiKey.Contains("YOUR_GEMINI_API_KEY"))
         {
-            logger.LogWarning("Gemini API Key is missing.");
-            return "Xin lỗi, hiện tại tôi không thể trả lời được do thiếu cấu hình AI.";
+            logger.LogWarning("Gemini API Key is missing or invalid.");
+            return "Xin lỗi, hiện tại tôi không thể trả lời được do thiếu cấu hình AI trên Server.";
         }
+
+        var cleanKey = _apiKey.Trim();
 
         try
         {
             // Build contents for Gemini
             var contents = new List<object>();
-
-            // 1. System instruction (as a special model turn if needed, but here we prepended to user prompt for simplicity or use system_instruction if API supports)
-            // Note: In newer v1beta, system_instruction is a separate field.
             
-            // 2. Add history
+            // Add history
             if (history != null)
             {
                 foreach (var msg in history)
@@ -42,7 +41,7 @@ public class GeminiAiService(
                 }
             }
 
-            // 3. Add current user prompt (including system instructions to ensure context)
+            // Add current user prompt
             var finalUserPrompt = $"[SYSTEM INSTRUCTION]\n{system}\n\n[USER]\n{user}";
             contents.Add(new
             {
@@ -52,7 +51,8 @@ public class GeminiAiService(
 
             var payload = new { contents };
 
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/{_model}:generateContent?key={_apiKey}";
+            // Switch to v1 stable API
+            var url = $"https://generativelanguage.googleapis.com/v1/models/{_model}:generateContent?key={cleanKey}";
             
             using var http = httpClientFactory.CreateClient();
             using var response = await http.PostAsJsonAsync(url, payload);
@@ -60,8 +60,8 @@ public class GeminiAiService(
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
-                logger.LogError("Gemini Chat API Error: Status={Status}, Detail={Detail}", response.StatusCode, error);
-                return $"Xin lỗi, có lỗi xảy ra khi kết nối với máy chủ AI (Lỗi: {(int)response.StatusCode}).";
+                logger.LogError("Gemini Chat API Error: Status={Status}, Detail={Detail}, URL_Model={Model}", response.StatusCode, error, _model);
+                return $"Bé Vinh gặp lỗi kết nối (Mã: {(int)response.StatusCode}, Model: {_model}). Bạn hãy kiểm tra lại cấu hình trên Azure nhé.";
             }
 
             var result = await response.Content.ReadFromJsonAsync<JsonElement>();
