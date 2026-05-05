@@ -50,7 +50,7 @@ public sealed class ApiClientService
 		}
 
 		// 2. Mặc định ưu tiên Azure cho máy thật/phiên bản phát hành (theo NewBranch)
-		return "https://vinh-khanh-food-street-gvhcecg4gbakhjgc.eastasia-01.azurewebsites.net/";
+		return "https://vinh-khanh-food-street-gvhceeg4gbakhjgc.eastasia-01.azurewebsites.net/";
 	}
 
 	public async Task<IReadOnlyList<PoiSnapshot>> GetPoisAsync(string lang, CancellationToken ct = default)
