@@ -19,8 +19,16 @@ public static class DbSeeder
 
 	private static async Task SeedSessionsAsync(ApplicationDbContext db, CancellationToken ct)
 	{
-		// Chỉ tạo dữ liệu mẫu nếu bảng đang trống
-		if (await db.DeviceSessions.AnyAsync(ct)) return;
+		try
+		{
+			// Chỉ tạo dữ liệu mẫu nếu bảng đang trống
+			if (await db.DeviceSessions.AnyAsync(ct)) return;
+		}
+		catch
+		{
+			// Bảng chưa tồn tại (chưa migration xong), bỏ qua để không sập App
+			return;
+		}
 
 		var rnd = new Random();
 		var platforms = new[] { "Android", "iOS" };
