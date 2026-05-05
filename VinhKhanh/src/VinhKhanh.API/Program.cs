@@ -232,6 +232,35 @@ try
                     {
                         try { db.Database.ExecuteSqlRaw(sql); } catch { /* Ignore if column exists */ }
                     }
+
+                    // ÉP TẠO BẢNG DeviceSessions (Vì Migration trên Azure đang bị kẹt)
+                    if (db.Database.IsSqlServer())
+                    {
+                        Console.WriteLine("[STARTUP] Force creating DeviceSessions table for SQL Server...");
+                        db.Database.ExecuteSqlRaw(@"
+                            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[DeviceSessions]') AND type in (N'U'))
+                            BEGIN
+                                CREATE TABLE [DeviceSessions] (
+                                    [Id] int NOT NULL IDENTITY,
+                                    [SessionId] nvarchar(128) NOT NULL,
+                                    [DeviceModel] nvarchar(128) NULL,
+                                    [DevicePlatform] nvarchar(32) NULL,
+                                    [OsVersion] nvarchar(32) NULL,
+                                    [AppVersion] nvarchar(32) NULL,
+                                    [Manufacturer] nvarchar(64) NULL,
+                                    [LanguageUsed] nvarchar(16) NULL,
+                                    [StartedAt] datetime2 NOT NULL,
+                                    [EndedAt] datetime2 NULL,
+                                    [LastHeartbeatAt] datetime2 NOT NULL,
+                                    [PoisVisited] int NOT NULL DEFAULT 0,
+                                    [DistanceMeters] float NOT NULL DEFAULT 0,
+                                    [IsReturning] bit NOT NULL DEFAULT 0,
+                                    CONSTRAINT [PK_DeviceSessions] PRIMARY KEY ([Id])
+                                );
+                                CREATE INDEX [IX_DeviceSessions_SessionId] ON [DeviceSessions] ([SessionId]);
+                                CREATE INDEX [IX_DeviceSessions_StartedAt] ON [DeviceSessions] ([StartedAt]);
+                            END");
+                    }
                 }
             }
         }
