@@ -37,6 +37,8 @@ public class ChatMessage
 {
 	public string Content { get; set; } = "";
 	public bool IsUser { get; set; }
+	public bool IsBot { get; set; }
+	public DateTime Timestamp { get; set; } = DateTime.Now;
 }
 
 public record PoiTranslationDto(

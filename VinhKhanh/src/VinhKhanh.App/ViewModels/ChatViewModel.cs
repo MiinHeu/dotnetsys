@@ -31,17 +31,17 @@ public partial class ChatViewModel : ObservableObject
 
 		var q = CurrentMessage.Trim();
 		CurrentMessage = "";
-		Messages.Add(new ChatMessage { Content = q, IsUser = true });
+		Messages.Add(new ChatMessage { Content = q, IsUser = true, IsBot = false });
 		
 		IsBusy = true;
 		try
 		{
 			var reply = await _api.ChatAsync(new ChatRequest(q, Lang));
-			Messages.Add(new ChatMessage { Content = string.IsNullOrWhiteSpace(reply) ? "Bé Vinh hiện đang bận một chút, bạn thử lại sau nhé!" : reply, IsUser = false });
+			Messages.Add(new ChatMessage { Content = string.IsNullOrWhiteSpace(reply) ? "Bé Vinh hiện đang bận một chút, bạn thử lại sau nhé!" : reply, IsUser = false, IsBot = true });
 		}
 		catch (Exception ex)
 		{
-			Messages.Add(new ChatMessage { Content = $"Rất tiếc, đã có lỗi xảy ra: {ex.Message}", IsUser = false });
+			Messages.Add(new ChatMessage { Content = $"Rất tiếc, đã có lỗi xảy ra: {ex.Message}", IsUser = false, IsBot = true });
 		}
 		finally
 		{
