@@ -12,6 +12,20 @@ public class AdminController(ApplicationDbContext db, IConnectionTracker tracker
 {
 	[HttpGet("ping")]
 	public IActionResult Ping() => Ok(new { message = "Server is ALIVE", time = DateTime.UtcNow });
+
+	[HttpGet("db-test")]
+	public async Task<IActionResult> DbTest()
+	{
+		try
+		{
+			var count = await db.DeviceSessions.CountAsync();
+			return Ok($"KẾT NỐI OK. Bảng DeviceSessions đã tồn tại. Số lượng dòng: {count}");
+		}
+		catch (Exception ex)
+		{
+			return Ok($"LỖI DATABASE: {ex.Message} -- CHI TIẾT: {ex.InnerException?.Message}");
+		}
+	}
 	[HttpGet("summary")]
 	public async Task<IActionResult> Summary(CancellationToken ct = default)
 	{
