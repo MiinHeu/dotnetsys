@@ -91,69 +91,80 @@ public class AdminController(ApplicationDbContext db, IConnectionTracker tracker
 		[FromQuery] string? platform = null,
 		CancellationToken ct = default)
 	{
-		page = Math.Max(page, 1);
-		size = Math.Clamp(size, 1, 200);
-		days = Math.Clamp(days, 1, 365);
-		var since = DateTime.UtcNow.AddDays(-days);
-
-		// Lấy danh sách thô trước, sau đó mới lọc (để tránh lỗi Join phức tạp trên SQL Server)
-		var q = db.DeviceSessions.AsNoTracking()
-			.Where(s => s.StartedAt >= since);
-
-		// Owner filter logic...
-		var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-		if (role == "Owner")
+		try
 		{
-			var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-			if (int.TryParse(userIdString, out var userId))
+			page = Math.Max(page, 1);
+			size = Math.Clamp(size, 1, 200);
+			days = Math.Clamp(days, 1, 365);
+			var since = DateTime.UtcNow.AddDays(-days);
+
+			var q = db.DeviceSessions.AsNoTracking()
+				.Where(s => s.StartedAt >= since);
+
+			// Logic lọc Owner... (Bỏ qua tạm thời nếu lỗi)
+			var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+			if (role == "Owner")
 			{
-				var ownerPoiIds = await db.Pois.IgnoreQueryFilters()
-					.Where(p => p.OwnerUserId == userId)
-					.Select(p => p.Id)
-					.ToListAsync(ct);
+				var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+				if (int.TryParse(userIdString, out var userId))
+				{
+					var ownerPoiIds = await db.Pois.IgnoreQueryFilters()
+						.Where(p => p.OwnerUserId == userId)
+						.Select(p => p.Id)
+						.ToListAsync(ct);
 
-				var relatedSessionIds = await db.PoiVisitLogs.IgnoreQueryFilters()
-					.Where(v => ownerPoiIds.Contains(v.PoiId) && v.VisitedAt >= since)
-					.Select(v => v.SessionId)
-					.Distinct()
-					.ToListAsync(ct);
+					var relatedSessionIds = await db.PoiVisitLogs.IgnoreQueryFilters()
+						.Where(v => ownerPoiIds.Contains(v.PoiId) && v.VisitedAt >= since)
+						.Select(v => v.SessionId)
+						.Distinct()
+						.ToListAsync(ct);
 
-				q = q.Where(s => relatedSessionIds.Contains(s.SessionId));
+					q = q.Where(s => relatedSessionIds.Contains(s.SessionId));
+				}
 			}
+
+			if (!string.IsNullOrWhiteSpace(platform))
+				q = q.Where(s => s.DevicePlatform == platform.Trim());
+
+			var total = await q.CountAsync(ct);
+			var rawItems = await q
+				.OrderByDescending(s => s.StartedAt)
+				.Skip((page - 1) * size)
+				.Take(size)
+				.ToListAsync(ct);
+
+			var items = rawItems.Select(s => new
+			{
+				s.Id,
+				s.SessionId,
+				s.DeviceModel,
+				s.DevicePlatform,
+				s.OsVersion,
+				s.AppVersion,
+				s.Manufacturer,
+				s.StartedAt,
+				s.EndedAt,
+				DurationMinutes = s.EndedAt != null
+					? Math.Round((s.EndedAt.Value - s.StartedAt).TotalMinutes, 1)
+					: Math.Round((DateTime.UtcNow - s.StartedAt).TotalMinutes, 1),
+				s.PoisVisited,
+				DistanceMeters = Math.Round(s.DistanceMeters),
+				s.LanguageUsed,
+				s.IsReturning,
+				IsActive = s.EndedAt == null && (DateTime.UtcNow - s.LastHeartbeatAt).TotalMinutes < 5
+			});
+
+			return Ok(new { total, page, size, items });
 		}
-
-		if (!string.IsNullOrWhiteSpace(platform))
-			q = q.Where(s => s.DevicePlatform == platform.Trim());
-
-		var total = await q.CountAsync(ct);
-		var rawItems = await q
-			.OrderByDescending(s => s.StartedAt)
-			.Skip((page - 1) * size)
-			.Take(size)
-			.ToListAsync(ct);
-
-		var items = rawItems.Select(s => new
+		catch (Exception ex)
 		{
-			s.Id,
-			s.SessionId,
-			s.DeviceModel,
-			s.DevicePlatform,
-			s.OsVersion,
-			s.AppVersion,
-			s.Manufacturer,
-			s.StartedAt,
-			s.EndedAt,
-			DurationMinutes = s.EndedAt != null
-				? Math.Round((s.EndedAt.Value - s.StartedAt).TotalMinutes, 1)
-				: Math.Round((DateTime.UtcNow - s.StartedAt).TotalMinutes, 1),
-			s.PoisVisited,
-			DistanceMeters = Math.Round(s.DistanceMeters),
-			s.LanguageUsed,
-			s.IsReturning,
-			IsActive = s.EndedAt == null && (DateTime.UtcNow - s.LastHeartbeatAt).TotalMinutes < 5
-		});
-
-		return Ok(new { total, page, size, items });
+			return StatusCode(500, new { 
+				message = "LỖI HỆ THỐNG CỰC NGHIÊM TRỌNG", 
+				error = ex.Message, 
+				stackTrace = ex.StackTrace,
+				innerError = ex.InnerException?.Message 
+			});
+		}
 	}
 
 	[Authorize(Roles = "Admin")]
