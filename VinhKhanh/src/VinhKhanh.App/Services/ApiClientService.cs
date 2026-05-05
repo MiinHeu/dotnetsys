@@ -19,18 +19,22 @@ public sealed class ApiClientService
 	
 	public HttpClient CreateClient()
 	{
+		return _http;
+	}
+
+	private string GetBaseUrl()
+	{
 		var defaultUrl = GetDefaultApiBase();
 		var baseUrl = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, defaultUrl);
 
-		// Ép dùng Azure trên máy thật nếu URL mặc định là Azure (bỏ qua cache IP cũ nếu có)
+		// Ép dùng Azure trên máy thật nếu URL mặc định là Azure
 		if (DeviceInfo.DeviceType != DeviceType.Virtual && defaultUrl.Contains("azurewebsites.net"))
 		{
 			baseUrl = defaultUrl;
 		}
 
 		if (!baseUrl.EndsWith('/')) baseUrl += "/";
-		_http.BaseAddress = new Uri(baseUrl);
-		return _http;
+		return baseUrl;
 	}
 
 	public static string GetDefaultApiBase()
@@ -52,7 +56,7 @@ public sealed class ApiClientService
 	public async Task<IReadOnlyList<PoiSnapshot>> GetPoisAsync(string lang, CancellationToken ct = default)
 	{
 		var http = CreateClient();
-		var url = $"api/poi?lang={Uri.EscapeDataString(lang)}&t={DateTime.UtcNow.Ticks}";
+		var url = $"{GetBaseUrl()}api/poi?lang={Uri.EscapeDataString(lang)}&t={DateTime.UtcNow.Ticks}";
 		var list = await http.GetFromJsonAsync<List<PoiSnapshot>>(url, JsonOpts, ct);
 		return list ?? [];
 	}
@@ -60,7 +64,7 @@ public sealed class ApiClientService
 	public async Task<IReadOnlyList<TourSnapshot>> GetToursAsync(string lang, CancellationToken ct = default)
 	{
 		var http = CreateClient();
-		var url = $"api/tour?lang={Uri.EscapeDataString(lang)}&t={DateTime.UtcNow.Ticks}";
+		var url = $"{GetBaseUrl()}api/tour?lang={Uri.EscapeDataString(lang)}&t={DateTime.UtcNow.Ticks}";
 		var list = await http.GetFromJsonAsync<List<TourSnapshot>>(url, JsonOpts, ct);
 		return list ?? [];
 	}
@@ -68,7 +72,7 @@ public sealed class ApiClientService
 	public async Task<PoiSnapshot?> GetPoiAsync(int id, CancellationToken ct = default)
 	{
 		var http = CreateClient();
-		var url = $"api/poi/{id}?t={DateTime.UtcNow.Ticks}";
+		var url = $"{GetBaseUrl()}api/poi/{id}?t={DateTime.UtcNow.Ticks}";
 		return await http.GetFromJsonAsync<PoiSnapshot>(url, JsonOpts, ct);
 	}
 
@@ -76,7 +80,7 @@ public sealed class ApiClientService
 	{
 		var code = Uri.EscapeDataString(qrCode.Trim());
 		var http = CreateClient();
-		var url = $"api/poi/qrcode/{code}?t={DateTime.UtcNow.Ticks}";
+		var url = $"{GetBaseUrl()}api/poi/qrcode/{code}?t={DateTime.UtcNow.Ticks}";
 		var res = await http.GetAsync(url, ct);
 		if (res.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
 		res.EnsureSuccessStatusCode();
@@ -88,7 +92,8 @@ public sealed class ApiClientService
 		try
 		{
 			var http = CreateClient();
-			var res = await http.PostAsJsonAsync("api/movement/batch", dto, ct);
+			var url = $"{GetBaseUrl()}api/movement/batch";
+			var res = await http.PostAsJsonAsync(url, dto, ct);
 			return res.IsSuccessStatusCode;
 		}
 		catch
@@ -102,7 +107,8 @@ public sealed class ApiClientService
 		try
 		{
 			var http = CreateClient();
-			var res = await http.PostAsJsonAsync("api/history/log", dto, ct);
+			var url = $"{GetBaseUrl()}api/history/log";
+			var res = await http.PostAsJsonAsync(url, dto, ct);
 			return res.IsSuccessStatusCode;
 		}
 		catch { return false; }
@@ -113,7 +119,8 @@ public sealed class ApiClientService
 		try
 		{
 			var http = CreateClient();
-			var res = await http.PostAsJsonAsync("api/analytics/log", dto, ct);
+			var url = $"{GetBaseUrl()}api/analytics/log";
+			var res = await http.PostAsJsonAsync(url, dto, ct);
 			return res.IsSuccessStatusCode;
 		}
 		catch { return false; }
@@ -139,7 +146,8 @@ public sealed class ApiClientService
 	public async Task<string?> ChatAsync(ChatRequest req, CancellationToken ct = default)
 	{
 		var http = CreateClient();
-		var res = await http.PostAsJsonAsync("api/ai/chat", req, ct);
+		var url = $"{GetBaseUrl()}api/ai/chat";
+		var res = await http.PostAsJsonAsync(url, req, ct);
 		res.EnsureSuccessStatusCode();
 		var json = await res.Content.ReadAsStringAsync(ct);
 		using var doc = JsonDocument.Parse(json);
