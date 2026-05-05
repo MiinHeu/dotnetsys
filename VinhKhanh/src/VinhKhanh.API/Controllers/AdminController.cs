@@ -195,19 +195,21 @@ public class AdminController(ApplicationDbContext db, IConnectionTracker tracker
 			? Math.Round(ended.Average(s => (s.EndedAt!.Value - s.StartedAt).TotalMinutes), 1)
 			: 0;
 
-		var returningRate = Math.Round(100.0 * sessions.Count(s => s.IsReturning) / sessions.Count, 1);
+		var returningRate = sessions.Count > 0 
+			? Math.Round(100.0 * sessions.Count(s => s.IsReturning) / sessions.Count, 1)
+			: 0;
 
 		return Ok(new
 		{
 			totalSessions = sessions.Count,
 			avgDurationMinutes = avgDuration,
-			avgPoisVisited = Math.Round(sessions.Average(s => (double)s.PoisVisited), 1),
-			avgDistanceMeters = Math.Round(sessions.Average(s => s.DistanceMeters)),
+			avgPoisVisited = sessions.Count > 0 ? Math.Round(sessions.Average(s => (double)s.PoisVisited), 1) : 0,
+			avgDistanceMeters = sessions.Count > 0 ? Math.Round(sessions.Average(s => s.DistanceMeters)) : 0,
 			returningRate,
-			platformBreakdown = sessions.GroupBy(s => s.DevicePlatform).Select(g => new { platform = g.Key, count = g.Count() }).OrderByDescending(x => x.count),
-			topDevices = sessions.GroupBy(s => s.DeviceModel).Select(g => new { model = g.Key, count = g.Count() }).OrderByDescending(x => x.count).Take(5),
-			topManufacturers = sessions.GroupBy(s => s.Manufacturer).Select(g => new { manufacturer = g.Key, count = g.Count() }).OrderByDescending(x => x.count).Take(5),
-			languageBreakdown = sessions.GroupBy(s => s.LanguageUsed).Select(g => new { language = g.Key, count = g.Count() }).OrderByDescending(x => x.count)
+			platformBreakdown = sessions.GroupBy(s => s.DevicePlatform ?? "Unknown").Select(g => new { platform = g.Key, count = g.Count() }).OrderByDescending(x => x.count),
+			topDevices = sessions.GroupBy(s => s.DeviceModel ?? "Unknown").Select(g => new { model = g.Key, count = g.Count() }).OrderByDescending(x => x.count).Take(5),
+			topManufacturers = sessions.GroupBy(s => s.Manufacturer ?? "Unknown").Select(g => new { manufacturer = g.Key, count = g.Count() }).OrderByDescending(x => x.count).Take(5),
+			languageBreakdown = sessions.GroupBy(s => s.LanguageUsed ?? "vi").Select(g => new { language = g.Key, count = g.Count() }).OrderByDescending(x => x.count)
 		});
 	}
 
