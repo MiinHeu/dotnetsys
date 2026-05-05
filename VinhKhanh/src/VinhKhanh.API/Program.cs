@@ -241,7 +241,7 @@ try
                             IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[DeviceSessions]') AND type in (N'U'))
                             BEGIN
                                 CREATE TABLE [DeviceSessions] (
-                                    [Id] int NOT NULL IDENTITY,
+                                    [Id] bigint NOT NULL IDENTITY,
                                     [SessionId] nvarchar(128) NOT NULL,
                                     [DeviceModel] nvarchar(128) NULL,
                                     [DevicePlatform] nvarchar(32) NULL,
