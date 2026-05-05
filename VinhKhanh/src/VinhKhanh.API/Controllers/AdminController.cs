@@ -116,27 +116,13 @@ public class AdminController(ApplicationDbContext db, IConnectionTracker tracker
 			var q = db.DeviceSessions.AsNoTracking()
 				.Where(s => s.StartedAt >= since);
 
-			// Logic lọc Owner... (Bỏ qua tạm thời nếu lỗi)
+			/* // TẠM KHÓA LOGIC OWNER ĐỂ GIẢM THIỂU LỖI 500
 			var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
 			if (role == "Owner")
 			{
-				var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-				if (int.TryParse(userIdString, out var userId))
-				{
-					var ownerPoiIds = await db.Pois.IgnoreQueryFilters()
-						.Where(p => p.OwnerUserId == userId)
-						.Select(p => p.Id)
-						.ToListAsync(ct);
-
-					var relatedSessionIds = await db.PoiVisitLogs.IgnoreQueryFilters()
-						.Where(v => ownerPoiIds.Contains(v.PoiId) && v.VisitedAt >= since)
-						.Select(v => v.SessionId)
-						.Distinct()
-						.ToListAsync(ct);
-
-					q = q.Where(s => relatedSessionIds.Contains(s.SessionId));
-				}
+				...
 			}
+			*/
 
 			if (!string.IsNullOrWhiteSpace(platform))
 				q = q.Where(s => s.DevicePlatform == platform.Trim());
