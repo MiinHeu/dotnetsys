@@ -8,9 +8,10 @@ using VinhKhanh.Infrastructure.Data;
 namespace VinhKhanh.API.Controllers;
 
 [ApiController, Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
 public class AdminController(ApplicationDbContext db, IConnectionTracker tracker, IMemoryCache _cache) : ControllerBase
 {
+	[HttpGet("ping")]
+	public IActionResult Ping() => Ok(new { message = "Server is ALIVE", time = DateTime.UtcNow });
 	[HttpGet("summary")]
 	public async Task<IActionResult> Summary(CancellationToken ct = default)
 	{
