@@ -96,6 +96,7 @@ public class AdminController(ApplicationDbContext db, IConnectionTracker tracker
 		days = Math.Clamp(days, 1, 365);
 		var since = DateTime.UtcNow.AddDays(-days);
 
+		// Lấy danh sách thô trước, sau đó mới lọc (để tránh lỗi Join phức tạp trên SQL Server)
 		var q = db.DeviceSessions.AsNoTracking()
 			.Where(s => s.StartedAt >= since);
 
