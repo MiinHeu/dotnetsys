@@ -14,6 +14,45 @@ public static class DbSeeder
 		CancellationToken ct = default)
 	{
 		await SeedUsersAsync(db, forceDefaultCredentials, ct);
+		await SeedSessionsAsync(db, ct);
+	}
+
+	private static async Task SeedSessionsAsync(ApplicationDbContext db, CancellationToken ct)
+	{
+		// Chỉ tạo dữ liệu mẫu nếu bảng đang trống
+		if (await db.DeviceSessions.AnyAsync(ct)) return;
+
+		var rnd = new Random();
+		var platforms = new[] { "Android", "iOS" };
+		var models = new[] { "iPhone 15 Pro", "Samsung S24 Ultra", "Pixel 8 Pro", "iPhone 13", "Xiaomi 14" };
+		var manufacturers = new[] { "Apple", "Samsung", "Google", "Xiaomi" };
+		var languages = new[] { "vi", "en", "ko", "zh" };
+
+		for (int i = 0; i < 50; i++)
+		{
+			var startedAt = DateTime.UtcNow.AddDays(-rnd.Next(0, 30)).AddHours(-rnd.Next(0, 24));
+			var duration = rnd.Next(10, 120);
+			var platformIdx = rnd.Next(platforms.Length);
+
+			db.DeviceSessions.Add(new DeviceSession
+			{
+				SessionId = Guid.NewGuid().ToString(),
+				DeviceModel = models[rnd.Next(models.Length)],
+				DevicePlatform = platforms[platformIdx],
+				Manufacturer = manufacturers[platformIdx == 1 ? 0 : rnd.Next(1, manufacturers.Length)],
+				OsVersion = platformIdx == 1 ? "17.4" : "14.0",
+				AppVersion = "1.0.5",
+				LanguageUsed = languages[rnd.Next(languages.Length)],
+				StartedAt = startedAt,
+				EndedAt = startedAt.AddMinutes(duration),
+				LastHeartbeatAt = startedAt.AddMinutes(duration),
+				PoisVisited = rnd.Next(1, 8),
+				DistanceMeters = rnd.Next(200, 3500),
+				IsReturning = rnd.Next(0, 10) > 7
+			});
+		}
+
+		await db.SaveChangesAsync(ct);
 	}
 
 
