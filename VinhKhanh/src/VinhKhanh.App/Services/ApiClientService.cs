@@ -51,7 +51,7 @@ public sealed class ApiClientService
 
 	public async Task<IReadOnlyList<PoiSnapshot>> GetPoisAsync(string lang, CancellationToken ct = default)
 	{
-		using var http = CreateClient();
+		var http = CreateClient();
 		var url = $"api/poi?lang={Uri.EscapeDataString(lang)}&t={DateTime.UtcNow.Ticks}";
 		var list = await http.GetFromJsonAsync<List<PoiSnapshot>>(url, JsonOpts, ct);
 		return list ?? [];
@@ -59,7 +59,7 @@ public sealed class ApiClientService
 
 	public async Task<IReadOnlyList<TourSnapshot>> GetToursAsync(string lang, CancellationToken ct = default)
 	{
-		using var http = CreateClient();
+		var http = CreateClient();
 		var url = $"api/tour?lang={Uri.EscapeDataString(lang)}&t={DateTime.UtcNow.Ticks}";
 		var list = await http.GetFromJsonAsync<List<TourSnapshot>>(url, JsonOpts, ct);
 		return list ?? [];
@@ -67,7 +67,7 @@ public sealed class ApiClientService
 
 	public async Task<PoiSnapshot?> GetPoiAsync(int id, CancellationToken ct = default)
 	{
-		using var http = CreateClient();
+		var http = CreateClient();
 		var url = $"api/poi/{id}?t={DateTime.UtcNow.Ticks}";
 		return await http.GetFromJsonAsync<PoiSnapshot>(url, JsonOpts, ct);
 	}
@@ -75,7 +75,7 @@ public sealed class ApiClientService
 	public async Task<PoiSnapshot?> GetPoiByQrCodeAsync(string qrCode, CancellationToken ct = default)
 	{
 		var code = Uri.EscapeDataString(qrCode.Trim());
-		using var http = CreateClient();
+		var http = CreateClient();
 		var url = $"api/poi/qrcode/{code}?t={DateTime.UtcNow.Ticks}";
 		var res = await http.GetAsync(url, ct);
 		if (res.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
@@ -87,7 +87,7 @@ public sealed class ApiClientService
 	{
 		try
 		{
-			using var http = CreateClient();
+			var http = CreateClient();
 			var res = await http.PostAsJsonAsync("api/movement/batch", dto, ct);
 			return res.IsSuccessStatusCode;
 		}
@@ -101,7 +101,7 @@ public sealed class ApiClientService
 	{
 		try
 		{
-			using var http = CreateClient();
+			var http = CreateClient();
 			var res = await http.PostAsJsonAsync("api/history/log", dto, ct);
 			return res.IsSuccessStatusCode;
 		}
@@ -112,7 +112,7 @@ public sealed class ApiClientService
 	{
 		try
 		{
-			using var http = CreateClient();
+			var http = CreateClient();
 			var res = await http.PostAsJsonAsync("api/analytics/log", dto, ct);
 			return res.IsSuccessStatusCode;
 		}
@@ -138,7 +138,7 @@ public sealed class ApiClientService
 
 	public async Task<string?> ChatAsync(ChatRequest req, CancellationToken ct = default)
 	{
-		using var http = CreateClient();
+		var http = CreateClient();
 		var res = await http.PostAsJsonAsync("api/ai/chat", req, ct);
 		res.EnsureSuccessStatusCode();
 		var json = await res.Content.ReadAsStringAsync(ct);
