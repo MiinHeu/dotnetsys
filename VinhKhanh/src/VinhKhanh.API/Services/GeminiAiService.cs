@@ -51,8 +51,8 @@ public class GeminiAiService(
 
             var payload = new { contents };
 
-            // Switch to v1 stable API
-            var url = $"https://generativelanguage.googleapis.com/v1/models/{_model}:generateContent?key={cleanKey}";
+            // Switch to v1beta API to support gemini-1.5-flash and newer models
+            var url = $"https://generativelanguage.googleapis.com/v1beta/models/{_model}:generateContent?key={cleanKey}";
             
             using var http = httpClientFactory.CreateClient();
             using var response = await http.PostAsJsonAsync(url, payload);
