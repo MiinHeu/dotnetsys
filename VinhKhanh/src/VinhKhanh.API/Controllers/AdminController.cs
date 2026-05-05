@@ -182,62 +182,65 @@ public class AdminController(ApplicationDbContext db, IConnectionTracker tracker
 		}
 	}
 
-	[Authorize(Roles = "Admin")]
+	[Authorize(Roles = "Admin,Owner")]
 	[HttpGet("sessions/stats")]
-	public async Task<IActionResult> GetSessionStats(
-		[FromQuery] int days = 30,
-		CancellationToken ct = default)
+	public async Task<IActionResult> GetSessionStats([FromQuery] int days = 30, CancellationToken ct = default)
 	{
-		days = Math.Clamp(days, 1, 365);
-		var since = DateTime.UtcNow.AddDays(-days);
-
-		List<DeviceSession> sessions;
 		try
 		{
-			sessions = await db.DeviceSessions.AsNoTracking()
+			days = Math.Clamp(days, 1, 365);
+			var since = DateTime.UtcNow.AddDays(-days);
+
+			var sessions = await db.DeviceSessions.AsNoTracking()
 				.Where(s => s.StartedAt >= since)
 				.ToListAsync(ct);
+
+			if (sessions.Count == 0)
+			{
+				return Ok(new
+				{
+					totalSessions = 0,
+					avgDurationMinutes = 0,
+					avgPoisVisited = 0,
+					avgDistanceMeters = 0,
+					returningRate = 0,
+					platformBreakdown = new List<object>(),
+					topDevices = new List<object>(),
+					topManufacturers = new List<object>(),
+					languageBreakdown = new List<object>()
+				});
+			}
+
+			var ended = sessions.Where(s => s.EndedAt != null).ToList();
+			var avgDuration = ended.Count > 0
+				? Math.Round(ended.Average(s => (s.EndedAt!.Value - s.StartedAt).TotalMinutes), 1)
+				: 0;
+
+			var returningRate = sessions.Count > 0 
+				? Math.Round(100.0 * sessions.Count(s => s.IsReturning) / sessions.Count, 1)
+				: 0;
+
+			return Ok(new
+			{
+				totalSessions = sessions.Count,
+				avgDurationMinutes = avgDuration,
+				avgPoisVisited = sessions.Count > 0 ? Math.Round(sessions.Average(s => (double)s.PoisVisited), 1) : 0,
+				avgDistanceMeters = sessions.Count > 0 ? Math.Round(sessions.Average(s => s.DistanceMeters)) : 0,
+				returningRate,
+				platformBreakdown = sessions.GroupBy(s => s.DevicePlatform ?? "Unknown").Select(g => new { platform = g.Key, count = g.Count() }).OrderByDescending(x => x.count),
+				topDevices = sessions.GroupBy(s => s.DeviceModel ?? "Unknown").Select(g => new { model = g.Key, count = g.Count() }).OrderByDescending(x => x.count).Take(5),
+				topManufacturers = sessions.GroupBy(s => s.Manufacturer ?? "Unknown").Select(g => new { manufacturer = g.Key, count = g.Count() }).OrderByDescending(x => x.count).Take(5),
+				languageBreakdown = sessions.GroupBy(s => s.LanguageUsed ?? "vi").Select(g => new { language = g.Key, count = g.Count() }).OrderByDescending(x => x.count)
+			});
 		}
 		catch (Exception ex)
 		{
-			return StatusCode(500, new { message = "Database error: DeviceSessions table might be missing.", details = ex.Message });
-		}
-
-		if (sessions.Count == 0)
-			return Ok(new
-			{
-				totalSessions = 0,
-				avgDurationMinutes = 0.0,
-				avgPoisVisited = 0.0,
-				avgDistanceMeters = 0.0,
-				returningRate = 0.0,
-				platformBreakdown = Array.Empty<object>(),
-				topDevices = Array.Empty<object>(),
-				topManufacturers = Array.Empty<object>(),
-				languageBreakdown = Array.Empty<object>()
+			return StatusCode(500, new { 
+				message = "LỖI TẠI STATS", 
+				error = ex.Message, 
+				inner = ex.InnerException?.Message 
 			});
-
-		var ended = sessions.Where(s => s.EndedAt != null).ToList();
-		var avgDuration = ended.Count > 0
-			? Math.Round(ended.Average(s => (s.EndedAt!.Value - s.StartedAt).TotalMinutes), 1)
-			: 0;
-
-		var returningRate = sessions.Count > 0 
-			? Math.Round(100.0 * sessions.Count(s => s.IsReturning) / sessions.Count, 1)
-			: 0;
-
-		return Ok(new
-		{
-			totalSessions = sessions.Count,
-			avgDurationMinutes = avgDuration,
-			avgPoisVisited = sessions.Count > 0 ? Math.Round(sessions.Average(s => (double)s.PoisVisited), 1) : 0,
-			avgDistanceMeters = sessions.Count > 0 ? Math.Round(sessions.Average(s => s.DistanceMeters)) : 0,
-			returningRate,
-			platformBreakdown = sessions.GroupBy(s => s.DevicePlatform ?? "Unknown").Select(g => new { platform = g.Key, count = g.Count() }).OrderByDescending(x => x.count),
-			topDevices = sessions.GroupBy(s => s.DeviceModel ?? "Unknown").Select(g => new { model = g.Key, count = g.Count() }).OrderByDescending(x => x.count).Take(5),
-			topManufacturers = sessions.GroupBy(s => s.Manufacturer ?? "Unknown").Select(g => new { manufacturer = g.Key, count = g.Count() }).OrderByDescending(x => x.count).Take(5),
-			languageBreakdown = sessions.GroupBy(s => s.LanguageUsed ?? "vi").Select(g => new { language = g.Key, count = g.Count() }).OrderByDescending(x => x.count)
-		});
+		}
 	}
 
 	[Authorize(Roles = "Admin")]
