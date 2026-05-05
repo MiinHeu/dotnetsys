@@ -146,7 +146,7 @@ public sealed class ApiClientService
 	public async Task<string?> ChatAsync(ChatRequest req, CancellationToken ct = default)
 	{
 		var http = CreateClient();
-		var url = $"{GetBaseUrl()}api/ai/chat";
+		var url = $"{GetBaseUrl().TrimEnd('/')}/api/ai/chat";
 		var res = await http.PostAsJsonAsync(url, req, ct);
 		res.EnsureSuccessStatusCode();
 		var json = await res.Content.ReadAsStringAsync(ct);

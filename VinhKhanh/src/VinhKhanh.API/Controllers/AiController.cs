@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VinhKhanh.API.Services;
 using VinhKhanh.Infrastructure.Data;
@@ -6,7 +6,7 @@ using VinhKhanh.Shared.DTOs;
 
 namespace VinhKhanh.API.Controllers;
 
-[ApiController, Route("api/[controller]")]
+[ApiController, Route("api/ai")]
 public class AiController(
 	ApplicationDbContext db,
 	IAiService ai,
