@@ -10,10 +10,7 @@ public class GeminiAiService(
     IHttpClientFactory httpClientFactory,
     ILogger<GeminiAiService> logger) : IAiService
 {
-    // DÁN API KEY GEMINI CỦA BẠN VÀO ĐÂY ĐỂ CHẠY TRỰC TIẾP
-    private const string HardcodedKey = "AIzaSyANpxjWGGoyIvfSJhcYSBxWYOMAmclUAJ8"; 
-
-    private readonly string? _apiKey = string.IsNullOrWhiteSpace(HardcodedKey) ? cfg["Gemini:ApiKey"] : HardcodedKey;
+    private readonly string? _apiKey = cfg["Gemini:ApiKey"];
     private readonly string _model = string.IsNullOrWhiteSpace(cfg["Gemini:Model"]) ? "gemini-1.5-flash" : cfg["Gemini:Model"].Trim();
 
     public async Task<string> ChatAsync(string system, string user, List<MessageHistory>? history = null)
