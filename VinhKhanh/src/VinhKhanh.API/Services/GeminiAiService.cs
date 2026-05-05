@@ -78,7 +78,7 @@ public class GeminiAiService(
             {
                 var error = await response.Content.ReadAsStringAsync();
                 logger.LogError("Gemini Chat API Error: Status={Status}, Detail={Detail}, URL_Model={Model}", response.StatusCode, error, _model);
-                return $"Bé Vinh gặp lỗi kết nối (Mã: {(int)response.StatusCode}, Model: {_model}). Bạn hãy kiểm tra lại cấu hình trên Azure nhé.";
+                return $"Bé Vinh (v1beta) gặp lỗi kết nối (Mã: {(int)response.StatusCode}, Model: {_model}). Bạn hãy kiểm tra lại cấu hình trên Azure nhé.";
             }
 
             var result = await response.Content.ReadFromJsonAsync<JsonElement>();
