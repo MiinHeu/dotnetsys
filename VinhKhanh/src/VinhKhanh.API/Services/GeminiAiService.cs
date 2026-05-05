@@ -11,7 +11,7 @@ public class GeminiAiService(
     ILogger<GeminiAiService> logger) : IAiService
 {
     private readonly string? _apiKey = cfg["Gemini:ApiKey"];
-    private readonly string _model = cfg["Gemini:Model"] ?? "gemini-1.5-flash";
+    private readonly string _model = string.IsNullOrWhiteSpace(cfg["Gemini:Model"]) ? "gemini-1.5-flash" : cfg["Gemini:Model"].Trim();
 
     public async Task<string> ChatAsync(string system, string user, List<MessageHistory>? history = null)
     {

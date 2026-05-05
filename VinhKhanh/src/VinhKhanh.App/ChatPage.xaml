@@ -33,26 +33,26 @@
                         Margin="15"
                         ItemsUpdatingScrollMode="KeepLastItemInView">
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:ChatMessage">
-                    <Grid Margin="0,5">
-                        <!-- Bot Message Container -->
-                        <VerticalStackLayout HorizontalOptions="Start" 
+                <DataTemplate>
+                    <Grid Margin="0,5" ColumnDefinitions="*, *">
+                        <!-- Bot Message (Left Column) -->
+                        <VerticalStackLayout Grid.Column="0" 
+                                             HorizontalOptions="Start" 
                                              IsVisible="{Binding IsBot}" 
-                                             Spacing="2" 
-                                             MaximumWidthRequest="300">
+                                             Spacing="2">
                             <Label Text="Bé Vinh" FontSize="10" TextColor="#64748B" Margin="10,0"/>
                             <Border BackgroundColor="#F1F5F9" StrokeThickness="0" StrokeShape="RoundRectangle 16,16,16,2" Padding="12,8">
-                                <Label Text="{Binding Content}" TextColor="#1E293B" FontSize="15" LineBreakMode="WordWrap"/>
+                                <Label Text="{Binding Content}" TextColor="#1E293B" FontSize="15"/>
                             </Border>
                         </VerticalStackLayout>
 
-                        <!-- User Message Container -->
-                        <VerticalStackLayout HorizontalOptions="End" 
+                        <!-- User Message (Right Column) -->
+                        <VerticalStackLayout Grid.Column="1" 
+                                             HorizontalOptions="End" 
                                              IsVisible="{Binding IsUser}" 
-                                             Spacing="2" 
-                                             MaximumWidthRequest="300">
+                                             Spacing="2">
                             <Border BackgroundColor="#EA580C" StrokeThickness="0" StrokeShape="RoundRectangle 16,16,2,16" Padding="12,8">
-                                <Label Text="{Binding Content}" TextColor="White" FontSize="15" LineBreakMode="WordWrap"/>
+                                <Label Text="{Binding Content}" TextColor="White" FontSize="15"/>
                             </Border>
                         </VerticalStackLayout>
                     </Grid>
