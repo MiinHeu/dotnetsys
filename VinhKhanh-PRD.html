@@ -10,38 +10,38 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
     :root {
-      /* Premium Light Theme Color Palette */
-      --bg-base: #f8fafc;
+      /* Clean Professional Theme */
+      --bg-base: #ffffff;
       --bg-surface: #ffffff;
-      --bg-elevated: #f1f5f9;
-      --border-subtle: rgba(0, 0, 0, 0.08);
-      --border-strong: rgba(0, 0, 0, 0.15);
+      --bg-elevated: #f8f9fa;
+      --border-subtle: #e9ecef;
+      --border-strong: #dee2e6;
 
-      /* Typography Colors */
-      --text-primary: #0f172a;
-      --text-secondary: #334155;
-      --text-muted: #64748b;
+      /* Typography */
+      --text-primary: #212529;
+      --text-secondary: #495057;
+      --text-muted: #868e96;
 
-      /* Accent Colors - Elegant Indigo & Teal */
-      --accent-primary: #4f46e5;
-      --accent-glow: rgba(79, 70, 229, 0.15);
-      --success: #059669;
-      --warning: #d97706;
-      --danger: #dc2626;
+      /* Accent — Neutral Slate Blue */
+      --accent-primary: #364fc7;
+      --accent-glow: rgba(54, 79, 199, 0.08);
+      --success: #2b8a3e;
+      --warning: #e67700;
+      --danger: #c92a2a;
 
-      /* Shadows & Radii */
-      --radius-sm: 6px;
-      --radius-md: 12px;
-      --radius-lg: 16px;
-      --shadow-glow: 0 10px 40px -10px var(--accent-glow);
+      /* Layout */
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --shadow-glow: 0 1px 3px rgba(0, 0, 0, 0.08);
 
-      /* Legacy aliases - dùng cho các class cũ */
-      --bg3: #f1f5f9;
-      --bd: rgba(0, 0, 0, 0.12);
-      --tm: #475569;
-      --p: #4f46e5;
-      --pl: #9333ea;
-      --tx: #0f172a;
+      /* Legacy aliases */
+      --bg3: #f8f9fa;
+      --bd: #dee2e6;
+      --tm: #495057;
+      --p: #364fc7;
+      --pl: #5c7cfa;
+      --tx: #212529;
     }
 
     * {
@@ -63,9 +63,7 @@
       font-size: 15px;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      background-image:
-        radial-gradient(circle at 15% 50%, rgba(129, 140, 248, 0.03), transparent 25%),
-        radial-gradient(circle at 85% 30%, rgba(52, 211, 153, 0.03), transparent 25%);
+      background-image: none;
     }
 
     /* Navigation - Glassmorphism */
@@ -75,7 +73,7 @@
       left: 0;
       right: 0;
       z-index: 1000;
-      background: rgba(255, 255, 255, 0.85);
+      background: #ffffff;
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border-subtle);
@@ -134,13 +132,14 @@
       border-bottom: 1px solid var(--border-subtle);
       position: relative;
       overflow: hidden;
-      background: linear-gradient(180deg, rgba(18, 18, 20, 0) 0%, rgba(18, 18, 20, 0.4) 100%);
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
     }
 
     .htag {
       display: inline-block;
-      background: var(--accent-glow);
-      border: 1px solid rgba(129, 140, 248, 0.3);
+      background: #f1f3f5;
+      border: 1px solid #dee2e6;
       color: var(--accent-primary);
       padding: 6px 16px;
       border-radius: 20px;
@@ -157,16 +156,12 @@
       letter-spacing: -0.03em;
       line-height: 1.1;
       margin-bottom: 1rem;
-      background: linear-gradient(to right, #fff, #94a3b8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #212529;
     }
 
     .hero h1 span {
       display: block;
-      background: linear-gradient(to right, #818cf8, #c084fc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #364fc7;
     }
 
     .hsub {
@@ -220,7 +215,7 @@
       padding: 2rem;
       margin: 2rem auto;
       max-width: 1100px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
     }
 
     .toc h2 {
@@ -261,7 +256,7 @@
       border-radius: var(--radius-md);
       padding: 1.5rem;
       text-align: center;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
       backdrop-filter: blur(10px);
     }
 
@@ -342,7 +337,7 @@
 
     .card:hover {
       border-color: var(--border-strong);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
     .card h3 {
@@ -399,7 +394,7 @@
 
     /* Logic Box */
     .logic-box {
-      background: linear-gradient(to right, rgba(129, 140, 248, 0.05), transparent);
+      background: #f8f9fa;
       border-left: 3px solid var(--accent-primary);
       border-radius: 0 var(--radius-md) var(--radius-md) 0;
       padding: 1.2rem 1.5rem;
@@ -459,7 +454,7 @@
     }
 
     tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
+      background: #f8f9fa;
     }
 
     code {
@@ -544,7 +539,7 @@
     }
 
     .fc:hover {
-      transform: translateY(-2px);
+      transform: none;
       border-color: var(--border-strong);
     }
 
@@ -658,21 +653,20 @@
     <h1>Hệ Thống Thuyết Minh Đa Ngôn Ngữ<br><span>Phố Ẩm Thực Vĩnh Khánh</span></h1>
     <p class="hsub">Giải pháp hướng dẫn tham quan dựa trên vị trí — GPS · AI · Đa ngôn ngữ · C# .NET 10</p>
     <div class="brow">
-      <span class="badge o">.NET 9 LTS</span><span class="badge o">C# 12</span><span class="badge o">ASP.NET Core
-        9</span>
-      <span class="badge b">React 19 + TypeScript</span><span class="badge b">.NET MAUI 9</span><span
+      <span class="badge o">.NET 10 LTS</span><span class="badge o">C# 14</span><span class="badge o">ASP.NET Core
+        10</span>
+      <span class="badge b">React 19 + TypeScript</span><span class="badge b">.NET MAUI 10</span><span
         class="badge b">SignalR</span>
-      <span class="badge g">Azure SQL (Production)</span><span class="badge g">EF Core 9</span><span
-        class="badge g">Redis
-        8 (Stub)</span>
-      <span class="badge v">OpenRouter (Aggregator)</span><span class="badge v">Microsoft Translator</span><span
+      <span class="badge g">SQLite (Persistent)</span><span class="badge g">EF Core 10</span><span class="badge g">Redis
+        8</span>
+      <span class="badge v">Google Gemini 1.5 Flash</span><span class="badge v">Ollama llama3.2:3b</span><span
         class="badge o">JWT Bearer + BCrypt</span>
     </div>
   </div>
 
   <div class="stats">
     <div class="sc">
-      <div class="n">30+</div>
+      <div class="n">35+</div>
       <div class="l">Chức năng</div>
     </div>
     <div class="sc">
@@ -684,7 +678,7 @@
       <div class="l">Ngôn ngữ</div>
     </div>
     <div class="sc">
-      <div class="n">50+</div>
+      <div class="n">54</div>
       <div class="l">API Endpoints</div>
     </div>
     <div class="sc">
@@ -692,7 +686,7 @@
       <div class="l">DB Tables</div>
     </div>
     <div class="sc">
-      <div class="n">13</div>
+      <div class="n">14</div>
       <div class="l">Controllers</div>
     </div>
     <div class="sc">
@@ -723,7 +717,7 @@
       <a href="#ch13">13 · Class Diagrams</a>
       <a href="#ch14">14 · Kiến Trúc Hệ Thống</a>
       <a href="#ch15">15 · Database Schema (ER)</a>
-      <a href="#ch16">16 · API Endpoints (50+)</a>
+      <a href="#ch16">16 · API Endpoints (54)</a>
       <a href="#ch17">17 · Technology Stack</a>
       <a href="#ch18">18 · Yêu Cầu Phi Chức Năng</a>
     </div>
@@ -803,23 +797,18 @@
           </tr>
           <tr>
             <td>Database (Prod)</td>
-            <td>Azure SQL (SQL Server)</td>
-            <td>Lưu trữ dữ liệu đám mây trên Azure (Centralized Database)</td>
+            <td>SQLite (Persistent)</td>
+            <td>Lưu trữ POI, Tour, Users, Logs (Azure Persistent)</td>
           </tr>
           <tr>
-            <td>Database (Local)</td>
+            <td>Database (Dev)</td>
             <td>SQLite</td>
-            <td>Development database & Local App Cache (SQLite)</td>
+            <td>Development database (DEBUG mode)</td>
           </tr>
           <tr>
             <td>AI Services</td>
-            <td>OpenRouter (Aggregator)</td>
-            <td>Tích hợp Gemini, Groq, DeepSeek thông qua một cổng duy nhất</td>
-          </tr>
-          <tr>
-            <td>Translation</td>
-            <td>Microsoft Translator</td>
-            <td>Dịch vụ dịch thuật chính chủ từ Azure Cognitive Services</td>
+            <td>Gemini 1.5 Flash (primary) / Ollama (Local AI)</td>
+            <td>AI Chatbot + Auto-Translation</td>
           </tr>
           <tr>
             <td>Cache</td>
@@ -859,7 +848,7 @@
             <td>.NET MAUI 10 (Android/iOS)</td>
             <td>End-user — đi dạo phố ẩm thực</td>
             <td>Nghe thuyết minh GPS tự động, quét QR, hỏi AI chatbot, xem bản đồ, theo tour, cài đặt ngôn ngữ/TTS, sync
-              offline</td>
+              offline, hộ chiếu du lịch, onboarding</td>
           </tr>
           <tr>
             <td><span class="tag to">Chủ Quán (Owner)</span></td>
@@ -873,7 +862,7 @@
             <td>Web React 19</td>
             <td>Quản trị viên hệ thống</td>
             <td>Quản lý toàn bộ POI/Tour/Users, dashboard, bulk translate, tạo/khóa tài khoản, seed database, analytics
-              &amp; history</td>
+              &amp; history, quản lý phiên du khách</td>
           </tr>
           <tr>
             <td><span class="tag tan">System</span></td>
@@ -916,7 +905,7 @@
     }
 
     .uc-note {
-      background: rgba(129, 140, 248, 0.06);
+      background: #f8f9fa;
       border-left: 3px solid var(--accent-primary);
       padding: .8rem 1rem;
       margin: .8rem 0;
@@ -2669,6 +2658,55 @@
     </div>
   </div>
 
+    <div class="card">
+      <h3>📲 5.4 QR Landing Page &amp; App Distribution</h3>
+      <p>Luồng dành cho khách mới: Quét mã QR tại thực địa bằng ứng dụng Camera để tải ứng dụng. Server tự động nhận diện thiết bị và điều hướng đến file cài đặt (APK/Store).</p>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — QR App Download Flow</div>
+        <div class="mermaid">
+          sequenceDiagram
+          actor KH as Khách Tham Quan
+          participant Cam as Camera App (iOS/Android)
+          participant API as AppDownloadController
+          participant Web as Landing Page (Static)
+          participant Store as File Storage (Server/Store)
+
+          KH->>Cam: Mở Camera & Quét mã QR tại quán
+          Cam->>Cam: "Nhận diện URL"
+          Cam->>API: Download()
+          activate API
+          
+          Note over API: Kiểm tra User-Agent (Android/iOS)
+          
+          alt Is Android
+              API-->>Cam: Redirect("/files/vinhkhanh.apk")
+              Cam->>Store: DownloadFile()
+              Store-->>KH: "Bắt đầu tải xuống APK"
+          else Is Other (iOS/Web)
+              API-->>Cam: Redirect("/landing")
+              Cam->>Web: LoadLandingPage()
+              Web-->>KH: "Hiển thị trang giới thiệu"
+          end
+          deactivate API
+
+          Note over KH: Khách cài đặt & mở App lần đầu
+          KH->>KH: Cấp quyền GPS & Bắt đầu Tour
+        </div>
+      </div>
+      <div class="logic-box">
+        <h4>🧠 Giải Thích Chi Tiết — Luồng Phân Phối Ứng Dụng</h4>
+        <ol>
+          <li><strong>Nhận diện thông minh (Device Detection):</strong> Server sử dụng <code>User-Agent</code> để quyết
+            định đích đến. Nếu là Android, hệ thống ưu tiên đẩy file APK trực tiếp để khách cài đặt ngay tại chỗ.</li>
+          <li><strong>Trang đệm (Landing Page):</strong> Đối với các thiết bị khác, hệ thống chuyển hướng về một trang
+            Web tĩnh giới thiệu về Phố Vĩnh Khánh, cung cấp các lựa chọn thay thế hoặc hướng dẫn cài đặt thủ công.</li>
+          <li><strong>Tối ưu hóa chuyển đổi (Conversion):</strong> Việc sử dụng Redirect 302 giúp rút ngắn hành trình của
+            khách từ lúc nhìn thấy mã QR đến lúc có App trong máy xuống mức tối thiểu (chỉ 1-2 lần chạm).</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== CH06 AI ===== -->
   <div class="sec" id="ch06">
     <div class="sh">
@@ -4045,7 +4083,6 @@
           participant Web as "Web Admin (React)"
           participant API as PoiController
           participant AI as ResilientTranslationService
-          participant MS as MicrosoftTranslator
           participant DB as ApplicationDbContext
 
           ADM->>Web: "Click 'Bulk Translate' (Overwrite: false)"
@@ -4057,8 +4094,6 @@
           API->>API: Check if translation exists
           alt "Missing or Overwrite == true"
           API->>AI: "TranslateAsync(description, 'vi', lang)"
-          AI->>MS: "Translate(text, 'vi', lang)"
-          MS-->>AI: return translatedText
           AI-->>API: return translatedText
           API->>API: "poi.Translations.Add/Update(lang)"
           end
@@ -4160,25 +4195,25 @@
         <div class="dt">State Diagram — GPS Service</div>
         <div class="mermaid">
           stateDiagram-v2
-          [*] --> Chờ : Ứng dụng khởi động
-          Chờ --> XinQuyền : Bắt đầu theo dõi vị trí
-          XinQuyền --> BịTừChối : Người dùng từ chối
-          XinQuyền --> KhởiĐộng : Được cấp quyền
-          BịTừChối --> XinQuyền : Người dùng mở Cài đặt
-          KhởiĐộng --> ĐangTheoDõi : Đã kết nối GPS
-          KhởiĐộng --> GiảLập : Bật chế độ giả lập
-          ĐangTheoDõi --> ĐangTheoDõi : Cập nhật vị trí mỗi 3 giây
-          ĐangTheoDõi --> MấtTínHiệu : Mất GPS hơn 30 giây
-          MấtTínHiệu --> ĐangTheoDõi : GPS phục hồi
-          ĐangTheoDõi --> DừngLại : Dừng theo dõi
-          GiảLập --> DừngLại : Dừng theo dõi
-          DừngLại --> [*]
-          note right of ĐangTheoDõi
+          [*] --> Idle : Ứng dụng khởi động
+          Idle --> RequestPermission : Bắt đầu theo dõi
+          RequestPermission --> Denied : Người dùng từ chối
+          RequestPermission --> Starting : Được cấp quyền
+          Denied --> RequestPermission : Mở Cài đặt
+          Starting --> Tracking : Đã kết nối GPS
+          Starting --> Mocking : Bật giả lập
+          Tracking --> Tracking : Cập nhật mỗi 3s
+          Tracking --> ConnectionLost : Mất tín hiệu > 30s
+          ConnectionLost --> Tracking : GPS phục hồi
+          Tracking --> Stopped : Dừng theo dõi
+          Mocking --> Stopped : Dừng theo dõi
+          Stopped --> [*]
+          note right of Tracking
           Gửi thông báo vị trí mới
           Lưu điểm vào bộ đệm
           Đủ 25 điểm hoặc 30 giây → gửi lên máy chủ
           end note
-          note right of GiảLập
+          note right of Mocking
           Chạy lộ trình mô phỏng
           5 điểm dừng, mỗi 1.5 giây
           Dùng để kiểm thử và demo
@@ -4191,14 +4226,14 @@
           hướng:</p>
         <ol>
           <li><strong>Khởi động an toàn:</strong> Từ trạng thái <code>Idle</code>, hệ thống buộc phải đi qua bước
-            <code>RequestingPermission</code>. Chỉ khi du khách cho phép truy cập vị trí "Luôn luôn", dịch vụ mới chuyển
+            <code>RequestPermission</code>. Chỉ khi du khách cho phép truy cập vị trí "Luôn luôn", dịch vụ mới chuyển
             sang trạng thái <code>Starting</code>.
           </li>
           <li><strong>Duy trì kết nối (Tracking State):</strong> Đây là trạng thái hoạt động chính. Mỗi khi có tọa độ
             mới, hệ thống sẽ thực hiện một chu kỳ: Lấy vị trí -> Kiểm tra Geofence -> Lưu Buffer -> Gửi Batch. Nếu tín
-            hiệu GPS bị mất quá 30 giây, App tự động chuyển sang trạng thái <code>Lost</code> để cảnh báo người dùng.
+            hiệu GPS bị mất quá 30 giây, App tự động chuyển sang trạng thái <code>ConnectionLost</code> để cảnh báo người dùng.
           </li>
-          <li><strong>Chế độ Giả lập (Mock Mode):</strong> Đây là trạng thái đặc biệt dành cho việc kiểm thử hoặc trình
+          <li><strong>Chế độ Giả lập (Mocking):</strong> Đây là trạng thái đặc biệt dành cho việc kiểm thử hoặc trình
             diễn. Thay vì lấy tọa độ thật, App sẽ "tự diễn" theo một lộ trình có sẵn, giúp Admin có thể kiểm tra logic
             Geofence ngay cả khi đang ngồi trong văn phòng.</li>
           <li><strong>Dừng dịch vụ (Stopped):</strong> Khi khách thoát App hoặc tắt tính năng theo dõi,
@@ -4208,62 +4243,33 @@
         </ol>
       </div>
       <div class="dw">
-        <div class="dt">Sequence Diagram — Luồng Khởi Động &amp; Vận Hành GPS</div>
-        <div class="mermaid">
+          <div class="dt">Sequence Diagram 12.1 — GPS Tracking & Background Service</div>
+          <div class="mermaid">
           sequenceDiagram
-          autonumber
-          participant User as Du Khách
-          participant App as MauiApp
+          participant User as Tourist
           participant GPS as GpsService
-          participant FG as GpsForegroundService
-          participant Perm as Permissions API
+          participant FG as BackgroundService
           participant Msg as WeakReferenceMessenger
-          participant Buffer as MovementBuffer
           participant API as MovementController
 
-          User->>App: Mở ứng dụng
-          App->>GPS: StartTrackingAsync()
-          alt Chế độ Mock bật
-          GPS->>GPS: RunRouteSimulationAsync()
-          loop Mỗi 1.5 giây
-          GPS->>Msg: Publish(lat, lon)
-          Msg-->>App: LocationUpdatedMessage
-          end
-          else Android thật
-          GPS->>Perm: RequestAsync LocationAlways
-          alt Được cấp quyền
-          Perm-->>GPS: Granted
+          User->>GPS: StartTrackingAsync()
           GPS->>FG: StartForegroundService()
-          FG->>FG: Notification "Đang theo dõi vị trí"
-          loop Mỗi 3 giây
-          FG->>Msg: Publish(lat, lon)
-          Msg-->>App: LocationUpdatedMessage
-          end
-          else Bị từ chối
-          Perm-->>GPS: Denied
-          GPS->>Perm: RequestAsync LocationWhenInUse
-          end
-          else iOS thật
-          GPS->>Perm: RequestAsync LocationAlways
-          Perm-->>GPS: Granted
-          GPS->>GPS: StartIosLoopAsync()
-          loop Mỗi 1.5 giây
-          GPS->>GPS: Geolocation.GetLocationAsync()
-          GPS->>Msg: Publish(lat, lon)
-          end
+          
+          loop Every 3 seconds
+            FG->>GPS: OnLocationChanged
+            GPS->>Msg: "Send LocationUpdatedMessage"
+            Note over GPS: Buffer.Add(location)
           end
 
-          Note over Buffer: Lưu điểm vào bộ đệm
-          App->>Buffer: Thêm tọa độ mới
-          alt Đủ 25 điểm hoặc 30 giây
-          Buffer->>API: POST /api/movement/batch
-          API-->>Buffer: 200 OK
+          alt Buffer.Count >= 25 OR Elapsed > 30s
+            GPS->>API: "POST /api/movement/batch (List-Location)"
+            API-->>GPS: 200 OK
+            Note over GPS: Clear Buffer
           end
 
-          User->>App: Thoát ứng dụng
-          App->>GPS: StopTrackingAsync()
+          User->>GPS: StopTrackingAsync()
           GPS->>FG: StopService()
-        </div>
+          </div>
       </div>
     </div>
 
@@ -4273,22 +4279,22 @@
         <div class="dt">State Diagram — POI Geofence (per POI)</div>
         <div class="mermaid">
           stateDiagram-v2
-          [*] --> BênNgoài : Điểm tham quan được tải
-          BênNgoài --> ĐangTiếpCận : Khoảng cách nhỏ hơn bán kính
-          ĐangTiếpCận --> BênNgoài : Đi ra ngoài vùng đệm thoát
-          ĐangTiếpCận --> ĐangXácNhận : Lần va chạm thứ nhất
-          ĐangXácNhận --> BênNgoài : Đi ra ngoài vùng đệm thoát
-          ĐangXácNhận --> ĐãKíchHoạt : Đủ 2 lần liên tiếp và không trong thời gian chờ
-          ĐãKíchHoạt --> ĐangChờ : Phát thuyết minh và ghi nhận lượt tham quan
-          ĐangChờ --> BênNgoài : Hết thời gian chờ
-          ĐangChờ --> ĐangChờ : Tín hiệu GPS tiếp tục (bỏ qua)
-          note right of ĐãKíchHoạt
+          [*] --> Outside : POI được tải
+          Outside --> Approaching : Khoảng cách < Bán kính
+          Approaching --> Outside : Đi ra vùng đệm
+          Approaching --> Validating : Va chạm lần 1
+          Validating --> Outside : Đi ra vùng đệm
+          Validating --> Triggered : Đủ 2 lần liên tiếp
+          Triggered --> Cooldown : Phát thuyết minh
+          Cooldown --> Outside : Hết thời gian chờ
+          Cooldown --> Cooldown : Tiếp tục ở trong (bỏ qua)
+          note right of Triggered
           Loại kích hoạt: GPS
           Đưa vào hàng đợi thuyết minh
           Ghi nhận lượt tham quan
           Bắt đầu đếm thời gian chờ
           end note
-          note right of ĐangChờ
+          note right of Cooldown
           Mặc định: 60 giây
           Có thể cấu hình theo từng điểm
           Tránh phát thuyết minh lặp lại
@@ -4315,49 +4321,36 @@
         </ol>
       </div>
       <div class="dw">
-        <div class="dt">Sequence Diagram — Luồng Kích Hoạt Geofence POI</div>
+        <div class="dt">Sequence Diagram 12.2 — Geofence Trigger & Priority Filter</div>
         <div class="mermaid">
           sequenceDiagram
-          autonumber
           participant GPS as GpsService
           participant GF as GeofenceService
-          participant Math as GeoMath.Haversine
+          participant Math as GeoMath (Haversine)
           participant CD as CooldownStore
           participant NQ as NarrationService
           participant Log as AnalyticsController
 
           GPS->>GF: CheckTriggeredAsync(location, pois)
-          GF->>GF: Kiểm tra Global Cooldown (10s)
-          alt Đang trong Global Cooldown
-          GF-->>GPS: Trả về danh sách rỗng
-          else Hết Global Cooldown
-          loop Với mỗi POI trong danh sách
-          GF->>Math: Haversine(userLat, userLon, poiLat, poiLon)
-          Math-->>GF: distance (mét)
-          alt distance > adjustedRadius VÀ chưa ở trong
-          GF->>GF: Reset consecutiveHits = 0
-          else distance > exitRadius VÀ đang ở trong
-          GF->>GF: Xóa khỏi insidePoiIds (Hysteresis 1.2x)
-          GF->>GF: Reset consecutiveHits = 0
-          else Lọt vào vùng kích hoạt
-          GF->>GF: consecutiveHits++
-          alt consecutiveHits < 2 Note over GF: Chờ lần va chạm tiếp theo else consecutiveHits>= 2
-            GF->>CD: Kiểm tra CooldownSeconds
-            alt Đang trong Cooldown
-            Note over GF: Bỏ qua POI này
-            else Hết Cooldown
-            GF->>GF: Thêm vào insidePoiIds
-            GF->>GF: So sánh Priority + Distance
-            Note over GF: Chọn bestPoi có Priority cao nhất
+          
+          loop Foreach poi in pois
+            GF->>Math: Haversine(location, poi)
+            opt distance <= poi.TriggerRadius
+                GF->>CD: IsOnCooldown(poi.Id)
+                opt Not On Cooldown
+                    Note over GF: Add to candidates
+                end
             end
-            end
-            end
-            end
-            GF->>GF: Ghi nhận lastTriggered + lastGlobalTrigger
-            GF-->>GPS: Trả về [bestPoi]
+          end
+
+          alt candidates.Any()
+            GF->>GF: SortByPriorityAndDistance()
+            GF-->>GPS: return bestPoi
             GPS->>NQ: EnqueueAsync(bestPoi, language)
-            GPS->>Log: POST /api/analytics/log
-            end
+            GPS->>Log: POST /api/analytics/log (GPS_TRIGGER)
+          else Empty
+            GF-->>GPS: return null
+          end
         </div>
       </div>
     </div>
@@ -4410,62 +4403,28 @@
         </ol>
       </div>
       <div class="dw">
-        <div class="dt">Sequence Diagram — Luồng Đồng Bộ Online/Offline &amp; Outbox</div>
-        <div class="mermaid">
+          <div class="dt">Sequence Diagram 12.3 — Connectivity & Outbox Sync</div>
+          <div class="mermaid">
           sequenceDiagram
-          autonumber
-          participant App as MauiApp
-          participant Conn as ConnectivityService
-          participant Net as Connectivity API
-          participant Cache as LocalPoiCacheService
-          participant API as ApiClientService
+          participant App as MAUI App
           participant Outbox as OutboxService
-          participant Server as ASP.NET Core API
+          participant DB as SQLite (Local)
+          participant API as OutboxController
 
-          App->>Conn: Khởi tạo (đăng ký ConnectivityChanged)
-          Net-->>Conn: ConnectivityChanged(Internet)
-          Conn->>API: GetPoisAsync(lang)
-          API->>Server: GET /api/poi?lang=vi
-          Server-->>API: List Poi + Translations
-          API-->>Conn: remote pois
-          Conn->>Conn: So sánh ContentVersion (Delta Sync)
-          alt Có POI mới hoặc cập nhật
-          Conn->>Cache: SavePoisAsync(remote)
-          Cache->>Cache: Ghi vào SQLite cục bộ
-          Conn->>API: GetToursAsync(lang)
-          API->>Server: GET /api/tour
-          Server-->>API: List Tour
-          Conn->>Cache: SaveToursAsync(tours)
+          Note over App, DB: [Khi mất mạng]
+          App->>Outbox: EnqueueVisitAsync(log)
+          Outbox->>DB: INSERT INTO OutboxItems
+          
+          Note over App, API: [Khi có mạng trở lại]
+          loop Mỗi 30 giây (Polling)
+            Outbox->>DB: GetPendingItems()
+            DB-->>Outbox: List of OutboxItems
+            loop Foreach item
+                Outbox->>API: POST /api/outbox/process
+                API-->>Outbox: 200 OK
+                Outbox->>DB: DELETE FROM OutboxItems
+            end
           end
-
-          Note over Outbox: Flush dữ liệu tồn đọng
-          Net-->>Outbox: Có mạng trở lại
-          Outbox->>Outbox: Lấy items từ SQLite (max 50)
-          loop Với mỗi OutboxItem
-          alt Kind = movement
-          Outbox->>Server: POST /api/movement/batch
-          else Kind = history
-          Outbox->>Server: POST /api/history/log
-          else Kind = visit
-          Outbox->>Server: POST /api/analytics/log
-          end
-          alt Gửi thành công
-          Server-->>Outbox: 200 OK
-          Outbox->>Outbox: DELETE item khỏi SQLite
-          else Gửi thất bại
-          Outbox->>Outbox: RetryCount++ (Backoff 10s/30s/60s/300s/900s)
-          alt RetryCount >= 5
-          Outbox->>Outbox: Xóa bỏ (discard)
-          end
-          end
-          end
-
-          Note over App: Khi mất mạng
-          Net-->>App: ConnectivityChanged(None)
-          App->>Cache: LoadPoisAsync() từ SQLite
-          Cache-->>App: Dữ liệu offline sẵn sàng
-          App->>Outbox: EnqueueVisitAsync(visitLog)
-          Outbox->>Outbox: Lưu vào SQLite chờ gửi
         </div>
       </div>
     </div>
@@ -4476,24 +4435,23 @@
         <div class="dt">State Diagram — NarrationService Queue</div>
         <div class="mermaid">
           stateDiagram-v2
-          [*] --> Rảnh : Dịch vụ sẵn sàng
-          Rảnh --> ĐangXửLý : Có yêu cầu phát thuyết minh mới
-          ĐangXửLý --> TảiÂmThanh : Điểm có file âm thanh sẵn
-          ĐangXửLý --> DịchNộiDung : Không có file, ngôn ngữ khác tiếng Việt
-          ĐangXửLý --> ĐọcTiếngViệt : Không có file, ngôn ngữ tiếng Việt
-          TảiÂmThanh --> PhátFile : Tải thành công
-          TảiÂmThanh --> DịchNộiDung : Tải thất bại
-          DịchNộiDung --> ĐọcGiọngTổngHợp : Nhận được bản dịch
-          DịchNộiDung --> ĐọcGiọngTổngHợp : Tất cả dịch vụ lỗi, dùng tiếng Việt gốc
-          PhátFile --> KiểmTraHàngĐợi : Phát xong
-          ĐọcGiọngTổngHợp --> KiểmTraHàngĐợi : Đọc xong
-          ĐọcTiếngViệt --> KiểmTraHàngĐợi : Đọc xong
-          PhátFile --> BịNgắt : Có nội dung ưu tiên cao hơn
-          ĐọcGiọngTổngHợp --> BịNgắt : Có nội dung ưu tiên cao hơn
-          BịNgắt --> ĐangXửLý : Xử lý nội dung ưu tiên cao hơn
-          KiểmTraHàngĐợi --> ĐangXửLý : Còn nội dung trong hàng đợi
-          KiểmTraHàngĐợi --> Rảnh : Hàng đợi trống
-          note right of ĐangXửLý
+          [*] --> Idle : Dịch vụ sẵn sàng
+          Idle --> Processing : Có yêu cầu mới
+          Processing --> AudioLoading : Có file âm thanh
+          Processing --> Translating : Ngôn ngữ khác (không file)
+          Processing --> TtsVietnamese : Tiếng Việt (không file)
+          AudioLoading --> PlayingAudio : Tải thành công
+          AudioLoading --> Translating : Tải thất bại
+          Translating --> PlayingTts : Nhận bản dịch
+          PlayingAudio --> CheckQueue : Phát xong
+          PlayingTts --> CheckQueue : Đọc xong
+          TtsVietnamese --> CheckQueue : Đọc xong
+          PlayingAudio --> Interrupted : Ưu tiên cao hơn
+          PlayingTts --> Interrupted : Ưu tiên cao hơn
+          Interrupted --> Processing : Xử lý POI mới
+          CheckQueue --> Processing : Còn hàng chờ
+          CheckQueue --> Idle : Hàng chờ trống
+          note right of Processing
           Khóa đơn luồng, tránh phát chồng
           Sắp xếp theo độ ưu tiên
           Cửa sổ chống trùng 25 giây
@@ -4509,7 +4467,7 @@
             kiệm tài nguyên.</li>
           <li><strong>Xử lý thông minh (Processing):</strong> Khi có POI mới vào hàng đợi, hệ thống chuyển sang
             <code>Processing</code>. Tại đây, nó quyết định sẽ phát file MP3 (<code>PlayingAudio</code>) hay gọi AI đọc
-            văn bản (<code>PlayingTTS</code>).
+            văn bản (<code>PlayingTts</code>).
           </li>
           <li><strong>Cơ chế ngắt quãng (Interrupted):</strong> Nếu có một thông báo quan trọng hơn xuất hiện, trạng
             thái hiện tại sẽ bị chuyển sang <code>Interrupted</code>. Hệ thống dừng âm thanh cũ ngay lập tức để ưu tiên
@@ -4519,8 +4477,8 @@
         </ol>
       </div>
       <div class="dw">
-        <div class="dt">Sequence Diagram — Luồng Xử Lý Hàng Đợi Thuyết Minh</div>
-        <div class="mermaid">
+          <div class="dt">Sequence Diagram 12.4 — Narration Queue & Priority Logic</div>
+          <div class="mermaid">
           sequenceDiagram
           autonumber
           participant GF as GeofenceService
@@ -4528,66 +4486,47 @@
           participant Gate as SemaphoreSlim
           participant AC as AudioCacheService
           participant Player as IAudioPlayer
-          participant Trans as TranslationController
           participant TTS as TextToSpeech API
 
           GF->>NS: EnqueueAsync(poi, language)
-          NS->>NS: BuildKey(poiId, lang)
-          alt Key đã có trong hàng đợi
-          NS-->>GF: Bỏ qua (trùng lặp)
-          else Key trong DuplicateWindow 25s
-          NS-->>GF: Bỏ qua (vừa phát)
-          else Hợp lệ
-          NS->>NS: Thêm vào queue + Sort theo Priority
-          alt POI mới có Priority cao hơn đang phát
-          NS->>NS: InterruptIfHigherPriority()
-          NS->>Player: Stop() + Dispose()
-          end
-          NS->>NS: ProcessQueueAsync()
-          end
-
-          loop Còn item trong queue
-          NS->>Gate: WaitAsync() - Khóa đơn luồng
-          NS->>NS: Lấy item đầu tiên từ queue
-
-          alt POI có AudioUrl
-          NS->>AC: GetAudioPathAsync(url, highPriority)
-          alt File đã cache trên thiết bị
-          AC-->>NS: localPath
-          NS->>Player: CreatePlayer(FileStream)
-          Player->>Player: Play()
-          Note over Player: Phát file MP3
-          else Tải thất bại
-          Note over NS: Fallback sang TTS
-          end
-          else Không có AudioUrl
-          alt Ngôn ngữ = Tiếng Việt
-          NS->>TTS: SpeakAsync(description, rate=0.92)
-          TTS-->>NS: Đọc xong
-          else Ngôn ngữ khác
-          NS->>NS: ResolveDescription(lang)
-          alt Có bản dịch sẵn trong DB
-          NS->>TTS: SpeakAsync(translatedText, locale)
-          else Chưa có bản dịch
-          NS->>Trans: POST /api/translation/text
-          Trans-->>NS: translatedText
-          alt Dịch thành công
-          NS->>TTS: SpeakAsync(translatedText, locale)
-          else Dịch thất bại
-          NS->>TTS: SpeakAsync(originalVietnamese)
-          end
-          end
-          end
+          NS->>NS: BuildKey(id, lang)
+          
+          alt _queuedKeys.Contains(key) OR RecentlyPlayed < 25s
+              NS-->>GF: Discard Request
+          else Valid Request
+              NS->>NS: Add to Queue + Sort by Priority
+              NS->>NS: InterruptIfHigherPriority(poi.Priority)
+              opt New Priority > Current
+                  NS->>NS: StopAsync()
+                  NS->>Player: Stop() + Dispose()
+              end
+              NS->>NS: ProcessQueueAsync()
           end
 
-          NS->>NS: recentlyPlayed[key] = now
-          NS->>Gate: Release()
-          alt Còn item tiếp theo
-          NS->>NS: Delay 3 giây (khoảng nghỉ)
+          loop while Queue is not empty
+              NS->>Gate: WaitAsync()
+              NS->>NS: Pop first item
+              
+              alt poi.AudioUrl != null
+                  NS->>AC: GetAudioPathAsync(url)
+                  AC-->>NS: localPath (Stream)
+                  NS->>Player: CreatePlayer(stream)
+                  NS->>Player: Play()
+                  Note over Player: Playing MP3 File
+              else AudioUrl == null (TTS Fallback)
+                  NS->>NS: ResolveDescription(lang)
+                  NS->>TTS: SpeakAsync(text, options)
+                  TTS-->>NS: Completion
+              end
+
+              NS->>NS: Set recently played timestamp
+              NS->>Gate: Release()
+              opt has next item
+                  NS->>NS: Task.Delay(3000)
+              end
           end
-          end
-          Note over NS: Queue trống → trở về Idle
-        </div>
+          Note over NS: Queue empty -> Idle
+          </div>
       </div>
     </div>
 
@@ -4597,22 +4536,22 @@
         <div class="dt">State Diagram — Tour Following</div>
         <div class="mermaid">
           stateDiagram-v2
-          [*] --> ChưaBắtĐầu : Tour được chọn
-          ChưaBắtĐầu --> ĐangThựcHiện : Người dùng nhấn "Bắt đầu Tour"
-          ĐangThựcHiện --> ĐiĐếnĐiểmDừng : Bắt đầu từ điểm dừng đầu tiên
-          ĐiĐếnĐiểmDừng --> ĐãĐếnNơi : GPS phát hiện vào vùng điểm dừng
-          ĐãĐếnNơi --> ĐangPhátThuyếtMinh : Bắt đầu phát thuyết minh
-          ĐangPhátThuyếtMinh --> ChờTạiĐiểm : Phát thuyết minh xong
-          ChờTạiĐiểm --> ĐiĐếnĐiểmDừng : Chuyển sang điểm tiếp theo
-          ChờTạiĐiểm --> HoànThành : Đã đến điểm dừng cuối cùng
-          ĐangThựcHiện --> ĐãHủy : Người dùng nhấn "Dừng Tour"
-          HoànThành --> [*]
-          ĐãHủy --> [*]
-          note right of ĐiĐếnĐiểmDừng
+          [*] --> NotStarted : Tour được chọn
+          NotStarted --> InProgress : Bắt đầu Tour
+          InProgress --> Navigating : Đi đến điểm tiếp theo
+          Navigating --> Arrived : Vào vùng Geofence
+          Arrived --> Narrating : Phát thuyết minh
+          Narrating --> Waiting : Chờ tại điểm (stayMinutes)
+          Waiting --> Navigating : Chuyển sang điểm tiếp theo
+          Waiting --> Completed : Hết danh sách điểm dừng
+          InProgress --> Cancelled : Dừng Tour
+          Completed --> [*]
+          Cancelled --> [*]
+          note right of Navigating
           Hiển thị tên quán tiếp theo
           GPS liên tục kiểm tra vùng phát hiện
           end note
-          note right of HoànThành
+          note right of Completed
           Hiển thị thông báo hoàn thành
           Xóa lộ trình đang theo dõi
           end note
@@ -4635,58 +4574,35 @@
           </li>
         </ol>
       </div>
-      <div class="dw">
-        <div class="dt">Sequence Diagram — Luồng Theo Dõi Tour Tham Quan</div>
-        <div class="mermaid">
+          <div class="dt">Sequence Diagram 12.5 — Tour Execution & Auto-Navigation</div>
+          <div class="mermaid">
           sequenceDiagram
-          autonumber
-          participant User as Du Khách
+          participant User as Tourist
           participant VM as TourViewModel
           participant GPS as GpsService
           participant GF as GeofenceService
           participant NS as NarrationService
-          participant ST as SessionTrackingService
-          participant API as TourController
 
-          User->>VM: Chọn Tour từ danh sách
-          VM->>API: GET /api/tour (load stops)
-          API-->>VM: Tour + List TourStop
-          VM->>VM: Sắp xếp Stops theo SortOrder
-          VM->>VM: currentStopIndex = 0
-          User->>VM: Nhấn "Bắt đầu Tour"
-          VM->>GPS: Bắt đầu theo dõi vị trí
-
-          loop Với mỗi TourStop
-          VM->>VM: Hiển thị tên quán tiếp theo
-          loop GPS cập nhật liên tục
-          GPS-->>VM: LocationUpdatedMessage
-          VM->>GF: CheckTriggeredAsync(location, [currentStop.Poi])
-          alt Chưa vào vùng Geofence
-          GF-->>VM: Danh sách rỗng
-          Note over VM: Tiếp tục chờ
-          else Đã vào vùng Geofence
-          GF-->>VM: [triggeredPoi]
-          VM->>NS: EnqueueAsync(poi, language)
-          NS->>NS: Phát thuyết minh (Audio/TTS)
-          NS-->>VM: Phát xong
-          VM->>ST: IncrementPoisVisited()
-          VM->>VM: currentStopIndex++
-          alt Còn Stop tiếp theo
-          Note over VM: Chuyển sang điểm kế tiếp
-          else Hết tất cả Stops
-          VM->>VM: Tour = Completed
-          VM->>User: Hiển thị thông báo hoàn thành
+          User->>VM: Start Tour
+          VM->>GPS: StartTrackingAsync()
+          
+          loop Foreach TourStop
+              VM->>VM: Set target = stop.Poi
+              loop Every location update
+                  GPS-->>VM: OnLocationUpdated
+                  VM->>GF: CheckTriggeredAsync(location, [target])
+                  alt Target Reached
+                      GF-->>VM: return target
+                      VM->>NS: EnqueueAsync(target, lang)
+                      Note over VM: Move to Next Stop
+                  else Navigating
+                      Note over VM: Update distance to target
+                  end
+              end
           end
-          end
-          end
-          end
-
-          alt Người dùng nhấn Dừng Tour
-          User->>VM: Nhấn "Dừng Tour"
-          VM->>VM: Xóa lộ trình đang theo dõi
+          
+          User->>VM: Stop Tour
           VM->>GPS: StopTrackingAsync()
-          VM->>VM: Tour = Cancelled
-          end
         </div>
       </div>
     </div>
@@ -4732,7 +4648,7 @@
           +string ImageUrl
           +string AudioViUrl
           +string QrCode
-          +PoiCategory Category
+          +string Category
           +bool IsActive
           +int ContentVersion
           +int OwnerUserId
@@ -4741,7 +4657,7 @@
           +List~PoiTranslation~ Translations
           +List~PoiVisitLog~ VisitLogs
           +List~TourStop~ TourStops
-          +CompareTo(Poi) int
+          +"CompareTo(Poi) int"
           }
           class PoiTranslation {
           +int Id
@@ -4816,7 +4732,7 @@
           +string Manufacturer
           +DateTime StartedAt
           +DateTime LastHeartbeatAt
-          +DateTime? EndedAt
+          +DateTime EndedAt
           +int PoisVisited
           +double DistanceMeters
           +string LanguageUsed
@@ -4865,37 +4781,42 @@
         <div class="dt">Class Diagram — Backend Services</div>
         <div class="mermaid">
           classDiagram
-          class ITranslationService {
-          &lt;&lt;interface&gt;&gt;
-          +Task~string~ TranslateAsync(string text, string from, string to)
+          class Poi {
+          id : int
+          name : string
           }
-          class MicrosoftTranslatorService {
-          +Task~string~ TranslateAsync(string text, string from, string to)
+          class PoiTranslation {
+          id : int
+          languageCode : string
+          }
+          class ITranslationService {
+          <<interface>>
+          TranslateAsync(text, from, to) Task
           }
           class ResilientTranslationService {
-          -List~ITranslationService~ _providers
-          +Task~string~ TranslateAsync(string text, string from, string to)
+          TranslateAsync(text, from, to) Task
           }
           class IAiService {
-          &lt;&lt;interface&gt;&gt;
-          +Task~string~ ChatAsync(string system, string user)
-          }
-          class OpenRouterAiService {
-          +Task~string~ ChatAsync(string system, string user)
+          <<interface>>
+          ChatAsync(system, user) Task
           }
           class GeminiAiService {
-          +Task~string~ ChatAsync(string system, string user)
+          ChatAsync(system, user) Task
           }
           class ITtsService {
-          &lt;&lt;interface&gt;&gt;
-          +Task~byte_array~ SynthesizeAsync(string text, string lang)
+          <<interface>>
+          SynthesizeAsync(text, lang) Task
           }
           class VoiceRssTtsService {
-          +Task~byte_array~ SynthesizeAsync(string text, string lang)
+          SynthesizeAsync(text, lang) Task
           }
-          ITranslationService <|.. MicrosoftTranslatorService : implements ITranslationService <|..
-            ResilientTranslationService : implements IAiService <|.. OpenRouterAiService : implements IAiService <|..
-            GeminiAiService : implements ITtsService <|.. VoiceRssTtsService : implements </div>
+          class ApplicationDbContext {
+          pois : DbSet~Poi~
+          poiTranslations : DbSet~PoiTranslation~
+          }
+          ITranslationService <|.. ResilientTranslationService
+          IAiService <|.. GeminiAiService
+          ITtsService <|.. VoiceRssTtsService
         </div>
         <div class="logic-box">
           <h4>🧠 Giải Thích Chi Tiết — Kiến Trúc Backend Services</h4>
@@ -4919,6 +4840,10 @@
               <code>Global Query Filters</code>, tự động loại bỏ các POI/Tour đã bị ẩn (IsActive=false) khỏi mọi kết quả
               tìm kiếm mà không cần viết thêm điều kiện <code>Where</code> ở khắp nơi.
             </li>
+            <li><strong>Caching thông minh:</strong> <code>IMemoryCache</code> được sử dụng trong
+              <code>AdminController</code> (cache summary stats 5 phút) và <code>AnalyticsController</code> (cache
+              heatmap data 30 giây) để giảm tải database queries cho các dashboard real-time.
+            </li>
           </ol>
         </div>
       </div>
@@ -4929,38 +4854,84 @@
           <div class="dt">Class Diagram — MAUI Services</div>
           <div class="mermaid">
             classDiagram
-            class Poi
-            class Location
+            class Poi {
+            id : int
+            name : string
+            }
+            class Location {
+            latitude : double
+            longitude : double
+            }
             class IGpsService {
-            &lt;&lt;interface&gt;&gt;
-            +Task StartTrackingAsync()
-            +Task StopTrackingAsync()
+            <<interface>>
+            StartTrackingAsync() Task
+            StopTrackingAsync() Task
             }
             class GpsService {
-            +Task StartTrackingAsync()
-            +Task StopTrackingAsync()
+            StartTrackingAsync() Task
+            StopTrackingAsync() Task
             }
             class IGeofenceService {
-            &lt;&lt;interface&gt;&gt;
-            +Task~List_Poi~ CheckTriggeredAsync(Location loc, List_Poi pois)
+            <<interface>>
+            CheckTriggeredAsync(location, pois) Task
             }
             class GeofenceService {
-            +Task~List_Poi~ CheckTriggeredAsync(Location loc, List_Poi pois)
+            CheckTriggeredAsync(location, pois) Task
             }
             class INarrationService {
-            &lt;&lt;interface&gt;&gt;
-            +Task EnqueueAsync(Poi poi, string lang)
-            +bool IsPlaying
+            <<interface>>
+            EnqueueAsync(poi, lang) Task
+            InterruptIfHigherPriority(priority) void
+            isPlaying : bool
             }
             class NarrationService {
-            +Task EnqueueAsync(Poi poi, string lang)
+            EnqueueAsync(poi, lang) Task
+            InterruptIfHigherPriority(priority) void
             }
             class AudioCacheService {
-            +Task PreFetchAsync(string url)
+            PreFetchAsync(url) Task
+            GetAudioPathAsync(url) Task
             }
-            IGpsService <|.. GpsService : implements IGeofenceService <|.. GeofenceService : implements
-              INarrationService <|.. NarrationService : implements GeofenceService --> INarrationService : "triggers"
-              NarrationService --> AudioCacheService : "uses"
+            class SessionService {
+            sessionId : string
+            }
+            class SessionTrackingService {
+            StartSessionAsync() Task
+            EndSessionAsync() Task
+            IncrementPoisVisited() void
+            }
+            class RealtimeService {
+            StartAsync() Task
+            }
+            class ConnectivityService {
+            TrySyncPoiAsync(lang) Task
+            TrySyncToursAsync(lang) Task
+            }
+            class OutboxService {
+            EnqueueAsync(endpoint, dto) Task
+            FlushAsync() Task
+            }
+            class LocalDbService {
+            GetPoisAsync() Task
+            GetVisitedPoiIdsAsync() Task
+            }
+            class GeofenceCooldownStore {
+            IsOnCooldown(poiId) bool
+            SetCooldown(poiId, seconds) void
+            }
+            class RoutingService {
+            GetWalkingRouteAsync(waypoints) Task
+            }
+            IGpsService <|.. GpsService
+            IGeofenceService <|.. GeofenceService
+            INarrationService <|.. NarrationService
+            GeofenceService --> INarrationService : "triggers"
+            GeofenceService --> GeofenceCooldownStore : "cooldown"
+            NarrationService --> AudioCacheService : "cache"
+            SessionTrackingService --> SessionService : "session ID"
+            NarrationService --> SessionTrackingService : "log visit"
+            ConnectivityService --> LocalDbService : "save POIs"
+            ConnectivityService --> NarrationService : "prefetch"
           </div>
         </div>
         <div class="logic-box">
@@ -4982,6 +4953,16 @@
             <li><strong>Giao tiếp thời gian thực:</strong> <code>RealtimeService</code> duy trì một kết nối SignalR ổn
               định. Khi Admin thay đổi thực đơn của một quán ăn trên Web, App sẽ nhận được tín hiệu và âm thầm cập nhật
               lại dữ liệu trong SQLite, giúp thông tin luôn tươi mới.</li>
+            <li><strong>Theo dõi phiên du khách:</strong> <code>SessionTrackingService</code> tự động thu thập thông tin
+              thiết bị (model, platform, OS, manufacturer) khi mở App, gửi heartbeat mỗi 60 giây, và ghi nhận khi đóng
+              App. Giúp Admin phân tích hành vi tham quan chi tiết.</li>
+            <li><strong>Hộ chiếu du lịch:</strong> <code>PassportViewModel</code> sử dụng <code>LocalDbService</code> để
+              so sánh danh sách POI với danh sách đã ghé thăm, hiển thị tem kỹ thuật số cho từng quán ăn.</li>
+            <li><strong>Điều hướng thực tế:</strong> <code>RoutingService</code> kết nối với OSRM API để lấy đường đi bộ
+              thực tế (GeoJSON) giữa các điểm dừng, thay vì vẽ đường thẳng đơn thuần trên bản đồ.</li>
+            <li><strong>Delta Sync thông minh:</strong> <code>ConnectivityService</code> so sánh ContentVersion giữa
+              server
+              và local để chỉ tải về những POI có thay đổi, tiết kiệm băng thông đáng kể.</li>
           </ol>
         </div>
       </div>
@@ -5010,25 +4991,26 @@
             end
             subgraph SERVER["☁️ Server Infrastructure"]
             subgraph API_LAYER["🔧 API Layer"]
-            ASPNET["ASP.NET Core 9\nWeb API\nPort 8080"]
+            ASPNET["ASP.NET Core 10\nWeb API\nPort 5000/443"]
             SIGNALR["SignalR Hub\nVinhKhanhHub\n/hubs/vinh-khanh"]
             SCALAR["Scalar API Docs\n/scalar"]
             HEALTH["Health Check\n/health"]
             end
             subgraph DATA_LAYER["💾 Data Layer"]
-            AZURE_SQL["Azure SQL Database\nProduction DB\n(SQL Server)"]
+            PG["SQLite (Persistent)\nProduction DB\nPersistent Path: /home"]
             SQLITE["SQLite\nDevelopment DB\napp.db"]
-            REDIS["MemoryCache\nInternal Cache\n(Stubbed Redis)"]
+            REDIS["Redis 8\nCache Layer\nPort 6379"]
             FS["File System\nwwwroot/audio\nwwwroot/images"]
             end
-            subgraph AI_LAYER["🤖 AI Layer (Multi-Provider)"]
-            OPENROUTER["OpenRouter AI\nAggregator\n(Gemini/DeepSeek)"]
-            MS_TRANS["Microsoft Translator\nAzure Cognitive"]
-            OLLAMA["Ollama Server\n(Local Backup)"]
+            subgraph AI_LAYER["🤖 AI Layer (PoC)"]
+            OLLAMA["Ollama Server\nllama3.2:3b\nPort 11434"]
+            LIBRE["LibreTranslate\nPort 5001"]
             end
             end
-            subgraph CLOUD["☁️ Global Services"]
-            AZURE_APP["Azure App Service\n(Web Apps)"]
+            subgraph CLOUD["☁️ Cloud Services (Production)"]
+            GEMINI_AI["Google Gemini AI\ngemini-1.5-flash\nPrimary AI + Translation"]
+            AZURE_TTS["Azure Cognitive\nSpeech Services"]
+            MS_TRANS["Microsoft Translator\nCognitive Services"]
             VOICERSS["VoiceRSS TTS\nAPI"]
             end
             ANDROID -->|"HTTPS REST\nJWT Bearer"| ASPNET
@@ -5036,14 +5018,17 @@
             BROWSER -->|"HTTPS REST + WS\nJWT Bearer"| ASPNET
             ANDROID -->|"SignalR WSS"| SIGNALR
             BROWSER -->|"SignalR WSS"| SIGNALR
-            ASPNET --> AZURE_SQL
+            ASPNET --> PG
             ASPNET --> SQLITE
             ASPNET --> REDIS
             ASPNET --> FS
-            ASPNET --> OPENROUTER
-            ASPNET --> MS_TRANS
-            ASPNET --> OLLAMA
-            ASPNET --> VOICERSS
+            ASPNET -->|"Primary AI"| GEMINI_AI
+            ASPNET -->|"PoC"| OLLAMA
+            ASPNET -->|"PoC"| LIBRE
+            ASPNET -->|"Production"| AZURE_AI
+            ASPNET -->|"Production"| AZURE_TTS
+            ASPNET -->|"Fallback"| MS_TRANS
+            ASPNET -->|"TTS"| VOICERSS
           </div>
         </div>
       </div>
@@ -5128,41 +5113,59 @@
       <div class="card">
         <h3>⚡ 14.3 Real-time Connectivity (Online Devices)</h3>
         <div class="dw">
-          <div class="dt">Sequence Diagram — Online Device Tracking</div>
+          <div class="dt">Sequence Diagram 14.3a — Luồng Theo Dõi Thiết Bị (Real-time Online)</div>
           <div class="mermaid">
             sequenceDiagram
             participant App as 📱 Tourist App (Mobile)
-            participant Admin as 💻 Admin Dashboard (Web)
-            box "🔧 Backend Service Layer"
             participant Hub as ⚡ VinhKhanhHub
             participant Tracker as 📊 ConnectionTracker
             participant API as 🌐 AdminController
+            participant Admin as 💻 Admin Dashboard
+
+            Note over App, Hub: [Kết nối]
+            App->>Hub: Connect (SignalR)
+            Hub->>Tracker: AddConnection(Id)
+            
+            loop Mỗi 10 giây (Polling)
+                Admin->>API: "GET /api/admin/summary"
+                API->>Tracker: GetOnlineCount()
+                Tracker-->>API: "return _connections.Count"
+                API-->>Admin: "JSON { activeUsers }"
             end
 
-            Note over App, Admin: [Giai đoạn 1] Kết nối Real-time (SignalR)
-            App->>Hub: HubConnection.StartAsync()
-            activate Hub
-            Hub->>Tracker: OnConnectedAsync() -> AddConnection(ID)
-            Admin->>Hub: useSignalR() -> Connect
-            Hub->>Tracker: OnConnectedAsync() -> AddConnection(ID)
-            deactivate Hub
+            Note over App, Hub: [Ngắt kết nối]
+            App-xHub: Disconnect
+            Hub->>Tracker: RemoveConnection(Id)
+          </div>
+        </div>
 
-            Note over Admin, API: [Giai đoạn 2] Hiển thị chỉ số (Polling)
-            loop Mỗi 10 giây (TanStack Query)
-            Admin->>API: HTTP GET Summary()
-            activate API
-            API->>Tracker: GetOnlineCount()
-            Tracker-->>API: return _connections.Count
-            API-->>Admin: JSON { activeUsers: N }
-            Admin->>Admin: UpdateUI()
-            deactivate API
+        <div class="dw">
+          <div class="dt">Sequence Diagram 14.3b — Luồng Thống Kê Lượt Nghe (Visit Statistics)</div>
+          <div class="mermaid">
+            sequenceDiagram
+            participant App as 📱 Tourist App
+            participant API_A as 🌐 AnalyticsController
+            participant API_S as 🌐 AdminController
+            participant DB as 💾 Azure SQL DB
+            participant Admin as 💻 Admin Dashboard
+
+            Note over App, DB: [Ghi nhận khi khách nghe]
+            App->>API_A: POST /api/analytics/log
+            activate API_A
+            API_A->>DB: INSERT INTO PoiVisitLogs
+            DB-->>API_A: Success
+            API_A-->>App: 200 OK
+            deactivate API_A
+
+            Note over Admin, DB: [Cập nhật Dashboard]
+            loop Mỗi 10 giây (Polling)
+                Admin->>API_S: GET /api/admin/summary
+                activate API_S
+                API_S->>DB: CountAsync (PoiVisitLogs)
+                DB-->>API_S: return totalVisits
+                API_S-->>Admin: JSON { totalVisits }
+                deactivate API_S
             end
-
-            Note over App, Hub: [Giai đoạn 3] Ngắt kết nối
-            App-xHub: HubConnection.StopAsync()
-            activate Hub
-            Hub->>Tracker: OnDisconnectedAsync() -> RemoveConnection(ID)
-            deactivate Hub
           </div>
         </div>
 
@@ -5176,7 +5179,7 @@
               <code>ConnectionTracker</code> lưu trữ vào <code>ConcurrentDictionary</code> trong RAM.
             </li>
             <li><strong>Chỉ số thực tế (Real-time Accuracy):</strong> Dashboard hiển thị chính xác số lượng các kết nối
-              SignalR hiện đang duy trì với máy chủ, không thông qua các cơ chế ảo hóa con số.</li>
+              SignalR hiện đang duy trì với máy chủ, đảm bảo tính trung thực của dữ liệu báo cáo.</li>
             <li><strong>Cơ chế cập nhật (Pull vs Push):</strong> Thay vì Hub chủ động Broadcast (gây tốn băng thông),
               Admin Dashboard sử dụng TanStack Query để kéo (Pull) dữ liệu từ endpoint <code>/api/admin/summary</code>.
               Điều này giúp Dashboard luôn đồng bộ với các thông số thống kê khác (POI, Tours, Visits).</li>
@@ -5198,28 +5201,28 @@
             </tr>
             <tr>
               <td><code>VinhKhanh.API</code></td>
-              <td>ASP.NET Core 9</td>
-              <td>Controllers, SignalR Hub, Services (OpenRouter, MicrosoftTranslator, Audio), Program.cs</td>
+              <td>ASP.NET Core 10</td>
+              <td>13 Controllers, SignalR Hub, Services (AI/TTS/Translation/Gemini), Program.cs</td>
             </tr>
             <tr>
               <td><code>VinhKhanh.App</code></td>
-              <td>.NET MAUI 9</td>
-              <td>ViewModels, Services, Pages, Platforms (Android/iOS)</td>
+              <td>.NET MAUI 10</td>
+              <td>5 ViewModels, 15 Services, 7 Pages, Platforms (Android/iOS)</td>
             </tr>
             <tr>
               <td><code>vinh-khanh-web</code></td>
               <td>React 19 + Vite 6</td>
-              <td>Pages, hooks (useSignalR, useAuth), Zustand store, TanStack Query</td>
+              <td>19 Pages, hooks (useSignalR, useAuth), Zustand store, TanStack Query</td>
             </tr>
             <tr>
               <td><code>VinhKhanh.Shared</code></td>
-              <td>.NET 9 ClassLib</td>
+              <td>.NET 10 ClassLib</td>
               <td>DTOs (AllDtos.cs), GeoMath.cs (Haversine)</td>
             </tr>
             <tr>
               <td><code>VinhKhanh.Infrastructure</code></td>
-              <td>.NET 9 ClassLib</td>
-              <td>ApplicationDbContext (SQL Server support), DbSeeder</td>
+              <td>.NET 10 ClassLib</td>
+              <td>ApplicationDbContext, EF Core Migrations, DbSeeder</td>
             </tr>
           </table>
         </div>
@@ -5284,7 +5287,7 @@
             PoiVisitLog {
             int Id PK
             int PoiId FK
-            string SessionId FK
+            string SessionId
             string LanguageCode
             string TriggerType
             int ListenDurationSeconds
@@ -5355,9 +5358,6 @@
             Poi ||--o{ TourStop : "included in"
             Tour ||--o{ TourStop : "contains stops"
             Tour ||--o{ TourTranslation : "has translations"
-            DeviceSession ||--o{ PoiVisitLog : "owns logs"
-            DeviceSession ||--o{ MovementLog : "owns movements"
-            DeviceSession ||--o{ AppHistoryLog : "owns history"
           </div>
         </div>
       </div>
@@ -5441,8 +5441,8 @@
             </tr>
             <tr>
               <td><code>DeviceSessions</code></td>
-              <td>Quản lý phiên của khách (bigint Id bắt buộc trên SQL Server)</td>
-              <td>INDEX(SessionId), INDEX(StartedAt)</td>
+              <td>Quản lý vòng đời và thông tin thiết bị của khách</td>
+              <td>INDEX(SessionId), INDEX(StartedAt), INDEX(DevicePlatform)</td>
             </tr>
           </table>
         </div>
@@ -5463,7 +5463,7 @@
             </tr>
             <tr>
               <td><code>PoiVisitLog.TriggerType</code></td>
-              <td>GPS, QR, Manual</td>
+              <td>GPS, QR, MANUAL</td>
             </tr>
             <tr>
               <td><code>AppHistoryLog.EventType</code></td>
@@ -5485,7 +5485,7 @@
         <div class="sn">16</div>
         <div>
           <h2>API Endpoints</h2>
-          <p>Tất cả REST endpoints — ASP.NET Core 10 Web API (50+ endpoints)</p>
+          <p>Tất cả REST endpoints — ASP.NET Core 10 Web API (54 endpoints)</p>
         </div>
       </div>
 
@@ -5546,6 +5546,12 @@
               <td><code>/api/auth/forgot-password</code></td>
               <td><span class="tag tan">Anonymous</span></td>
               <td>Reset mật khẩu Owner — Admin không được reset bằng cách này</td>
+            </tr>
+            <tr>
+              <td><span class="tag tget">GET</span></td>
+              <td><code>/api/auth/profile</code></td>
+              <td><span class="tag to">Authorize</span></td>
+              <td>Lấy thông tin profile user đang đăng nhập (Id, Username, DisplayId, FullName, Email, Role)</td>
             </tr>
           </table>
         </div>
@@ -5801,7 +5807,7 @@
             </tr>
             <tr>
               <td><span class="tag tget">GET</span></td>
-              <td><code>/api/analytics/heatmap?timeframe=24h</code></td>
+              <td><code>/api/analytics/heatmap?hours=24</code></td>
               <td><span class="tag tg2">Public</span></td>
               <td>Lấy dữ liệu Heatmap từ MovementLogs. Hỗ trợ các mốc: 10m (Live), 24h, 48h, 72h. Đi kèm RealtimeService
                 active users.</td>
@@ -5814,9 +5820,15 @@
             </tr>
             <tr>
               <td><span class="tag tget">GET</span></td>
-              <td><code>/api/movement/heatmap?timeframe=24h</code></td>
+              <td><code>/api/movement/heatmap?hours=24</code></td>
               <td><span class="tag tg2">Public</span></td>
               <td>Movement heatmap data theo bộ lọc thời gian.</td>
+            </tr>
+            <tr>
+              <td><span class="tag tget">GET</span></td>
+              <td><code>/api/analytics/poi-heatmap-stats?hours=24</code></td>
+              <td><span class="tag tg2">Public</span></td>
+              <td>Thống kê lượt ghé thăm theo POI dựa trên proximity matching</td>
             </tr>
             <tr>
               <td><span class="tag tget">GET</span></td>
@@ -5846,43 +5858,19 @@
               <td><span class="tag tget">GET</span></td>
               <td><code>/api/admin/summary</code></td>
               <td><span class="tag ta">Admin</span></td>
-              <td>Tổng quan: totalPois, totalTours, totalUsers, totalVisits</td>
-            </tr>
-            <tr>
-              <td><span class="tag tget">GET</span></td>
-              <td><code>/api/admin/sessions</code></td>
-              <td><span class="tag ta">Admin</span></td>
-              <td>Danh sách phiên (phân trang, lọc theo số ngày)</td>
-            </tr>
-            <tr>
-              <td><span class="tag tget">GET</span></td>
-              <td><code>/api/admin/sessions/stats</code></td>
-              <td><span class="tag ta">Admin</span></td>
-              <td>Thống kê chi tiết: Duration, Returning Rate, Platform, Top Devices</td>
-            </tr>
-            <tr>
-              <td><span class="tag tget">GET</span></td>
-              <td><code>/api/admin/peak-hours</code></td>
-              <td><span class="tag ta">Admin</span></td>
-              <td>Biểu đồ giờ cao điểm (Peak Hours) trong 30 ngày</td>
+              <td>Tổng quan: totalPois, totalTours, totalUsers, totalVisits, ownerStats</td>
             </tr>
             <tr>
               <td><span class="tag tpost">POST</span></td>
               <td><code>/api/admin/seed</code></td>
               <td><span class="tag ta">Admin</span></td>
-              <td>Seed database (migrate + Force Create DeviceSessions)</td>
-            </tr>
-            <tr>
-              <td><span class="tag tget">GET</span></td>
-              <td><code>/api/admin/ping</code></td>
-              <td><span class="tag tan">Anonymous</span></td>
-              <td>Kiểm tra trạng thái server (Health diagnostic)</td>
+              <td>Seed database (migrate + DbSeeder.SeedAsync)</td>
             </tr>
             <tr>
               <td><span class="tag tget">GET</span></td>
               <td><code>/health</code></td>
               <td><span class="tag tan">Anonymous</span></td>
-              <td>Health check chuẩn (ASP.NET HealthChecks)</td>
+              <td>Health check endpoint</td>
             </tr>
           </table>
         </div>
@@ -5922,6 +5910,90 @@
       </div>
 
       <div class="card">
+        <h3>📱 SessionController — <code>/api/session</code></h3>
+        <div class="tw">
+          <table>
+            <tr>
+              <th>Method</th>
+              <th>Endpoint</th>
+              <th>Auth</th>
+              <th>Mô tả</th>
+            </tr>
+            <tr>
+              <td><span class="tag tpost">POST</span></td>
+              <td><code>/api/session/start</code></td>
+              <td><span class="tag tg2">Public</span></td>
+              <td>Ghi nhận phiên mới + thông tin thiết bị (model, platform, OS, version, manufacturer)</td>
+            </tr>
+            <tr>
+              <td><span class="tag tpost">POST</span></td>
+              <td><code>/api/session/heartbeat</code></td>
+              <td><span class="tag tg2">Public</span></td>
+              <td>Cập nhật trạng thái phiên mỗi 60s (POIs visited, distance)</td>
+            </tr>
+            <tr>
+              <td><span class="tag tpost">POST</span></td>
+              <td><code>/api/session/end</code></td>
+              <td><span class="tag tg2">Public</span></td>
+              <td>Đánh dấu kết thúc phiên du khách</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Admin Sessions — <code>/api/admin</code></h3>
+        <div class="tw">
+          <table>
+            <tr>
+              <th>Method</th>
+              <th>Endpoint</th>
+              <th>Auth</th>
+              <th>Mô tả</th>
+            </tr>
+            <tr>
+              <td><span class="tag tget">GET</span></td>
+              <td><code>/api/admin/sessions?page=1&size=50&days=7</code></td>
+              <td><span class="tag ta">Admin</span></td>
+              <td>Danh sách phiên du khách (phân trang, lọc platform/days)</td>
+            </tr>
+            <tr>
+              <td><span class="tag tget">GET</span></td>
+              <td><code>/api/admin/sessions/stats?days=30</code></td>
+              <td><span class="tag ta">Admin</span></td>
+              <td>Thống kê tổng hợp: avg duration, returning rate, top devices, language breakdown</td>
+            </tr>
+            <tr>
+              <td><span class="tag tget">GET</span></td>
+              <td><code>/api/admin/peak-hours?days=7</code></td>
+              <td><span class="tag ta">Admin</span></td>
+              <td>Phân tích giờ cao điểm theo khung giờ trong ngày (UTC+7)</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🖼️ UploadController — <code>/api/upload</code></h3>
+        <div class="tw">
+          <table>
+            <tr>
+              <th>Method</th>
+              <th>Endpoint</th>
+              <th>Auth</th>
+              <th>Mô tả</th>
+            </tr>
+            <tr>
+              <td><span class="tag tpost">POST</span></td>
+              <td><code>/api/upload/image</code></td>
+              <td><span class="tag to">Admin/Owner</span></td>
+              <td>Upload ảnh POI (jpg/png/webp, max 10MB). Lưu wwwroot/images/</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
         <h3>📱 AppDownloadController — <code>/api/app</code></h3>
         <div class="tw">
           <table>
@@ -5936,6 +6008,12 @@
               <td><code>/api/app/download</code></td>
               <td><span class="tag tan">Anonymous</span></td>
               <td>Tải file APK (Release Android). Trả về application/vnd.android.package-archive</td>
+            </tr>
+            <tr>
+              <td><span class="tag tget">GET</span></td>
+              <td><code>/api/app/qr</code></td>
+              <td><span class="tag tan">Anonymous</span></td>
+              <td>QR code PNG trỏ tới link download APK</td>
             </tr>
           </table>
         </div>
@@ -6023,12 +6101,12 @@
         <div class="sn">17</div>
         <div>
           <h2>Technology Stack</h2>
-          <p>Toàn bộ công nghệ sử dụng trong dự án — tính đến 17/04/2026</p>
+          <p>Toàn bộ công nghệ sử dụng trong dự án — tính đến 06/05/2026</p>
         </div>
       </div>
 
       <div class="card">
-        <h3>🔧 Backend — ASP.NET Core 9</h3>
+        <h3>🔧 Backend — ASP.NET Core 10</h3>
         <div class="tw">
           <table>
             <tr>
@@ -6040,14 +6118,14 @@
             <tr>
               <td>Runtime</td>
               <td>.NET LTS</td>
-              <td>9.0.x</td>
+              <td>10.0.x</td>
               <td>Long-Term Support</td>
             </tr>
             <tr>
               <td>Language</td>
-              <td>C# 12</td>
+              <td>C# 14</td>
               <td>built-in</td>
-              <td>Primary constructors, collection expressions []</td>
+              <td>Primary expressions, collection literals []</td>
             </tr>
             <tr>
               <td>Web Framework</td>
@@ -6233,7 +6311,7 @@
             </tr>
           </table>
         </div>
-        <h4>Web Pages (19 trang)</h4>
+        <h4>Web Pages (21 trang)</h4>
         <div class="tw">
           <table>
             <tr>
@@ -6357,6 +6435,12 @@
               <td>Tải APK/QR code cho Mobile App (Google Drive link)</td>
             </tr>
             <tr>
+              <td>SessionsPage</td>
+              <td>/sessions</td>
+              <td>Admin</td>
+              <td>Phiên hoạt động du khách — thiết bị, thời gian, hành vi</td>
+            </tr>
+            <tr>
               <td>Login (legacy)</td>
               <td>/login</td>
               <td>Anonymous</td>
@@ -6456,7 +6540,7 @@
             </tr>
           </table>
         </div>
-        <h4>MAUI Pages (7 trang)</h4>
+        <h4>MAUI Pages (10 trang)</h4>
         <div class="tw">
           <table>
             <tr>
@@ -6498,6 +6582,16 @@
               <td>SettingsPage</td>
               <td>SettingsViewModel</td>
               <td>Ngôn ngữ, GPS radius, TTS voice, sync offline</td>
+            </tr>
+            <tr>
+              <td>PassportPage</td>
+              <td>PassportViewModel</td>
+              <td>Hộ chiếu du lịch — tem kỹ thuật số các quán đã ghé thăm</td>
+            </tr>
+            <tr>
+              <td>OnboardingPage</td>
+              <td>—</td>
+              <td>Giới thiệu lần đầu (3 slides) + xin quyền GPS</td>
             </tr>
             <tr>
               <td>LanguageSelectionPage</td>

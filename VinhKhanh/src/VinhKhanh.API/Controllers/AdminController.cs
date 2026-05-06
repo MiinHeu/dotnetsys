@@ -45,6 +45,7 @@ public class AdminController(ApplicationDbContext db, IConnectionTracker tracker
 			var totalDevices = (new[] { totalHistoryDevices, totalVisitDevices }).Max();
 
 			var totalVisits = await db.PoiVisitLogs.AsNoTracking().CountAsync(ct);
+			//var totalVisits = (await db.PoiVisitLogs.AsNoTracking().CountAsync(ct)) * 2;
 
 			var ownerStats = await db.Pois.AsNoTracking()
 				.Where(p => p.OwnerUserId.HasValue)
