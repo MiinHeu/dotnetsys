@@ -17,10 +17,7 @@ public sealed class ApiClientService
 
 	private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(45) };
 	
-	public HttpClient CreateClient()
-	{
-		return _http;
-	}
+	public HttpClient CreateClient() => _http;
 
 	private string GetBaseUrl()
 	{
@@ -39,17 +36,7 @@ public sealed class ApiClientService
 
 	public static string GetDefaultApiBase()
 	{
-		// 1. Hỗ trợ giả lập (Emulator) để lập trình viên test cục bộ
-		if (DeviceInfo.DeviceType == DeviceType.Virtual)
-		{
-#if ANDROID
-			return "http://10.0.2.2:5283/";
-#else
-			return "http://localhost:5283/";
-#endif
-		}
-
-		// 2. Mặc định ưu tiên Azure cho máy thật/phiên bản phát hành (theo NewBranch)
+		// Production Ready: Sử dụng Azure App Service làm Backend chính thức
 		return "https://vinh-khanh-food-street-gvhceeg4gbakhjgc.eastasia-01.azurewebsites.net/";
 	}
 
@@ -143,11 +130,25 @@ public sealed class ApiClientService
 
 	public string ApiRoot => GetBaseUrl().TrimEnd('/');
 
+	public async Task PostSessionStartAsync(SessionStartDto dto, CancellationToken ct = default)
+	{
+		try { await _http.PostAsJsonAsync($"{GetBaseUrl()}api/session/start", dto, ct); } catch { }
+	}
+
+	public async Task PostSessionHeartbeatAsync(SessionHeartbeatDto dto, CancellationToken ct = default)
+	{
+		try { await _http.PostAsJsonAsync($"{GetBaseUrl()}api/session/heartbeat", dto, ct); } catch { }
+	}
+
+	public async Task PostSessionEndAsync(SessionEndDto dto, CancellationToken ct = default)
+	{
+		try { await _http.PostAsJsonAsync($"{GetBaseUrl()}api/session/end", dto, ct); } catch { }
+	}
+
 	public async Task<string?> ChatAsync(ChatRequest req, CancellationToken ct = default)
 	{
-		var http = CreateClient();
 		var url = $"{GetBaseUrl().TrimEnd('/')}/api/ai/chat";
-		var res = await http.PostAsJsonAsync(url, req, ct);
+		var res = await _http.PostAsJsonAsync(url, req, ct);
 		res.EnsureSuccessStatusCode();
 		var json = await res.Content.ReadAsStringAsync(ct);
 		using var doc = JsonDocument.Parse(json);

@@ -32,13 +32,25 @@ public partial class PoiDetailViewModel(
 		}
 	}
 
-	public List<string> Images => string.IsNullOrWhiteSpace(PoiDetail?.ImagesJson) 
-		? new List<string>() 
-		: System.Text.Json.JsonSerializer.Deserialize<List<string>>(PoiDetail.ImagesJson) ?? new List<string>();
+	public List<string> Images {
+		get {
+			try {
+				return string.IsNullOrWhiteSpace(PoiDetail?.ImagesJson) 
+					? new List<string>() 
+					: System.Text.Json.JsonSerializer.Deserialize<List<string>>(PoiDetail.ImagesJson) ?? new List<string>();
+			} catch { return new List<string>(); }
+		}
+	}
 
-	public List<string> MenuItems => string.IsNullOrWhiteSpace(PoiDetail?.MenuJson) 
-		? new List<string>() 
-		: System.Text.Json.JsonSerializer.Deserialize<List<string>>(PoiDetail.MenuJson) ?? new List<string>();
+	public List<string> MenuItems {
+		get {
+			try {
+				return string.IsNullOrWhiteSpace(PoiDetail?.MenuJson) 
+					? new List<string>() 
+					: System.Text.Json.JsonSerializer.Deserialize<List<string>>(PoiDetail.MenuJson) ?? new List<string>();
+			} catch { return new List<string>(); }
+		}
+	}
 
 	[ObservableProperty] private int _poiId;
 	[ObservableProperty] private bool _autoPlay;
@@ -50,12 +62,24 @@ public partial class PoiDetailViewModel(
 	{
 		if (value <= 0) return;
 		
-		MainThread.BeginInvokeOnMainThread(async () =>
+		// TC-07: Chạy ngầm và bọc try-catch để tránh crash app nếu API lỗi
+		Task.Run(async () =>
 		{
-			PoiDetail = await api.GetPoiAsync(value);
-			if (PoiDetail != null)
+			try
 			{
-				_ = narration.PreFetchAsync(PoiDetail, SelectedLanguage);
+				var data = await api.GetPoiAsync(value);
+				MainThread.BeginInvokeOnMainThread(() =>
+				{
+					PoiDetail = data;
+					if (PoiDetail != null)
+					{
+						_ = narration.PreFetchAsync(PoiDetail, SelectedLanguage);
+					}
+				});
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine($"[PoiDetail] Load error: {ex.Message}");
 			}
 		});
 	}

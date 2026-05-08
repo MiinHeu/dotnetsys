@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 using VinhKhanh.App.Services;
 using VinhKhanh.Infrastructure.Data;
 
@@ -10,12 +12,15 @@ public partial class PoiListPage : ContentPage
     private readonly ApiClientService _api;
     private List<Poi> _allPois = new();
     public ObservableCollection<Poi> FilteredPois { get; } = new();
+    public ICommand RefreshCommand { get; }
 
     public PoiListPage()
     {
         InitializeComponent();
         _db = MauiProgram.Services.GetRequiredService<ILocalDbService>();
         _api = MauiProgram.Services.GetRequiredService<ApiClientService>();
+        
+        RefreshCommand = new AsyncRelayCommand(LoadDataAsync);
         
         BindingContext = this;
         PoisCollectionView.ItemsSource = FilteredPois;

@@ -17,8 +17,15 @@ public partial class App : Application
 		_realtime = realtime;
 		_sessionTracking = sessionTracking;
 
-		_ = _realtime.StartAsync();
-		_ = _sessionTracking.StartSessionAsync();
+		// TC-06: Chạy khởi động trong luồng phụ để tránh crash app nếu Server không phản hồi
+		Task.Run(async () => {
+			try {
+				await _realtime.StartAsync();
+				await _sessionTracking.StartSessionAsync();
+			} catch (Exception ex) {
+				System.Diagnostics.Debug.WriteLine($"[App] Start error: {ex.Message}");
+			}
+		});
 
 		var langCode = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "en");
 		var culture = new System.Globalization.CultureInfo(langCode);
