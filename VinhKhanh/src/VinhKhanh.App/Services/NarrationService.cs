@@ -69,10 +69,12 @@ public sealed class NarrationService(
 			if (_recentlyPlayed.TryGetValue(key, out var playedAt) &&
 				DateTime.UtcNow - playedAt < DuplicateWindow) return Task.CompletedTask;
 
+			// Thêm vào cuối hàng đợi - không sắp xếp lại để giữ đúng thứ tự A -> B -> C
 			_queue.Add((poi, language, triggerType));
-			// Keep higher priority items processed first while preserving FIFO within same priority.
-			_queue.Sort((a, b) => b.poi.Priority.CompareTo(a.poi.Priority));
 			_queuedKeys.Add(key);
+			
+			// Vẫn cho phép ngắt nếu Priority mới cực cao (ví dụ thông báo khẩn cấp), 
+			// nhưng không tự động sắp xếp lại danh sách hiện có.
 			InterruptIfHigherPriority(poi.Priority);
 			
 			if (_isProcessing) return Task.CompletedTask;
@@ -133,7 +135,7 @@ public sealed class NarrationService(
 
 				var apiRoot = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, ApiClientService.GetDefaultApiBase()).TrimEnd('/');
 				
-				// Thông báo bắt đầu phát để UI cập nhật và chuẩn bị ghi log
+				// Thông báo bắt đầu phát
 				WeakReferenceMessenger.Default.Send(new NarrationStartedMessage(poiSnapshot, language, triggerType));
 
 				var duration = await PlayPoiAsync(poiSnapshot, language, apiRoot, _playCts.Token);
@@ -141,15 +143,14 @@ public sealed class NarrationService(
 				var key = BuildKey(poi.Id, language);
 				_recentlyPlayed[key] = DateTime.UtcNow;
 
-				// Thông báo kết thúc phát kèm theo thời lượng thực tế và context
+				// Thông báo kết thúc phát
 				WeakReferenceMessenger.Default.Send(new NarrationEndedMessage(poi.Id, duration, triggerType, language));
 
-				// Thêm khoảng nghỉ ngắn giữa các audio trong hàng đợi để trải nghiệm tự nhiên hơn
-				// QUAN TRỌNG: Vẫn giữ key trong _queuedKeys trong suốt thời gian nghỉ để tránh re-enqueue ngay lập tức
+				// Khoảng nghỉ 10 giây giữa các POI theo yêu cầu
 				if (_queue.Count > 0)
 				{
-					logger.LogInformation("Gap between queued narrations: 3 seconds");
-					try { await Task.Delay(3000, _playCts.Token); } catch { /* ignore cancel */ }
+					logger.LogInformation("Gap between narrations: 10 seconds");
+					try { await Task.Delay(10000, _playCts.Token); } catch { /* ignore cancel */ }
 				}
 
 				lock (_syncLock)

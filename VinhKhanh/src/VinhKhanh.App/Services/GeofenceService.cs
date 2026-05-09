@@ -23,10 +23,10 @@ public class GeofenceService : IGeofenceService
 		if ((now - _lastGlobalTrigger).TotalSeconds < GlobalCooldownSeconds)
 			return Task.FromResult(new List<Poi>());
 
-		var triggered = new List<Poi>();
+		var triggeredWithDist = new List<(Poi poi, double dist)>();
 		foreach (var poi in pois)
 		{
-			var dist = GeoMath.Haversine(loc.Latitude, loc.Longitude, poi.Latitude, poi.Longitude);
+			var dist = VinhKhanh.Shared.GeoMath.Haversine(loc.Latitude, loc.Longitude, poi.Latitude, poi.Longitude);
 			var adjustedRadius = poi.TriggerRadiusMeters * radiusMultiplier;
 			var exitRadius = adjustedRadius * ExitHysteresisFactor;
 
@@ -52,15 +52,20 @@ public class GeofenceService : IGeofenceService
 
 			_insidePoiIds.Add(poi.Id);
 			_lastTriggered[poi.Id] = now;
-			triggered.Add(poi);
+			triggeredWithDist.Add((poi, dist));
 		}
 
-		if (triggered.Count > 0)
+		if (triggeredWithDist.Count > 0)
 		{
 			_lastGlobalTrigger = now;
 		}
 
-		return Task.FromResult(triggered.OrderByDescending(p => p.Priority).ToList());
+		// Sắp xếp: Ưu tiên cao nhất -> Gần nhất
+		return Task.FromResult(triggeredWithDist
+			.OrderByDescending(x => x.poi.Priority)
+			.ThenBy(x => x.dist)
+			.Select(x => x.poi)
+			.ToList());
 	}
 
 	private static double GetRadiusMultiplier()
