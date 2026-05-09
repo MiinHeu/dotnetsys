@@ -32,10 +32,14 @@ public partial class App : Application
 		if (!Microsoft.Maui.Storage.Preferences.ContainsKey(AppPreferences.UiLanguage))
 		{
 			// Lần đầu mở App: Tự động nhận diện
-			var deviceLang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToLower();
-			var supportedLangs = new List<string> { "vi", "en", "ko", "zh" };
+			// Thử lấy từ UICulture trước, nếu không được thì lấy Culture
+			var detectedCulture = System.Globalization.CultureInfo.CurrentUICulture ?? System.Globalization.CultureInfo.CurrentCulture;
+			var deviceLang = detectedCulture.TwoLetterISOLanguageName.ToLower();
 			
+			var supportedLangs = new List<string> { "vi", "en", "ko", "zh" };
 			langCode = supportedLangs.Contains(deviceLang) ? deviceLang : "en";
+			
+			System.Diagnostics.Debug.WriteLine($"[App] Detected Device Lang: {deviceLang} -> Final: {langCode}");
 			
 			// Lưu lại làm lựa chọn tạm thời
 			Microsoft.Maui.Storage.Preferences.Set(AppPreferences.UiLanguage, langCode);
