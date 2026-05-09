@@ -5,6 +5,7 @@ using Plugin.Maui.Audio;
 using VinhKhanh.App.Models;
 using VinhKhanh.Infrastructure.Data;
 using Microsoft.Maui.Media;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace VinhKhanh.App.Services;
 
@@ -18,7 +19,7 @@ public sealed class NarrationService(
 	private IAudioPlayer? _player;
 	private Stream? _playbackStream;
 	private readonly SemaphoreSlim _gate = new(1, 1);
-	private readonly List<(Poi poi, string language)> _queue = [];
+	private readonly List<(Poi poi, string language, string triggerType)> _queue = [];
 	private readonly HashSet<string> _queuedKeys = [];
 	private readonly Dictionary<string, DateTime> _recentlyPlayed = [];
 	private CancellationTokenSource? _playCts;
@@ -58,14 +59,14 @@ public sealed class NarrationService(
 		return Task.CompletedTask;
 	}
 
-	public Task EnqueueAsync(Poi poi, string language)
+	public Task EnqueueAsync(Poi poi, string language, string triggerType = "GPS")
 	{
 		var key = BuildKey(poi.Id, language);
 		if (_queuedKeys.Contains(key)) return Task.CompletedTask;
 		if (_recentlyPlayed.TryGetValue(key, out var playedAt) &&
 		    DateTime.UtcNow - playedAt < DuplicateWindow) return Task.CompletedTask;
 
-		_queue.Add((poi, language));
+		_queue.Add((poi, language, triggerType));
 		// Keep higher priority items processed first while preserving FIFO within same priority.
 		_queue.Sort((a, b) => b.poi.Priority.CompareTo(a.poi.Priority));
 		_queuedKeys.Add(key);
@@ -84,7 +85,7 @@ public sealed class NarrationService(
 		{
 			while (_queue.Count > 0)
 			{
-				var (poi, language) = _queue[0];
+				var (poi, language, triggerType) = _queue[0];
 				_queue.RemoveAt(0);
 				_queuedKeys.Remove(BuildKey(poi.Id, language));
 				_currentPriority = poi.Priority;
@@ -119,10 +120,16 @@ public sealed class NarrationService(
 				};
 
 				var apiRoot = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, ApiClientService.GetDefaultApiBase()).TrimEnd('/');
-				await PlayPoiAsync(poiSnapshot, language, apiRoot, _playCts.Token);
+				
+				// Thông báo bắt đầu phát để UI cập nhật và chuẩn bị ghi log
+				WeakReferenceMessenger.Default.Send(new NarrationStartedMessage(poiSnapshot, language, triggerType));
+
+				var duration = await PlayPoiAsync(poiSnapshot, language, apiRoot, _playCts.Token);
 				_recentlyPlayed[BuildKey(poi.Id, language)] = DateTime.UtcNow;
 
-				// Thêm khoảng nghỉ ngắn giữa các audio trong hàng đợi để trải nghiệm tự nhiên hơn
+				// Thông báo kết thúc phát kèm theo thời lượng thực tế và context
+				WeakReferenceMessenger.Default.Send(new NarrationEndedMessage(poi.Id, duration, triggerType, language));
+
 				if (_queue.Count > 0)
 				{
 					logger.LogInformation("Gap between queued narrations: 3 seconds");

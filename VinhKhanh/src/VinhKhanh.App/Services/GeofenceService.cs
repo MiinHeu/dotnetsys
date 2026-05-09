@@ -23,9 +23,7 @@ public class GeofenceService : IGeofenceService
 		if ((now - _lastGlobalTrigger).TotalSeconds < GlobalCooldownSeconds)
 			return Task.FromResult(new List<Poi>());
 
-		Poi? bestPoi = null;
-		double bestDistance = double.MaxValue;
-
+		var triggered = new List<Poi>();
 		foreach (var poi in pois)
 		{
 			var dist = GeoMath.Haversine(loc.Latitude, loc.Longitude, poi.Latitude, poi.Longitude);
@@ -34,7 +32,6 @@ public class GeofenceService : IGeofenceService
 
 			var isInside = _insidePoiIds.Contains(poi.Id);
 
-			// Logic Hysteresis: tránh jitter tại biên
 			if (!isInside && dist > adjustedRadius)
 			{
 				_consecutiveHits[poi.Id] = 0;
@@ -47,34 +44,23 @@ public class GeofenceService : IGeofenceService
 				continue;
 			}
 
-			// Đã lọt vào vùng kích hoạt
 			_consecutiveHits[poi.Id] = _consecutiveHits.TryGetValue(poi.Id, out var n) ? n + 1 : 1;
 			if (_consecutiveHits[poi.Id] < RequiredConsecutiveHits) continue;
 
-			// Kiểm tra Cooldown
 			if (_lastTriggered.TryGetValue(poi.Id, out var last) && (now - last).TotalSeconds < poi.CooldownSeconds)
 				continue;
 
-			// Lưu trạng thái 'đang ở trong'
 			_insidePoiIds.Add(poi.Id);
-
-			// Xử lý xung đột (Overlap): Chọn POI tốt nhất dựa trên Priority và Distance
-			if (bestPoi == null || poi.Priority > bestPoi.Priority || (poi.Priority == bestPoi.Priority && dist < bestDistance))
-			{
-				bestPoi = poi;
-				bestDistance = dist;
-			}
+			_lastTriggered[poi.Id] = now;
+			triggered.Add(poi);
 		}
 
-		var triggered = new List<Poi>();
-		if (bestPoi != null)
+		if (triggered.Count > 0)
 		{
-			_lastTriggered[bestPoi.Id] = now;
-			_lastGlobalTrigger = now; // Cập nhật mốc thời gian kích hoạt toàn cục
-			triggered.Add(bestPoi);
+			_lastGlobalTrigger = now;
 		}
 
-		return Task.FromResult(triggered);
+		return Task.FromResult(triggered.OrderByDescending(p => p.Priority).ToList());
 	}
 
 	private static double GetRadiusMultiplier()

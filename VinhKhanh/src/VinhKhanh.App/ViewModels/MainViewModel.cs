@@ -11,7 +11,10 @@ using VinhKhanh.Shared.DTOs;
 
 namespace VinhKhanh.App.ViewModels;
 
-public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdatedMessage>
+public partial class MainViewModel : ObservableObject, 
+	IRecipient<LocationUpdatedMessage>,
+	IRecipient<NarrationStartedMessage>,
+	IRecipient<NarrationEndedMessage>
 {
 	private readonly ApiClientService _api;
 	private readonly LocalPoiCacheService _cache;
@@ -22,7 +25,6 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 	private readonly IGeofenceService _geofence;
 	private readonly IOutboxService _outbox;
 	private readonly SessionTrackingService _sessionTracking;
-
 	private readonly ILocalDbService _db;
 
 	private readonly List<MovementPointDto> _movementBuffer = [];
@@ -52,7 +54,9 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		_sessionTracking = sessionTracking;
 		_db = db;
 		SelectedLanguage = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "vi");
-		WeakReferenceMessenger.Default.Register(this);
+		WeakReferenceMessenger.Default.Register<LocationUpdatedMessage>(this);
+		WeakReferenceMessenger.Default.Register<NarrationStartedMessage>(this);
+		WeakReferenceMessenger.Default.Register<NarrationEndedMessage>(this);
 	}
 
 	public ObservableCollection<PoiSnapshot> Pois { get; } = new();
@@ -85,24 +89,14 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 	partial void OnSelectedLanguageChanged(string value)
 	{
 		Microsoft.Maui.Storage.Preferences.Set(AppPreferences.UiLanguage, value);
-		
-		// Ép tệp tài nguyên hệ thống nạp lại theo ngôn ngữ mới
 		VinhKhanh.App.Resources.Strings.AppResources.Culture = new System.Globalization.CultureInfo(value);
-		
-		// Kích hoạt cập nhật lại các thuộc tính hiển thị (DisplayName, DisplayDescription) cho toàn bộ danh sách
-		foreach (var p in Pois)
-		{
-			p.RefreshTranslations();
-		}
-
-		// Thông báo cho Shell cập nhật lại các Tab
+		foreach (var p in Pois) p.RefreshTranslations();
 		WeakReferenceMessenger.Default.Send(new LanguageChangedMessage(value));
 
-		// Tự động tải audio cho ngôn ngữ vừa chọn (ưu tiên)
 		_ = Task.Run(async () => {
-			StatusMessage = "Đang ưu tiên tải dữ liệu âm thanh offline...";
+			StatusMessage = "Đang tải audio...";
 			await _narration.PreFetchAllAsync(Pois, value);
-			StatusMessage = "Đã hoàn tất tải dữ liệu âm thanh offline.";
+			StatusMessage = "Sẵn sàng.";
 		});
 	}
 
@@ -113,38 +107,21 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		try
 		{
 			var remote = await _api.GetPoisAsync(SelectedLanguage);
-			
-			// Luôn lưu và cập nhật danh sách (kể cả khi trống) để đảm bảo đồng bộ IsActive từ Server
 			await _cache.SavePoisAsync(remote);
-			await _db.SyncPoisAsync(remote); // Đảm bảo đồng bộ sang SQLite cho Passport/Tours
+			await _db.SyncPoisAsync(remote);
 			ReplacePois(remote);
-			
 			StatusMessage = string.Format(VinhKhanh.App.Resources.Strings.AppResources.SyncStatusSuccess, remote.Count);
 
-			// Tự động tải audio sau khi Sync metadata xong
 			_ = Task.Run(async () => {
-				StatusMessage = $"Đang tải audio ({SelectedLanguage})...";
 				await _narration.PreFetchAllAsync(remote, SelectedLanguage);
-				StatusMessage = $"Đã tải xong toàn bộ dữ liệu offline ({SelectedLanguage}).";
 			});
 
-			await _api.PostHistoryLogAsync(new AppHistoryLogDto(_session.SessionId, "SYNC_POI",
-				LanguageCode: SelectedLanguage, Payload: $"count={Pois.Count}"));
-			
-			// Đồng bộ thêm cả Tours để các Tab khác không bị trống
-			try 
-			{
-				var toursVm = MauiProgram.Services.GetRequiredService<ToursViewModel>();
-				await toursVm.LoadAsync();
-			}
-			catch { /* Ignore if tours fail */ }
-
+			await _api.PostHistoryLogAsync(new AppHistoryLogDto(_session.SessionId, "SYNC_POI", LanguageCode: SelectedLanguage));
 			await FlushOutboxIfNeededAsync(force: true);
 		}
 		catch (Exception ex)
 		{
-			StatusMessage = $"{VinhKhanh.App.Resources.Strings.AppResources.SyncStatusNetworkError}: {ex.Message}";
-			Debug.WriteLine(ex);
+			StatusMessage = "Lỗi kết nối.";
 			var local = await _cache.LoadPoisAsync();
 			ReplacePois(local);
 		}
@@ -164,16 +141,14 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		{
 			await _gps.StopTrackingAsync();
 			IsTracking = false;
-			StatusMessage = VinhKhanh.App.Resources.Strings.AppResources.GpsStatusStopped;
+			StatusMessage = "Đã dừng định vị.";
 			await FlushMovementAsync();
-			await FlushOutboxIfNeededAsync(force: true);
 			return;
 		}
 
 		IsTracking = true;
-		StatusMessage = VinhKhanh.App.Resources.Strings.AppResources.GpsStatusTracking;
+		StatusMessage = "Đang định vị...";
 		await _gps.StartTrackingAsync();
-		await FlushOutboxIfNeededAsync(force: true);
 	}
 
 	public async void Receive(LocationUpdatedMessage message)
@@ -182,71 +157,57 @@ public partial class MainViewModel : ObservableObject, IRecipient<LocationUpdate
 		UserLatitude = loc.Latitude;
 		UserLongitude = loc.Longitude;
 
-		_movementBuffer.Add(new MovementPointDto(loc.Latitude, loc.Longitude,
-			(float)(loc.Accuracy ?? 25), DateTime.UtcNow));
+		_movementBuffer.Add(new MovementPointDto(loc.Latitude, loc.Longitude, (float)(loc.Accuracy ?? 25), DateTime.UtcNow));
 		await MaybeFlushMovementAsync();
-		await FlushOutboxIfNeededAsync();
 
-			var domainPois = Pois.Select(p => new Poi
-			{
-				Id = p.Id,
-				Name = p.Name,
-				Description = p.Description,
-				Latitude = p.Latitude,
-				Longitude = p.Longitude,
-				MapX = p.MapX,
-				MapY = p.MapY,
-				TriggerRadiusMeters = p.TriggerRadiusMeters,
-				CooldownSeconds = p.CooldownSeconds,
-				Priority = p.Priority,
-				ImageUrl = p.ImageUrl,
-				AudioViUrl = p.AudioViUrl,
-				Translations = p.Translations?.Select(t => new PoiTranslation
-				{
-					Id = t.Id,
-					PoiId = t.PoiId,
-					LanguageCode = t.LanguageCode,
-					Name = t.Name,
-					Description = t.Description,
-					AudioUrl = t.AudioUrl,
-					OriginalDescription = t.OriginalDescription
-				}).ToList()
-			}).ToList();
+		var domainPois = Pois.Select(p => new Poi {
+			Id = p.Id, Name = p.Name, Description = p.Description, Latitude = p.Latitude, Longitude = p.Longitude,
+			TriggerRadiusMeters = p.TriggerRadiusMeters, CooldownSeconds = p.CooldownSeconds, Priority = p.Priority,
+			Translations = p.Translations?.Select(t => new PoiTranslation {
+				Id = t.Id, PoiId = t.PoiId, LanguageCode = t.LanguageCode, Name = t.Name, Description = t.Description, AudioUrl = t.AudioUrl
+			}).ToList()
+		}).ToList();
 
 		var triggered = await _geofence.CheckTriggeredAsync(loc, domainPois);
-
-		if (triggered.Count > 0)
+		foreach (var poi in triggered)
 		{
-			// Hiển thị POI có Priority cao nhất trên giao diện
-			var best = triggered[0];
-			NearestPoiId = best.Id;
-			NearestLabel = best.Name;
-			StatusMessage = string.Format(VinhKhanh.App.Resources.Strings.AppResources.PlaybackPoiLabel, NearestLabel);
-
-			// Enqueue TẤT CẢ các POI đã trigger — NarrationService sẽ tự sắp xếp theo Priority
-			foreach (var poi in triggered)
+			if (_cooldowns.CanTrigger(poi.Id, poi.CooldownSeconds))
 			{
-				if (!_cooldowns.CanTrigger(poi.Id, poi.CooldownSeconds))
-					continue;
-
 				await _narration.EnqueueAsync(poi, SelectedLanguage);
+				// Mark as triggered locally to avoid immediate re-enqueue before NarrationService starts it
 				_cooldowns.MarkTriggered(poi.Id);
-				_sessionTracking.IncrementPoisVisited();
-				await _db.AddVisitedPoiAsync(poi.Id);
-
-				var visit = new VisitLogDto(poi.Id, _session.SessionId, SelectedLanguage, "GPS", 1);
-				if (!await _api.TryPostAnalyticsVisitAsync(visit))
-					await _outbox.EnqueueVisitAsync(visit);
-
-				var history = new AppHistoryLogDto(_session.SessionId, "GPS_TRIGGER", PoiId: poi.Id, LanguageCode: SelectedLanguage);
-				if (!await _api.TryPostHistoryLogAsync(history))
-					await _outbox.EnqueueHistoryAsync(history);
 			}
 		}
-		else
-		{
-			NearestPoiId = 0;
-		}
+
+		if (triggered.Count == 0) NearestPoiId = 0;
+	}
+
+	public void Receive(NarrationStartedMessage message)
+	{
+		MainThread.BeginInvokeOnMainThread(() => {
+			NearestPoiId = message.Poi.Id;
+			NearestLabel = message.Poi.Name;
+			StatusMessage = string.Format(VinhKhanh.App.Resources.Strings.AppResources.PlaybackPoiLabel, message.Poi.Name);
+		});
+	}
+
+	public async void Receive(NarrationEndedMessage message)
+	{
+		var poiId = message.PoiId;
+		var duration = message.DurationSeconds;
+		var trigger = message.TriggerType;
+		var lang = message.LanguageCode;
+
+		_sessionTracking.IncrementPoisVisited();
+		await _db.AddVisitedPoiAsync(poiId);
+
+		var visit = new VisitLogDto(poiId, _session.SessionId, lang, trigger, duration);
+		if (!await _api.TryPostAnalyticsVisitAsync(visit))
+			await _outbox.EnqueueVisitAsync(visit);
+
+		var history = new AppHistoryLogDto(_session.SessionId, $"{trigger}_TRIGGER", PoiId: poiId, LanguageCode: lang, Payload: $"duration={duration}");
+		if (!await _api.TryPostHistoryLogAsync(history))
+			await _outbox.EnqueueHistoryAsync(history);
 	}
 
 	private async Task MaybeFlushMovementAsync()

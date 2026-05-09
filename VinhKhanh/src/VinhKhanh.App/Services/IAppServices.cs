@@ -15,7 +15,7 @@ public interface IGeofenceService
 
 public interface INarrationService
 {
-	Task EnqueueAsync(Poi poi, string language);
+	Task EnqueueAsync(Poi poi, string language, string triggerType = "GPS");
 	void InterruptIfHigherPriority(int newPriority);
 	Task StopCurrentAsync();
 	Task PreFetchAsync(Models.PoiSnapshot poi, string language);
