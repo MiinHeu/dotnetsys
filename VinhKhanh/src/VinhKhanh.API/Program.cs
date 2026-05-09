@@ -255,10 +255,23 @@ try
                                     [PoisVisited] int NOT NULL DEFAULT 0,
                                     [DistanceMeters] float NOT NULL DEFAULT 0,
                                     [IsReturning] bit NOT NULL DEFAULT 0,
+                                    [IpAddress] nvarchar(64) NULL,
+                                    [Country] nvarchar(64) NULL,
+                                    [City] nvarchar(64) NULL,
                                     CONSTRAINT [PK_DeviceSessions] PRIMARY KEY ([Id])
                                 );
                                 CREATE INDEX [IX_DeviceSessions_SessionId] ON [DeviceSessions] ([SessionId]);
                                 CREATE INDEX [IX_DeviceSessions_StartedAt] ON [DeviceSessions] ([StartedAt]);
+                            END
+                            ELSE
+                            BEGIN
+                                -- Vá thêm cột nếu bảng đã tồn tại nhưng thiếu (cho các bản cũ nâng cấp lên)
+                                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[DeviceSessions]') AND name = 'IpAddress')
+                                BEGIN
+                                    ALTER TABLE [DeviceSessions] ADD [IpAddress] nvarchar(64) NULL;
+                                    ALTER TABLE [DeviceSessions] ADD [Country] nvarchar(64) NULL;
+                                    ALTER TABLE [DeviceSessions] ADD [City] nvarchar(64) NULL;
+                                END
                             END");
                     }
                 }

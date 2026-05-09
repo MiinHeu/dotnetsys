@@ -30,4 +30,9 @@ public class DeviceSession
 
 	/// <summary>Du khách này đã từng dùng App trước đó (SessionId cũ tồn tại).</summary>
 	public bool IsReturning { get; set; }
+
+	// ── Thông tin vị trí từ IP ──
+	public string? IpAddress { get; set; }
+	public string? Country { get; set; }
+	public string? City { get; set; }
 }
