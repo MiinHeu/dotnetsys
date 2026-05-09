@@ -274,6 +274,44 @@ try
                                 END
                             END");
                     }
+                    // ÉP TẠO BẢNG DeviceSessions CHO PostgreSQL
+                    else if (db.Database.IsNpgsql())
+                    {
+                        Console.WriteLine("[STARTUP] Force patching DeviceSessions table for PostgreSQL...");
+                        db.Database.ExecuteSqlRaw(@"
+                            DO $$ 
+                            BEGIN 
+                                IF NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'DeviceSessions') THEN
+                                    CREATE TABLE ""DeviceSessions"" (
+                                        ""Id"" BIGSERIAL PRIMARY KEY,
+                                        ""SessionId"" TEXT NOT NULL,
+                                        ""DeviceModel"" TEXT,
+                                        ""DevicePlatform"" TEXT,
+                                        ""OsVersion"" TEXT,
+                                        ""AppVersion"" TEXT,
+                                        ""Manufacturer"" TEXT,
+                                        ""LanguageUsed"" TEXT,
+                                        ""StartedAt"" TIMESTAMP WITH TIME ZONE NOT NULL,
+                                        ""EndedAt"" TIMESTAMP WITH TIME ZONE,
+                                        ""LastHeartbeatAt"" TIMESTAMP WITH TIME ZONE NOT NULL,
+                                        ""PoisVisited"" INTEGER NOT NULL DEFAULT 0,
+                                        ""DistanceMeters"" DOUBLE PRECISION NOT NULL DEFAULT 0,
+                                        ""IsReturning"" BOOLEAN NOT NULL DEFAULT FALSE,
+                                        ""IpAddress"" TEXT,
+                                        ""Country"" TEXT,
+                                        ""City"" TEXT
+                                    );
+                                    CREATE INDEX ""IX_DeviceSessions_SessionId"" ON ""DeviceSessions"" (""SessionId"");
+                                END IF;
+
+                                -- Vá thêm cột nếu bảng đã tồn tại
+                                IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'DeviceSessions' AND column_name = 'IpAddress') THEN
+                                    ALTER TABLE ""DeviceSessions"" ADD COLUMN ""IpAddress"" TEXT;
+                                    ALTER TABLE ""DeviceSessions"" ADD COLUMN ""Country"" TEXT;
+                                    ALTER TABLE ""DeviceSessions"" ADD COLUMN ""City"" TEXT;
+                                END IF;
+                            END $$;");
+                    }
                 }
             }
         }
