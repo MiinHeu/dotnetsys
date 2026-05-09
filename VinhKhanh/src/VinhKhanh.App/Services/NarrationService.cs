@@ -19,6 +19,7 @@ public sealed class NarrationService(
 	private IAudioPlayer? _player;
 	private Stream? _playbackStream;
 	private readonly SemaphoreSlim _gate = new(1, 1);
+	private readonly object _syncLock = new();
 	private readonly List<(Poi poi, string language, string triggerType)> _queue = [];
 	private readonly HashSet<string> _queuedKeys = [];
 	private readonly Dictionary<string, DateTime> _recentlyPlayed = [];
@@ -61,17 +62,23 @@ public sealed class NarrationService(
 
 	public Task EnqueueAsync(Poi poi, string language, string triggerType = "GPS")
 	{
-		var key = BuildKey(poi.Id, language);
-		if (_queuedKeys.Contains(key)) return Task.CompletedTask;
-		if (_recentlyPlayed.TryGetValue(key, out var playedAt) &&
-		    DateTime.UtcNow - playedAt < DuplicateWindow) return Task.CompletedTask;
+		lock (_syncLock)
+		{
+			var key = BuildKey(poi.Id, language);
+			if (_queuedKeys.Contains(key)) return Task.CompletedTask;
+			if (_recentlyPlayed.TryGetValue(key, out var playedAt) &&
+				DateTime.UtcNow - playedAt < DuplicateWindow) return Task.CompletedTask;
 
-		_queue.Add((poi, language, triggerType));
-		// Keep higher priority items processed first while preserving FIFO within same priority.
-		_queue.Sort((a, b) => b.poi.Priority.CompareTo(a.poi.Priority));
-		_queuedKeys.Add(key);
-		InterruptIfHigherPriority(poi.Priority);
-		if (_isProcessing) return Task.CompletedTask;
+			_queue.Add((poi, language, triggerType));
+			// Keep higher priority items processed first while preserving FIFO within same priority.
+			_queue.Sort((a, b) => b.poi.Priority.CompareTo(a.poi.Priority));
+			_queuedKeys.Add(key);
+			InterruptIfHigherPriority(poi.Priority);
+			
+			if (_isProcessing) return Task.CompletedTask;
+			_isProcessing = true;
+		}
+		
 		_ = ProcessQueueAsync();
 		return Task.CompletedTask;
 	}
@@ -80,14 +87,19 @@ public sealed class NarrationService(
 
 	private async Task ProcessQueueAsync()
 	{
-		_isProcessing = true;
 		try
 		{
-			while (_queue.Count > 0)
+			while (true)
 			{
-				var (poi, language, triggerType) = _queue[0];
-				_queue.RemoveAt(0);
-				
+				(Poi poi, string language, string triggerType) item;
+				lock (_syncLock)
+				{
+					if (_queue.Count == 0) break;
+					item = _queue[0];
+					_queue.RemoveAt(0);
+				}
+
+				var (poi, language, triggerType) = item;
 				_currentPriority = poi.Priority;
 				_playCts?.Cancel();
 				_playCts?.Dispose();
@@ -128,24 +140,33 @@ public sealed class NarrationService(
 				
 				var key = BuildKey(poi.Id, language);
 				_recentlyPlayed[key] = DateTime.UtcNow;
-				_queuedKeys.Remove(key); // Chỉ xóa khỏi hàng đợi chờ sau khi đã phát xong
 
 				// Thông báo kết thúc phát kèm theo thời lượng thực tế và context
 				WeakReferenceMessenger.Default.Send(new NarrationEndedMessage(poi.Id, duration, triggerType, language));
 
+				// Thêm khoảng nghỉ ngắn giữa các audio trong hàng đợi để trải nghiệm tự nhiên hơn
+				// QUAN TRỌNG: Vẫn giữ key trong _queuedKeys trong suốt thời gian nghỉ để tránh re-enqueue ngay lập tức
 				if (_queue.Count > 0)
 				{
 					logger.LogInformation("Gap between queued narrations: 3 seconds");
-					await Task.Delay(3000, _playCts.Token);
+					try { await Task.Delay(3000, _playCts.Token); } catch { /* ignore cancel */ }
+				}
+
+				lock (_syncLock)
+				{
+					_queuedKeys.Remove(key);
 				}
 			}
 		}
 		finally
 		{
+			lock (_syncLock)
+			{
+				_isProcessing = false;
+				_currentPriority = 0;
+			}
 			_playCts?.Dispose();
 			_playCts = null;
-			_currentPriority = 0;
-			_isProcessing = false;
 		}
 	}
 
