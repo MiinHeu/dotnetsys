@@ -27,7 +27,25 @@ public partial class App : Application
 			}
 		});
 
-		var langCode = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "en");
+		// Smart Language Detection: Lấy ngôn ngữ máy hoặc mặc định là "en"
+		string langCode;
+		if (!Microsoft.Maui.Storage.Preferences.ContainsKey(AppPreferences.UiLanguage))
+		{
+			// Lần đầu mở App: Tự động nhận diện
+			var deviceLang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.ToLower();
+			var supportedLangs = new List<string> { "vi", "en", "ko", "zh" };
+			
+			langCode = supportedLangs.Contains(deviceLang) ? deviceLang : "en";
+			
+			// Lưu lại làm lựa chọn tạm thời
+			Microsoft.Maui.Storage.Preferences.Set(AppPreferences.UiLanguage, langCode);
+		}
+		else
+		{
+			// Đã có lựa chọn trước đó
+			langCode = Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "en");
+		}
+
 		var culture = new System.Globalization.CultureInfo(langCode);
 		System.Globalization.CultureInfo.CurrentCulture = culture;
 		System.Globalization.CultureInfo.CurrentUICulture = culture;
