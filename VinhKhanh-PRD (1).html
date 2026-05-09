@@ -704,6 +704,7 @@
     <div class="tg">
       <a href="#ch01">01 · Tổng Quan Dự Án</a>
       <a href="#ch02">02 · Actors &amp; Stakeholders</a>
+      <a href="#ch02-anon">02b · Anonymous Visitor Flow (Không Cần Tài Khoản)</a>
       <a href="#ch03">03 · Use Case Diagrams (đầy đủ include/extend)</a>
       <a href="#ch04">04 · PoC — 5 Chức Năng Cốt Lõi</a>
       <a href="#ch05">05 · MVP — CMS, Analytics, QR Code</a>
@@ -720,6 +721,7 @@
       <a href="#ch16">16 · API Endpoints (54)</a>
       <a href="#ch17">17 · Technology Stack</a>
       <a href="#ch18">18 · Yêu Cầu Phi Chức Năng</a>
+      <a href="#ch19">19 · Tổng Hợp & Chứng Minh</a>
     </div>
   </div>
 
@@ -871,6 +873,91 @@
             <td>GPS geofencing, narration queue, translation fallback chain, AI inference, batch log, sync offline</td>
           </tr>
         </table>
+      </div>
+    </div>
+
+    <!-- ===== ANONYMOUS VISITOR FLOW ===== -->
+    <div class="card" id="ch02-anon" style="border-left: 4px solid #10b981;">
+      <h3>👤 Khách Tham Quan — Anonymous Flow (Không Cần Tài Khoản)</h3>
+      <p>Đây là điểm khác biệt cốt lõi của hệ thống: <strong>du khách không cần đăng ký, không cần đăng nhập</strong>.
+        Toàn bộ trải nghiệm hoạt động hoàn toàn ẩn danh.</p>
+      <div class="logic-box">
+        <h4>🔑 Cơ Chế Nhận Dạng Ẩn Danh — SessionId GUID</h4>
+        <ul>
+          <li><strong>Tạo định danh cục bộ:</strong> Khi cài App lần đầu, <code>SessionService</code> tạo một
+            <code>SessionId = Guid.NewGuid().ToString()</code> và lưu vào <code>Preferences</code> của thiết bị. GUID
+            này là duy nhất, không thay đổi giữa các lần mở App.
+          </li>
+          <li><strong>Không cần JWT:</strong> Tất cả API mà du khách gọi (<code>/api/analytics/log</code>,
+            <code>/api/session/start</code>, <code>/api/movement/batch</code>, <code>/api/history/log</code>,
+            <code>/api/poi</code>) đều là <span class="tag tg2">Public</span> — không yêu cầu token xác thực.
+          </li>
+          <li><strong>Quét QR không cần account:</strong> <code>QrScanPage</code> gọi
+            <code>/api/poi/qrcode/{code}</code> (Public) rồi điều hướng thẳng sang trang chi tiết và phát thuyết minh —
+            không có bước đăng nhập nào.
+          </li>
+          <li><strong>Phân biệt khách quay lại:</strong> <code>SessionController.Start</code> kiểm tra
+            <code>db.DeviceSessions.AnyAsync(s => s.SessionId == dto.SessionId)</code> để đánh dấu
+            <code>IsReturning = true</code> nếu SessionId đã từng tồn tại.
+          </li>
+        </ul>
+      </div>
+      <div class="tw">
+        <table>
+          <tr>
+            <th>Bước</th>
+            <th>Hành động</th>
+            <th>API / Service</th>
+            <th>Auth</th>
+          </tr>
+          <tr>
+            <td>1. Mở App</td>
+            <td>Tạo/đọc SessionId từ Preferences</td>
+            <td><code>SessionService.SessionId</code> (local GUID)</td>
+            <td>Không cần</td>
+          </tr>
+          <tr>
+            <td>2. Khởi động</td>
+            <td>Gửi thông tin thiết bị lên server</td>
+            <td><code>POST /api/session/start</code></td>
+            <td><span class="tag tg2">Public</span></td>
+          </tr>
+          <tr>
+            <td>3. Đi dạo</td>
+            <td>GPS trigger → phát thuyết minh tự động</td>
+            <td><code>GeofenceService</code> + <code>NarrationService</code> (on-device)</td>
+            <td>Không cần</td>
+          </tr>
+          <tr>
+            <td>4. Quét QR</td>
+            <td>Scan mã → tìm POI → phát audio ngay</td>
+            <td><code>GET /api/poi/qrcode/{code}</code></td>
+            <td><span class="tag tg2">Public</span></td>
+          </tr>
+          <tr>
+            <td>5. Log lượt nghe</td>
+            <td>Ghi nhận POI đã nghe + thời lượng</td>
+            <td><code>POST /api/analytics/log</code></td>
+            <td><span class="tag tg2">Public</span></td>
+          </tr>
+          <tr>
+            <td>6. Heartbeat</td>
+            <td>Cập nhật trạng thái phiên mỗi 60s</td>
+            <td><code>POST /api/session/heartbeat</code></td>
+            <td><span class="tag tg2">Public</span></td>
+          </tr>
+          <tr>
+            <td>7. Đóng App</td>
+            <td>Đánh dấu kết thúc phiên</td>
+            <td><code>POST /api/session/end</code></td>
+            <td><span class="tag tg2">Public</span></td>
+          </tr>
+        </table>
+      </div>
+      <div class="uc-note">
+        <strong>📌 Nhiều du khách đồng thời:</strong> Mỗi thiết bị có SessionId riêng biệt. Server nhận log từ hàng trăm
+        SessionId khác nhau cùng lúc — không có conflict. <code>MovementController.BatchLog</code> chấp nhận tối đa 2000
+        điểm/batch và xử lý <code>AddRange</code> trong một transaction duy nhất để tối ưu throughput.
       </div>
     </div>
   </div>
@@ -2018,8 +2105,12 @@
     <!-- 4.2 Geofence -->
     <div class="card">
       <h3>🔔 4.2 Geofence / Kích Hoạt Điểm Thuyết Minh</h3>
-      <p>Thuật toán Haversine tính khoảng cách, yêu cầu 2 lần va chạm liên tiếp, hệ số vùng đệm thoát 1.2×, thời gian
-        chờ giữa các lần kích hoạt, sắp xếp theo độ ưu tiên, và hệ số bán kính tùy chỉnh từ cài đặt người dùng.</p>
+      <p>Thuật toán Haversine tính khoảng cách, yêu cầu 2 lần va chạm liên tiếp
+        (<code>RequiredConsecutiveHits = 2</code>), hệ số vùng đệm thoát 1.2× (<code>ExitHysteresisFactor</code>),
+        cooldown per-POI (<code>CooldownSeconds</code> từng quán), <strong>global cooldown 10 giây</strong>
+        (<code>GlobalCooldownSeconds = 10</code>) giữa bất kỳ 2 lần trigger nào, sắp xếp theo độ ưu tiên (Priority +
+        Distance), và hệ số bán kính tùy chỉnh từ cài đặt người dùng. <code>GeofenceCooldownStore</code> persist trạng
+        thái cooldown vào <code>Preferences</code> để survive app restart.</p>
       <div class="dw">
         <div class="dt">Activity Diagram — Geofence Check</div>
         <div class="mermaid">
@@ -2113,8 +2204,12 @@
     <!-- 4.3 Narration -->
     <div class="card">
       <h3>🔊 4.3 Thuyết Minh Tự Động (Narration Engine)</h3>
-      <p>Hàng đợi ưu tiên, khóa đơn luồng để tránh phát chồng, ưu tiên file âm thanh thu sẵn trước khi dùng giọng đọc
-        tổng hợp, cửa sổ chống phát trùng 25 giây, tốc độ đọc 0.92.</p>
+      <p><strong>Kiến trúc per-device (quan trọng):</strong> Hàng đợi narration chạy <strong>hoàn toàn trên thiết bị của
+          từng du khách</strong> — không phải server-side queue. Khi 100 du khách đứng cùng một quầy, mỗi người nghe
+        trên điện thoại của mình, không có conflict. Server chỉ nhận log analytics sau khi phát xong.</p>
+      <p>Hàng đợi ưu tiên per-device, khóa đơn luồng (<code>SemaphoreSlim(1,1)</code>) để tránh phát chồng, ưu tiên file
+        âm thanh thu sẵn trước khi dùng giọng đọc tổng hợp, cửa sổ chống phát trùng 25 giây
+        (<code>DuplicateWindow</code>), tốc độ đọc 0.92, khoảng nghỉ 3s giữa các audio trong queue.</p>
       <div class="dw">
         <div class="dt">Activity Diagram — Narration Service</div>
         <div class="mermaid">
@@ -2484,7 +2579,86 @@
     </div>
 
     <div class="card">
-      <h3>📊 5.2 Analytics — MovementLog, PoiVisitLog, Heatmap</h3>
+      <h3>📊 5.2 Analytics — Monitoring Toàn Diện (Nhiều Du Khách, Nhiều Ngày)</h3>
+      <p>Hệ thống monitoring được thiết kế để theo dõi <strong>hàng trăm du khách đồng thời</strong>, thống kê theo
+        ngày/giờ, và cung cấp dữ liệu real-time cho Admin.</p>
+
+      <div class="logic-box" style="border-left-color: #10b981;">
+        <h4>📊 Toàn Bộ Monitoring APIs — Được Chứng Minh Bởi Code</h4>
+        <div class="tw">
+          <table>
+            <tr>
+              <th>API</th>
+              <th>Dữ liệu trả về</th>
+              <th>Nguồn dữ liệu</th>
+            </tr>
+            <tr>
+              <td><code>GET /api/admin/summary</code></td>
+              <td>totalPois, totalTours, <strong>totalDevices</strong> (unique SessionIds), totalVisits,
+                <strong>activeUsers</strong> (real-time SignalR connections)
+              </td>
+              <td>Pois, Tours, PoiVisitLogs, AppHistoryLogs, <code>ConnectionTracker</code></td>
+            </tr>
+            <tr>
+              <td><code>GET /api/admin/sessions?days=7</code></td>
+              <td>Danh sách phiên du khách: thiết bị, platform, thời gian, POIs visited, quãng đường, ngôn ngữ,
+                <strong>IsActive</strong> (heartbeat &lt;3 phút)
+              </td>
+              <td>DeviceSessions</td>
+            </tr>
+            <tr>
+              <td><code>GET /api/admin/sessions/stats?days=30</code></td>
+              <td>totalSessions, avgDurationMinutes, avgPoisVisited, avgDistanceMeters, <strong>returningRate</strong>
+                (%), platformBreakdown (Android/iOS), topDevices, topManufacturers, languageBreakdown</td>
+              <td>DeviceSessions</td>
+            </tr>
+            <tr>
+              <td><code>GET /api/admin/peak-hours?days=7</code></td>
+              <td>Số phiên theo từng khung giờ 0-23 (UTC+7) — phân tích giờ cao điểm</td>
+              <td>DeviceSessions.StartedAt</td>
+            </tr>
+            <tr>
+              <td><code>GET /api/analytics/top?days=7</code></td>
+              <td>Top 20 POI: lượt nghe, avg duration — xếp hạng quán phổ biến</td>
+              <td>PoiVisitLogs GROUP BY PoiId</td>
+            </tr>
+            <tr>
+              <td><code>GET /api/analytics/heatmap?hours=24</code></td>
+              <td>Tọa độ GPS unique per SessionId (5 decimal places ~1.1m) — bản đồ nhiệt di chuyển</td>
+              <td>MovementLogs (cache 30s)</td>
+            </tr>
+            <tr>
+              <td><code>GET /api/analytics/poi-heatmap-stats?hours=24</code></td>
+              <td>Số unique visitors đến gần từng POI (trong bán kính TriggerRadius)</td>
+              <td>MovementLogs + Pois proximity check</td>
+            </tr>
+            <tr>
+              <td><code>GET /api/history?eventType=GPS_TRIGGER</code></td>
+              <td>Event log: GPS_TRIGGER, QR_SCAN, AI_CHAT, TTS_PLAY, AUDIO_PLAY, SYNC_POI — lọc theo ngày/ngôn ngữ</td>
+              <td>AppHistoryLogs</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="logic-box">
+        <h4>🔢 Cách Đếm Số Lượng Du Khách — Chứng Minh Từ Code</h4>
+        <ul>
+          <li><strong>Unique devices (tổng):</strong>
+            <code>db.PoiVisitLogs.Select(x => x.SessionId).Distinct().Count()</code> — đếm số thiết bị duy nhất đã từng
+            nghe thuyết minh.
+          </li>
+          <li><strong>Active users (real-time):</strong> <code>tracker.GetOnlineCount()</code> —
+            <code>ConnectionTracker</code> dùng <code>ConcurrentDictionary&lt;string, byte&gt;</code> để đếm SignalR
+            connections đang mở.
+          </li>
+          <li><strong>Returning visitors:</strong> <code>DeviceSession.IsReturning</code> — được set khi SessionId đã
+            tồn tại trong DB từ lần trước.</li>
+          <li><strong>Visitors per POI:</strong> <code>GetPoiHeatmapStats</code> đếm unique SessionIds trong bán kính
+            của từng POI từ MovementLogs.</li>
+        </ul>
+      </div>
+
       <div class="dw">
         <div class="dt">Activity Diagram — Analytics Dashboard</div>
         <div class="mermaid">
@@ -2504,6 +2678,10 @@
           H -- "Xem lịch sử" --> K["Tải nhật ký sự kiện hệ thống"]
           K --> L["Hiển thị bảng lịch sử"]
           L --> H
+          H -- "Xem phiên du khách" --> M["Tải DeviceSessions (phân trang)"]
+          M --> N["Hiển thị: thiết bị, thời gian, POIs, quãng đường, IsReturning"]
+          N --> O["Xem stats tổng hợp: avg duration, returning rate, peak hours"]
+          O --> H
         </div>
       </div>
       <div class="logic-box">
@@ -2511,22 +2689,28 @@
         <p>Hệ thống Analytics biến các dữ liệu thô từ log thành thông tin quản trị giá trị:</p>
         <ol>
           <li><strong>Tổng hợp dữ liệu (Aggregation Logic):</strong> Thống kê lượt nghe và thời gian nghe trung bình
-            theo từng quán.</li>
-          <li><strong>Bản đồ nhiệt (Heatmap Algorithm):</strong> Lấy tọa độ từ <code>MovementLogs</code> để tô màu mật
-            độ du khách.</li>
+            theo từng quán. Cache 5 phút cho summary stats, 30 giây cho heatmap data.</li>
+          <li><strong>Bản đồ nhiệt (Heatmap Algorithm):</strong> Lấy tọa độ từ <code>MovementLogs</code>, group by
+            SessionId + rounded coordinates (5 decimal places) để đại diện mật độ người thực tế thay vì thời gian hoạt
+            động.</li>
+          <li><strong>Phân tích phiên (Session Analytics):</strong> <code>GetSessionStats</code> tính avg duration (chỉ
+            phiên đã kết thúc), returning rate, platform breakdown, top devices, language breakdown — tất cả từ
+            <code>DeviceSessions</code>.
+          </li>
+          <li><strong>Giờ cao điểm (Peak Hours):</strong> <code>GetPeakHours</code> chuyển <code>StartedAt</code> sang
+            UTC+7 và đếm số phiên theo từng khung giờ 0-23.</li>
         </ol>
         <hr />
         <h4>🔄 Luồng tương tác Sequence — Analytics Aggregation</h4>
         <ul>
           <li><strong>Truy vấn tập trung:</strong> Khi Admin mở Dashboard, React gửi đồng thời nhiều request tới
             <code>AnalyticsController</code>. Server thực thi các câu lệnh SQL <code>GROUP BY</code> và
-            <code>COUNT</code> trực tiếp trên SQLite để lấy dữ liệu thống kê trong vòng 7 ngày qua.
+            <code>COUNT</code> trực tiếp trên SQLite.
           </li>
-          <li><strong>Xử lý Heatmap:</strong> <code>MovementController</code> truy xuất hàng ngàn điểm tọa độ trong 10
-            phút gần nhất. Dữ liệu này được gửi về dưới dạng mảng tọa độ gọn nhẹ để thư viện Leaflet phía Client xử lý
-            việc vẽ các vùng màu nhiệt (Red/Blue/Yellow).</li>
-          <li><strong>Hiệu suất:</strong> Sơ đồ Sequence thể hiện việc Server xử lý logic tính toán trước khi trả về
-            (SummaryDto), giúp giảm tải cho trình duyệt và tăng tốc độ hiển thị biểu đồ BarChart.</li>
+          <li><strong>Xử lý Heatmap:</strong> <code>MovementController</code> truy xuất hàng ngàn điểm tọa độ. Dữ liệu
+            được gửi về dưới dạng mảng tọa độ gọn nhẹ để thư viện Leaflet phía Client xử lý vẽ heatmap.</li>
+          <li><strong>Hiệu suất:</strong> <code>IMemoryCache</code> cache summary stats 5 phút và heatmap 30 giây. Cache
+            bị invalidate ngay khi có visit log mới (<code>_cache.Remove("admin_summary_stats")</code>).</li>
         </ul>
       </div>
       <div class="dw">
@@ -2537,28 +2721,37 @@
           participant Web as "Dashboard (React)"
           participant AdminAPI as AdminController
           participant AnalyticsAPI as AnalyticsController
+          participant Tracker as ConnectionTracker
           participant DB as ApplicationDbContext
 
           ADM->>Web: Mở trang Thống kê
           Web->>AdminAPI: HTTP GET Summary()
           activate AdminAPI
-          AdminAPI->>DB: db.Pois.CountAsync()
-          AdminAPI-->>Web: "JSON { totalPois, totalVisits, ... }"
+          AdminAPI->>DB: "db.PoiVisitLogs.Select(x=>x.SessionId).Distinct().Count()"
+          AdminAPI->>Tracker: GetOnlineCount()
+          Tracker-->>AdminAPI: "return _connections.Count (real-time)"
+          AdminAPI-->>Web: "JSON { totalDevices, totalVisits, activeUsers }"
           deactivate AdminAPI
 
           Web->>AnalyticsAPI: "HTTP GET GetTop(days=7)"
           activate AnalyticsAPI
-          AnalyticsAPI->>DB: "db.PoiVisitLogs.GroupBy(PoiId)"
+          AnalyticsAPI->>DB: "db.PoiVisitLogs.GroupBy(PoiId).Select(Count, AvgDuration)"
           AnalyticsAPI-->>Web: "JSON List[TopPoiDto]"
           deactivate AnalyticsAPI
 
+          Web->>AdminAPI: "HTTP GET GetSessionStats(days=30)"
+          activate AdminAPI
+          AdminAPI->>DB: "db.DeviceSessions.Where(StartedAt >= since)"
+          AdminAPI-->>Web: "JSON { avgDuration, returningRate, platformBreakdown, peakHours }"
+          deactivate AdminAPI
+
           Web->>AnalyticsAPI: "HTTP GET GetHeatmap(hours=0.1)"
           activate AnalyticsAPI
-          AnalyticsAPI->>DB: "db.MovementLogs.Where(RecordedAt >= since)"
-          AnalyticsAPI-->>Web: "JSON List[CoordinateDto]"
+          AnalyticsAPI->>DB: "db.MovementLogs.GroupBy(SessionId+RoundedCoords)"
+          AnalyticsAPI-->>Web: "JSON List[CoordinateDto] (cached 30s)"
           deactivate AnalyticsAPI
 
-          Web-->>ADM: Render Charts & Heatmap
+          Web-->>ADM: Render Charts, Heatmap, Session Stats
         </div>
       </div>
     </div>
@@ -2654,55 +2847,6 @@
           Page->>Outbox: "EnqueueLogAsync(PoiId, 'QR')"
           Outbox-->>KH: Success
         </div>
-      </div>
-    </div>
-  </div>
-
-    <div class="card">
-      <h3>📲 5.4 QR Landing Page &amp; App Distribution</h3>
-      <p>Luồng dành cho khách mới: Quét mã QR tại thực địa bằng ứng dụng Camera để tải ứng dụng. Server tự động nhận diện thiết bị và điều hướng đến file cài đặt (APK/Store).</p>
-      <div class="dw">
-        <div class="dt">Sequence Diagram — QR App Download Flow</div>
-        <div class="mermaid">
-          sequenceDiagram
-          actor KH as Khách Tham Quan
-          participant Cam as Camera App (iOS/Android)
-          participant API as AppDownloadController
-          participant Web as Landing Page (Static)
-          participant Store as File Storage (Server/Store)
-
-          KH->>Cam: Mở Camera & Quét mã QR tại quán
-          Cam->>Cam: "Nhận diện URL"
-          Cam->>API: Download()
-          activate API
-          
-          Note over API: Kiểm tra User-Agent (Android/iOS)
-          
-          alt Is Android
-              API-->>Cam: Redirect("/files/vinhkhanh.apk")
-              Cam->>Store: DownloadFile()
-              Store-->>KH: "Bắt đầu tải xuống APK"
-          else Is Other (iOS/Web)
-              API-->>Cam: Redirect("/landing")
-              Cam->>Web: LoadLandingPage()
-              Web-->>KH: "Hiển thị trang giới thiệu"
-          end
-          deactivate API
-
-          Note over KH: Khách cài đặt & mở App lần đầu
-          KH->>KH: Cấp quyền GPS & Bắt đầu Tour
-        </div>
-      </div>
-      <div class="logic-box">
-        <h4>🧠 Giải Thích Chi Tiết — Luồng Phân Phối Ứng Dụng</h4>
-        <ol>
-          <li><strong>Nhận diện thông minh (Device Detection):</strong> Server sử dụng <code>User-Agent</code> để quyết
-            định đích đến. Nếu là Android, hệ thống ưu tiên đẩy file APK trực tiếp để khách cài đặt ngay tại chỗ.</li>
-          <li><strong>Trang đệm (Landing Page):</strong> Đối với các thiết bị khác, hệ thống chuyển hướng về một trang
-            Web tĩnh giới thiệu về Phố Vĩnh Khánh, cung cấp các lựa chọn thay thế hoặc hướng dẫn cài đặt thủ công.</li>
-          <li><strong>Tối ưu hóa chuyển đổi (Conversion):</strong> Việc sử dụng Redirect 302 giúp rút ngắn hành trình của
-            khách từ lúc nhìn thấy mã QR đến lúc có App trong máy xuống mức tối thiểu (chỉ 1-2 lần chạm).</li>
-        </ol>
       </div>
     </div>
   </div>
@@ -4195,25 +4339,25 @@
         <div class="dt">State Diagram — GPS Service</div>
         <div class="mermaid">
           stateDiagram-v2
-          [*] --> Idle : Ứng dụng khởi động
-          Idle --> RequestPermission : Bắt đầu theo dõi
-          RequestPermission --> Denied : Người dùng từ chối
-          RequestPermission --> Starting : Được cấp quyền
-          Denied --> RequestPermission : Mở Cài đặt
-          Starting --> Tracking : Đã kết nối GPS
-          Starting --> Mocking : Bật giả lập
-          Tracking --> Tracking : Cập nhật mỗi 3s
-          Tracking --> ConnectionLost : Mất tín hiệu > 30s
-          ConnectionLost --> Tracking : GPS phục hồi
-          Tracking --> Stopped : Dừng theo dõi
-          Mocking --> Stopped : Dừng theo dõi
-          Stopped --> [*]
-          note right of Tracking
+          [*] --> Chờ : Ứng dụng khởi động
+          Chờ --> XinQuyền : Bắt đầu theo dõi vị trí
+          XinQuyền --> BịTừChối : Người dùng từ chối
+          XinQuyền --> KhởiĐộng : Được cấp quyền
+          BịTừChối --> XinQuyền : Người dùng mở Cài đặt
+          KhởiĐộng --> ĐangTheoDõi : Đã kết nối GPS
+          KhởiĐộng --> GiảLập : Bật chế độ giả lập
+          ĐangTheoDõi --> ĐangTheoDõi : Cập nhật vị trí mỗi 3 giây
+          ĐangTheoDõi --> MấtTínHiệu : Mất GPS hơn 30 giây
+          MấtTínHiệu --> ĐangTheoDõi : GPS phục hồi
+          ĐangTheoDõi --> DừngLại : Dừng theo dõi
+          GiảLập --> DừngLại : Dừng theo dõi
+          DừngLại --> [*]
+          note right of ĐangTheoDõi
           Gửi thông báo vị trí mới
           Lưu điểm vào bộ đệm
           Đủ 25 điểm hoặc 30 giây → gửi lên máy chủ
           end note
-          note right of Mocking
+          note right of GiảLập
           Chạy lộ trình mô phỏng
           5 điểm dừng, mỗi 1.5 giây
           Dùng để kiểm thử và demo
@@ -4226,14 +4370,14 @@
           hướng:</p>
         <ol>
           <li><strong>Khởi động an toàn:</strong> Từ trạng thái <code>Idle</code>, hệ thống buộc phải đi qua bước
-            <code>RequestPermission</code>. Chỉ khi du khách cho phép truy cập vị trí "Luôn luôn", dịch vụ mới chuyển
+            <code>RequestingPermission</code>. Chỉ khi du khách cho phép truy cập vị trí "Luôn luôn", dịch vụ mới chuyển
             sang trạng thái <code>Starting</code>.
           </li>
           <li><strong>Duy trì kết nối (Tracking State):</strong> Đây là trạng thái hoạt động chính. Mỗi khi có tọa độ
             mới, hệ thống sẽ thực hiện một chu kỳ: Lấy vị trí -> Kiểm tra Geofence -> Lưu Buffer -> Gửi Batch. Nếu tín
-            hiệu GPS bị mất quá 30 giây, App tự động chuyển sang trạng thái <code>ConnectionLost</code> để cảnh báo người dùng.
+            hiệu GPS bị mất quá 30 giây, App tự động chuyển sang trạng thái <code>Lost</code> để cảnh báo người dùng.
           </li>
-          <li><strong>Chế độ Giả lập (Mocking):</strong> Đây là trạng thái đặc biệt dành cho việc kiểm thử hoặc trình
+          <li><strong>Chế độ Giả lập (Mock Mode):</strong> Đây là trạng thái đặc biệt dành cho việc kiểm thử hoặc trình
             diễn. Thay vì lấy tọa độ thật, App sẽ "tự diễn" theo một lộ trình có sẵn, giúp Admin có thể kiểm tra logic
             Geofence ngay cả khi đang ngồi trong văn phòng.</li>
           <li><strong>Dừng dịch vụ (Stopped):</strong> Khi khách thoát App hoặc tắt tính năng theo dõi,
@@ -4243,33 +4387,62 @@
         </ol>
       </div>
       <div class="dw">
-          <div class="dt">Sequence Diagram 12.1 — GPS Tracking & Background Service</div>
-          <div class="mermaid">
+        <div class="dt">Sequence Diagram — Luồng Khởi Động &amp; Vận Hành GPS</div>
+        <div class="mermaid">
           sequenceDiagram
-          participant User as Tourist
+          autonumber
+          participant User as Du Khách
+          participant App as MauiApp
           participant GPS as GpsService
-          participant FG as BackgroundService
+          participant FG as GpsForegroundService
+          participant Perm as Permissions API
           participant Msg as WeakReferenceMessenger
+          participant Buffer as MovementBuffer
           participant API as MovementController
 
-          User->>GPS: StartTrackingAsync()
+          User->>App: Mở ứng dụng
+          App->>GPS: StartTrackingAsync()
+          alt Chế độ Mock bật
+          GPS->>GPS: RunRouteSimulationAsync()
+          loop Mỗi 1.5 giây
+          GPS->>Msg: Publish(lat, lon)
+          Msg-->>App: LocationUpdatedMessage
+          end
+          else Android thật
+          GPS->>Perm: RequestAsync LocationAlways
+          alt Được cấp quyền
+          Perm-->>GPS: Granted
           GPS->>FG: StartForegroundService()
-          
-          loop Every 3 seconds
-            FG->>GPS: OnLocationChanged
-            GPS->>Msg: "Send LocationUpdatedMessage"
-            Note over GPS: Buffer.Add(location)
+          FG->>FG: Notification "Đang theo dõi vị trí"
+          loop Mỗi 3 giây
+          FG->>Msg: Publish(lat, lon)
+          Msg-->>App: LocationUpdatedMessage
+          end
+          else Bị từ chối
+          Perm-->>GPS: Denied
+          GPS->>Perm: RequestAsync LocationWhenInUse
+          end
+          else iOS thật
+          GPS->>Perm: RequestAsync LocationAlways
+          Perm-->>GPS: Granted
+          GPS->>GPS: StartIosLoopAsync()
+          loop Mỗi 1.5 giây
+          GPS->>GPS: Geolocation.GetLocationAsync()
+          GPS->>Msg: Publish(lat, lon)
+          end
           end
 
-          alt Buffer.Count >= 25 OR Elapsed > 30s
-            GPS->>API: "POST /api/movement/batch (List-Location)"
-            API-->>GPS: 200 OK
-            Note over GPS: Clear Buffer
+          Note over Buffer: Lưu điểm vào bộ đệm
+          App->>Buffer: Thêm tọa độ mới
+          alt Đủ 25 điểm hoặc 30 giây
+          Buffer->>API: POST /api/movement/batch
+          API-->>Buffer: 200 OK
           end
 
-          User->>GPS: StopTrackingAsync()
+          User->>App: Thoát ứng dụng
+          App->>GPS: StopTrackingAsync()
           GPS->>FG: StopService()
-          </div>
+        </div>
       </div>
     </div>
 
@@ -4279,22 +4452,22 @@
         <div class="dt">State Diagram — POI Geofence (per POI)</div>
         <div class="mermaid">
           stateDiagram-v2
-          [*] --> Outside : POI được tải
-          Outside --> Approaching : Khoảng cách < Bán kính
-          Approaching --> Outside : Đi ra vùng đệm
-          Approaching --> Validating : Va chạm lần 1
-          Validating --> Outside : Đi ra vùng đệm
-          Validating --> Triggered : Đủ 2 lần liên tiếp
-          Triggered --> Cooldown : Phát thuyết minh
-          Cooldown --> Outside : Hết thời gian chờ
-          Cooldown --> Cooldown : Tiếp tục ở trong (bỏ qua)
-          note right of Triggered
+          [*] --> BênNgoài : Điểm tham quan được tải
+          BênNgoài --> ĐangTiếpCận : Khoảng cách nhỏ hơn bán kính
+          ĐangTiếpCận --> BênNgoài : Đi ra ngoài vùng đệm thoát
+          ĐangTiếpCận --> ĐangXácNhận : Lần va chạm thứ nhất
+          ĐangXácNhận --> BênNgoài : Đi ra ngoài vùng đệm thoát
+          ĐangXácNhận --> ĐãKíchHoạt : Đủ 2 lần liên tiếp và không trong thời gian chờ
+          ĐãKíchHoạt --> ĐangChờ : Phát thuyết minh và ghi nhận lượt tham quan
+          ĐangChờ --> BênNgoài : Hết thời gian chờ
+          ĐangChờ --> ĐangChờ : Tín hiệu GPS tiếp tục (bỏ qua)
+          note right of ĐãKíchHoạt
           Loại kích hoạt: GPS
           Đưa vào hàng đợi thuyết minh
           Ghi nhận lượt tham quan
           Bắt đầu đếm thời gian chờ
           end note
-          note right of Cooldown
+          note right of ĐangChờ
           Mặc định: 60 giây
           Có thể cấu hình theo từng điểm
           Tránh phát thuyết minh lặp lại
@@ -4321,36 +4494,49 @@
         </ol>
       </div>
       <div class="dw">
-        <div class="dt">Sequence Diagram 12.2 — Geofence Trigger & Priority Filter</div>
+        <div class="dt">Sequence Diagram — Luồng Kích Hoạt Geofence POI</div>
         <div class="mermaid">
           sequenceDiagram
+          autonumber
           participant GPS as GpsService
           participant GF as GeofenceService
-          participant Math as GeoMath (Haversine)
+          participant Math as GeoMath.Haversine
           participant CD as CooldownStore
           participant NQ as NarrationService
           participant Log as AnalyticsController
 
           GPS->>GF: CheckTriggeredAsync(location, pois)
-          
-          loop Foreach poi in pois
-            GF->>Math: Haversine(location, poi)
-            opt distance <= poi.TriggerRadius
-                GF->>CD: IsOnCooldown(poi.Id)
-                opt Not On Cooldown
-                    Note over GF: Add to candidates
-                end
+          GF->>GF: Kiểm tra Global Cooldown (10s)
+          alt Đang trong Global Cooldown
+          GF-->>GPS: Trả về danh sách rỗng
+          else Hết Global Cooldown
+          loop Với mỗi POI trong danh sách
+          GF->>Math: Haversine(userLat, userLon, poiLat, poiLon)
+          Math-->>GF: distance (mét)
+          alt distance > adjustedRadius VÀ chưa ở trong
+          GF->>GF: Reset consecutiveHits = 0
+          else distance > exitRadius VÀ đang ở trong
+          GF->>GF: Xóa khỏi insidePoiIds (Hysteresis 1.2x)
+          GF->>GF: Reset consecutiveHits = 0
+          else Lọt vào vùng kích hoạt
+          GF->>GF: consecutiveHits++
+          alt consecutiveHits < 2 Note over GF: Chờ lần va chạm tiếp theo else consecutiveHits>= 2
+            GF->>CD: Kiểm tra CooldownSeconds
+            alt Đang trong Cooldown
+            Note over GF: Bỏ qua POI này
+            else Hết Cooldown
+            GF->>GF: Thêm vào insidePoiIds
+            GF->>GF: So sánh Priority + Distance
+            Note over GF: Chọn bestPoi có Priority cao nhất
             end
-          end
-
-          alt candidates.Any()
-            GF->>GF: SortByPriorityAndDistance()
-            GF-->>GPS: return bestPoi
+            end
+            end
+            end
+            GF->>GF: Ghi nhận lastTriggered + lastGlobalTrigger
+            GF-->>GPS: Trả về [bestPoi]
             GPS->>NQ: EnqueueAsync(bestPoi, language)
-            GPS->>Log: POST /api/analytics/log (GPS_TRIGGER)
-          else Empty
-            GF-->>GPS: return null
-          end
+            GPS->>Log: POST /api/analytics/log
+            end
         </div>
       </div>
     </div>
@@ -4403,28 +4589,62 @@
         </ol>
       </div>
       <div class="dw">
-          <div class="dt">Sequence Diagram 12.3 — Connectivity & Outbox Sync</div>
-          <div class="mermaid">
+        <div class="dt">Sequence Diagram — Luồng Đồng Bộ Online/Offline &amp; Outbox</div>
+        <div class="mermaid">
           sequenceDiagram
-          participant App as MAUI App
+          autonumber
+          participant App as MauiApp
+          participant Conn as ConnectivityService
+          participant Net as Connectivity API
+          participant Cache as LocalPoiCacheService
+          participant API as ApiClientService
           participant Outbox as OutboxService
-          participant DB as SQLite (Local)
-          participant API as OutboxController
+          participant Server as ASP.NET Core API
 
-          Note over App, DB: [Khi mất mạng]
-          App->>Outbox: EnqueueVisitAsync(log)
-          Outbox->>DB: INSERT INTO OutboxItems
-          
-          Note over App, API: [Khi có mạng trở lại]
-          loop Mỗi 30 giây (Polling)
-            Outbox->>DB: GetPendingItems()
-            DB-->>Outbox: List of OutboxItems
-            loop Foreach item
-                Outbox->>API: POST /api/outbox/process
-                API-->>Outbox: 200 OK
-                Outbox->>DB: DELETE FROM OutboxItems
-            end
+          App->>Conn: Khởi tạo (đăng ký ConnectivityChanged)
+          Net-->>Conn: ConnectivityChanged(Internet)
+          Conn->>API: GetPoisAsync(lang)
+          API->>Server: GET /api/poi?lang=vi
+          Server-->>API: List Poi + Translations
+          API-->>Conn: remote pois
+          Conn->>Conn: So sánh ContentVersion (Delta Sync)
+          alt Có POI mới hoặc cập nhật
+          Conn->>Cache: SavePoisAsync(remote)
+          Cache->>Cache: Ghi vào SQLite cục bộ
+          Conn->>API: GetToursAsync(lang)
+          API->>Server: GET /api/tour
+          Server-->>API: List Tour
+          Conn->>Cache: SaveToursAsync(tours)
           end
+
+          Note over Outbox: Flush dữ liệu tồn đọng
+          Net-->>Outbox: Có mạng trở lại
+          Outbox->>Outbox: Lấy items từ SQLite (max 50)
+          loop Với mỗi OutboxItem
+          alt Kind = movement
+          Outbox->>Server: POST /api/movement/batch
+          else Kind = history
+          Outbox->>Server: POST /api/history/log
+          else Kind = visit
+          Outbox->>Server: POST /api/analytics/log
+          end
+          alt Gửi thành công
+          Server-->>Outbox: 200 OK
+          Outbox->>Outbox: DELETE item khỏi SQLite
+          else Gửi thất bại
+          Outbox->>Outbox: RetryCount++ (Backoff 10s/30s/60s/300s/900s)
+          alt RetryCount >= 5
+          Outbox->>Outbox: Xóa bỏ (discard)
+          end
+          end
+          end
+
+          Note over App: Khi mất mạng
+          Net-->>App: ConnectivityChanged(None)
+          App->>Cache: LoadPoisAsync() từ SQLite
+          Cache-->>App: Dữ liệu offline sẵn sàng
+          App->>Outbox: EnqueueVisitAsync(visitLog)
+          Outbox->>Outbox: Lưu vào SQLite chờ gửi
         </div>
       </div>
     </div>
@@ -4435,23 +4655,24 @@
         <div class="dt">State Diagram — NarrationService Queue</div>
         <div class="mermaid">
           stateDiagram-v2
-          [*] --> Idle : Dịch vụ sẵn sàng
-          Idle --> Processing : Có yêu cầu mới
-          Processing --> AudioLoading : Có file âm thanh
-          Processing --> Translating : Ngôn ngữ khác (không file)
-          Processing --> TtsVietnamese : Tiếng Việt (không file)
-          AudioLoading --> PlayingAudio : Tải thành công
-          AudioLoading --> Translating : Tải thất bại
-          Translating --> PlayingTts : Nhận bản dịch
-          PlayingAudio --> CheckQueue : Phát xong
-          PlayingTts --> CheckQueue : Đọc xong
-          TtsVietnamese --> CheckQueue : Đọc xong
-          PlayingAudio --> Interrupted : Ưu tiên cao hơn
-          PlayingTts --> Interrupted : Ưu tiên cao hơn
-          Interrupted --> Processing : Xử lý POI mới
-          CheckQueue --> Processing : Còn hàng chờ
-          CheckQueue --> Idle : Hàng chờ trống
-          note right of Processing
+          [*] --> Rảnh : Dịch vụ sẵn sàng
+          Rảnh --> ĐangXửLý : Có yêu cầu phát thuyết minh mới
+          ĐangXửLý --> TảiÂmThanh : Điểm có file âm thanh sẵn
+          ĐangXửLý --> DịchNộiDung : Không có file, ngôn ngữ khác tiếng Việt
+          ĐangXửLý --> ĐọcTiếngViệt : Không có file, ngôn ngữ tiếng Việt
+          TảiÂmThanh --> PhátFile : Tải thành công
+          TảiÂmThanh --> DịchNộiDung : Tải thất bại
+          DịchNộiDung --> ĐọcGiọngTổngHợp : Nhận được bản dịch
+          DịchNộiDung --> ĐọcGiọngTổngHợp : Tất cả dịch vụ lỗi, dùng tiếng Việt gốc
+          PhátFile --> KiểmTraHàngĐợi : Phát xong
+          ĐọcGiọngTổngHợp --> KiểmTraHàngĐợi : Đọc xong
+          ĐọcTiếngViệt --> KiểmTraHàngĐợi : Đọc xong
+          PhátFile --> BịNgắt : Có nội dung ưu tiên cao hơn
+          ĐọcGiọngTổngHợp --> BịNgắt : Có nội dung ưu tiên cao hơn
+          BịNgắt --> ĐangXửLý : Xử lý nội dung ưu tiên cao hơn
+          KiểmTraHàngĐợi --> ĐangXửLý : Còn nội dung trong hàng đợi
+          KiểmTraHàngĐợi --> Rảnh : Hàng đợi trống
+          note right of ĐangXửLý
           Khóa đơn luồng, tránh phát chồng
           Sắp xếp theo độ ưu tiên
           Cửa sổ chống trùng 25 giây
@@ -4467,7 +4688,7 @@
             kiệm tài nguyên.</li>
           <li><strong>Xử lý thông minh (Processing):</strong> Khi có POI mới vào hàng đợi, hệ thống chuyển sang
             <code>Processing</code>. Tại đây, nó quyết định sẽ phát file MP3 (<code>PlayingAudio</code>) hay gọi AI đọc
-            văn bản (<code>PlayingTts</code>).
+            văn bản (<code>PlayingTTS</code>).
           </li>
           <li><strong>Cơ chế ngắt quãng (Interrupted):</strong> Nếu có một thông báo quan trọng hơn xuất hiện, trạng
             thái hiện tại sẽ bị chuyển sang <code>Interrupted</code>. Hệ thống dừng âm thanh cũ ngay lập tức để ưu tiên
@@ -4477,8 +4698,8 @@
         </ol>
       </div>
       <div class="dw">
-          <div class="dt">Sequence Diagram 12.4 — Narration Queue & Priority Logic</div>
-          <div class="mermaid">
+        <div class="dt">Sequence Diagram — Luồng Xử Lý Hàng Đợi Thuyết Minh</div>
+        <div class="mermaid">
           sequenceDiagram
           autonumber
           participant GF as GeofenceService
@@ -4486,47 +4707,66 @@
           participant Gate as SemaphoreSlim
           participant AC as AudioCacheService
           participant Player as IAudioPlayer
+          participant Trans as TranslationController
           participant TTS as TextToSpeech API
 
           GF->>NS: EnqueueAsync(poi, language)
-          NS->>NS: BuildKey(id, lang)
-          
-          alt _queuedKeys.Contains(key) OR RecentlyPlayed < 25s
-              NS-->>GF: Discard Request
-          else Valid Request
-              NS->>NS: Add to Queue + Sort by Priority
-              NS->>NS: InterruptIfHigherPriority(poi.Priority)
-              opt New Priority > Current
-                  NS->>NS: StopAsync()
-                  NS->>Player: Stop() + Dispose()
-              end
-              NS->>NS: ProcessQueueAsync()
+          NS->>NS: BuildKey(poiId, lang)
+          alt Key đã có trong hàng đợi
+          NS-->>GF: Bỏ qua (trùng lặp)
+          else Key trong DuplicateWindow 25s
+          NS-->>GF: Bỏ qua (vừa phát)
+          else Hợp lệ
+          NS->>NS: Thêm vào queue + Sort theo Priority
+          alt POI mới có Priority cao hơn đang phát
+          NS->>NS: InterruptIfHigherPriority()
+          NS->>Player: Stop() + Dispose()
+          end
+          NS->>NS: ProcessQueueAsync()
           end
 
-          loop while Queue is not empty
-              NS->>Gate: WaitAsync()
-              NS->>NS: Pop first item
-              
-              alt poi.AudioUrl != null
-                  NS->>AC: GetAudioPathAsync(url)
-                  AC-->>NS: localPath (Stream)
-                  NS->>Player: CreatePlayer(stream)
-                  NS->>Player: Play()
-                  Note over Player: Playing MP3 File
-              else AudioUrl == null (TTS Fallback)
-                  NS->>NS: ResolveDescription(lang)
-                  NS->>TTS: SpeakAsync(text, options)
-                  TTS-->>NS: Completion
-              end
+          loop Còn item trong queue
+          NS->>Gate: WaitAsync() - Khóa đơn luồng
+          NS->>NS: Lấy item đầu tiên từ queue
 
-              NS->>NS: Set recently played timestamp
-              NS->>Gate: Release()
-              opt has next item
-                  NS->>NS: Task.Delay(3000)
-              end
+          alt POI có AudioUrl
+          NS->>AC: GetAudioPathAsync(url, highPriority)
+          alt File đã cache trên thiết bị
+          AC-->>NS: localPath
+          NS->>Player: CreatePlayer(FileStream)
+          Player->>Player: Play()
+          Note over Player: Phát file MP3
+          else Tải thất bại
+          Note over NS: Fallback sang TTS
           end
-          Note over NS: Queue empty -> Idle
-          </div>
+          else Không có AudioUrl
+          alt Ngôn ngữ = Tiếng Việt
+          NS->>TTS: SpeakAsync(description, rate=0.92)
+          TTS-->>NS: Đọc xong
+          else Ngôn ngữ khác
+          NS->>NS: ResolveDescription(lang)
+          alt Có bản dịch sẵn trong DB
+          NS->>TTS: SpeakAsync(translatedText, locale)
+          else Chưa có bản dịch
+          NS->>Trans: POST /api/translation/text
+          Trans-->>NS: translatedText
+          alt Dịch thành công
+          NS->>TTS: SpeakAsync(translatedText, locale)
+          else Dịch thất bại
+          NS->>TTS: SpeakAsync(originalVietnamese)
+          end
+          end
+          end
+          end
+
+          NS->>NS: recentlyPlayed[key] = now
+          NS->>Gate: Release()
+          alt Còn item tiếp theo
+          NS->>NS: Delay 3 giây (khoảng nghỉ)
+          end
+          end
+          Note over NS: Queue trống → trở về Idle
+        </div>
       </div>
     </div>
 
@@ -4536,22 +4776,22 @@
         <div class="dt">State Diagram — Tour Following</div>
         <div class="mermaid">
           stateDiagram-v2
-          [*] --> NotStarted : Tour được chọn
-          NotStarted --> InProgress : Bắt đầu Tour
-          InProgress --> Navigating : Đi đến điểm tiếp theo
-          Navigating --> Arrived : Vào vùng Geofence
-          Arrived --> Narrating : Phát thuyết minh
-          Narrating --> Waiting : Chờ tại điểm (stayMinutes)
-          Waiting --> Navigating : Chuyển sang điểm tiếp theo
-          Waiting --> Completed : Hết danh sách điểm dừng
-          InProgress --> Cancelled : Dừng Tour
-          Completed --> [*]
-          Cancelled --> [*]
-          note right of Navigating
+          [*] --> ChưaBắtĐầu : Tour được chọn
+          ChưaBắtĐầu --> ĐangThựcHiện : Người dùng nhấn "Bắt đầu Tour"
+          ĐangThựcHiện --> ĐiĐếnĐiểmDừng : Bắt đầu từ điểm dừng đầu tiên
+          ĐiĐếnĐiểmDừng --> ĐãĐếnNơi : GPS phát hiện vào vùng điểm dừng
+          ĐãĐếnNơi --> ĐangPhátThuyếtMinh : Bắt đầu phát thuyết minh
+          ĐangPhátThuyếtMinh --> ChờTạiĐiểm : Phát thuyết minh xong
+          ChờTạiĐiểm --> ĐiĐếnĐiểmDừng : Chuyển sang điểm tiếp theo
+          ChờTạiĐiểm --> HoànThành : Đã đến điểm dừng cuối cùng
+          ĐangThựcHiện --> ĐãHủy : Người dùng nhấn "Dừng Tour"
+          HoànThành --> [*]
+          ĐãHủy --> [*]
+          note right of ĐiĐếnĐiểmDừng
           Hiển thị tên quán tiếp theo
           GPS liên tục kiểm tra vùng phát hiện
           end note
-          note right of Completed
+          note right of HoànThành
           Hiển thị thông báo hoàn thành
           Xóa lộ trình đang theo dõi
           end note
@@ -4574,35 +4814,58 @@
           </li>
         </ol>
       </div>
-          <div class="dt">Sequence Diagram 12.5 — Tour Execution & Auto-Navigation</div>
-          <div class="mermaid">
+      <div class="dw">
+        <div class="dt">Sequence Diagram — Luồng Theo Dõi Tour Tham Quan</div>
+        <div class="mermaid">
           sequenceDiagram
-          participant User as Tourist
+          autonumber
+          participant User as Du Khách
           participant VM as TourViewModel
           participant GPS as GpsService
           participant GF as GeofenceService
           participant NS as NarrationService
+          participant ST as SessionTrackingService
+          participant API as TourController
 
-          User->>VM: Start Tour
-          VM->>GPS: StartTrackingAsync()
-          
-          loop Foreach TourStop
-              VM->>VM: Set target = stop.Poi
-              loop Every location update
-                  GPS-->>VM: OnLocationUpdated
-                  VM->>GF: CheckTriggeredAsync(location, [target])
-                  alt Target Reached
-                      GF-->>VM: return target
-                      VM->>NS: EnqueueAsync(target, lang)
-                      Note over VM: Move to Next Stop
-                  else Navigating
-                      Note over VM: Update distance to target
-                  end
-              end
+          User->>VM: Chọn Tour từ danh sách
+          VM->>API: GET /api/tour (load stops)
+          API-->>VM: Tour + List TourStop
+          VM->>VM: Sắp xếp Stops theo SortOrder
+          VM->>VM: currentStopIndex = 0
+          User->>VM: Nhấn "Bắt đầu Tour"
+          VM->>GPS: Bắt đầu theo dõi vị trí
+
+          loop Với mỗi TourStop
+          VM->>VM: Hiển thị tên quán tiếp theo
+          loop GPS cập nhật liên tục
+          GPS-->>VM: LocationUpdatedMessage
+          VM->>GF: CheckTriggeredAsync(location, [currentStop.Poi])
+          alt Chưa vào vùng Geofence
+          GF-->>VM: Danh sách rỗng
+          Note over VM: Tiếp tục chờ
+          else Đã vào vùng Geofence
+          GF-->>VM: [triggeredPoi]
+          VM->>NS: EnqueueAsync(poi, language)
+          NS->>NS: Phát thuyết minh (Audio/TTS)
+          NS-->>VM: Phát xong
+          VM->>ST: IncrementPoisVisited()
+          VM->>VM: currentStopIndex++
+          alt Còn Stop tiếp theo
+          Note over VM: Chuyển sang điểm kế tiếp
+          else Hết tất cả Stops
+          VM->>VM: Tour = Completed
+          VM->>User: Hiển thị thông báo hoàn thành
           end
-          
-          User->>VM: Stop Tour
+          end
+          end
+          end
+
+          alt Người dùng nhấn Dừng Tour
+          User->>VM: Nhấn "Dừng Tour"
+          VM->>VM: Xóa lộ trình đang theo dõi
           VM->>GPS: StopTrackingAsync()
+          VM->>VM: Tour = Cancelled
+          end
         </div>
       </div>
     </div>
@@ -4648,7 +4911,7 @@
           +string ImageUrl
           +string AudioViUrl
           +string QrCode
-          +string Category
+          +PoiCategory Category
           +bool IsActive
           +int ContentVersion
           +int OwnerUserId
@@ -4657,7 +4920,7 @@
           +List~PoiTranslation~ Translations
           +List~PoiVisitLog~ VisitLogs
           +List~TourStop~ TourStops
-          +"CompareTo(Poi) int"
+          +CompareTo(Poi) int
           }
           class PoiTranslation {
           +int Id
@@ -4732,7 +4995,7 @@
           +string Manufacturer
           +DateTime StartedAt
           +DateTime LastHeartbeatAt
-          +DateTime EndedAt
+          +DateTime? EndedAt
           +int PoisVisited
           +double DistanceMeters
           +string LanguageUsed
@@ -4781,42 +5044,34 @@
         <div class="dt">Class Diagram — Backend Services</div>
         <div class="mermaid">
           classDiagram
-          class Poi {
-          id : int
-          name : string
-          }
-          class PoiTranslation {
-          id : int
-          languageCode : string
-          }
+          class Poi
           class ITranslationService {
-          <<interface>>
-          TranslateAsync(text, from, to) Task
+          &lt;&lt;interface&gt;&gt;
+          +Task~string~ TranslateAsync(string text, string from, string to)
           }
           class ResilientTranslationService {
-          TranslateAsync(text, from, to) Task
+          +Task~string~ TranslateAsync(string text, string from, string to)
           }
           class IAiService {
-          <<interface>>
-          ChatAsync(system, user) Task
+          &lt;&lt;interface&gt;&gt;
+          +Task~string~ ChatAsync(string system, string user)
           }
           class GeminiAiService {
-          ChatAsync(system, user) Task
+          +Task~string~ ChatAsync(string system, string user)
           }
           class ITtsService {
-          <<interface>>
-          SynthesizeAsync(text, lang) Task
+          &lt;&lt;interface&gt;&gt;
+          +Task~byte_array~ SynthesizeAsync(string text, string lang)
           }
           class VoiceRssTtsService {
-          SynthesizeAsync(text, lang) Task
+          +Task~byte_array~ SynthesizeAsync(string text, string lang)
           }
           class ApplicationDbContext {
-          pois : DbSet~Poi~
-          poiTranslations : DbSet~PoiTranslation~
+          +DbSet~Poi~ Pois
+          +DbSet~PoiTranslation~ PoiTranslations
           }
-          ITranslationService <|.. ResilientTranslationService
-          IAiService <|.. GeminiAiService
-          ITtsService <|.. VoiceRssTtsService
+          ITranslationService <|.. ResilientTranslationService : implements IAiService <|.. GeminiAiService : implements
+            ITtsService <|.. VoiceRssTtsService : implements </div>
         </div>
         <div class="logic-box">
           <h4>🧠 Giải Thích Chi Tiết — Kiến Trúc Backend Services</h4>
@@ -4854,84 +5109,74 @@
           <div class="dt">Class Diagram — MAUI Services</div>
           <div class="mermaid">
             classDiagram
-            class Poi {
-            id : int
-            name : string
-            }
-            class Location {
-            latitude : double
-            longitude : double
-            }
+            class Poi
+            class Location
             class IGpsService {
-            <<interface>>
-            StartTrackingAsync() Task
-            StopTrackingAsync() Task
+            &lt;&lt;interface&gt;&gt;
+            +Task StartTrackingAsync()
+            +Task StopTrackingAsync()
             }
             class GpsService {
-            StartTrackingAsync() Task
-            StopTrackingAsync() Task
+            +Task StartTrackingAsync()
+            +Task StopTrackingAsync()
             }
             class IGeofenceService {
-            <<interface>>
-            CheckTriggeredAsync(location, pois) Task
+            &lt;&lt;interface&gt;&gt;
+            +Task~List_Poi~ CheckTriggeredAsync(Location loc, List_Poi pois)
             }
             class GeofenceService {
-            CheckTriggeredAsync(location, pois) Task
+            +Task~List_Poi~ CheckTriggeredAsync(Location loc, List_Poi pois)
             }
             class INarrationService {
-            <<interface>>
-            EnqueueAsync(poi, lang) Task
-            InterruptIfHigherPriority(priority) void
-            isPlaying : bool
+            &lt;&lt;interface&gt;&gt;
+            +Task EnqueueAsync(Poi poi, string lang)
+            +bool IsPlaying
             }
             class NarrationService {
-            EnqueueAsync(poi, lang) Task
-            InterruptIfHigherPriority(priority) void
+            +Task EnqueueAsync(Poi poi, string lang)
             }
             class AudioCacheService {
-            PreFetchAsync(url) Task
-            GetAudioPathAsync(url) Task
+            +Task PreFetchAsync(string url)
+            +Task~string~ GetAudioPathAsync(string url)
             }
             class SessionService {
-            sessionId : string
+            +string SessionId
             }
             class SessionTrackingService {
-            StartSessionAsync() Task
-            EndSessionAsync() Task
-            IncrementPoisVisited() void
+            +Task StartSessionAsync()
+            +Task EndSessionAsync()
+            +void IncrementPoisVisited()
             }
             class RealtimeService {
-            StartAsync() Task
+            +Task StartAsync()
             }
             class ConnectivityService {
-            TrySyncPoiAsync(lang) Task
-            TrySyncToursAsync(lang) Task
+            -Task TrySyncPoiAsync(string lang)
+            -Task TrySyncToursAsync(string lang)
             }
             class OutboxService {
-            EnqueueAsync(endpoint, dto) Task
-            FlushAsync() Task
+            +Task EnqueueAsync(string endpoint, object dto)
+            +Task FlushAsync()
             }
             class LocalDbService {
-            GetPoisAsync() Task
-            GetVisitedPoiIdsAsync() Task
+            +Task~List~ GetPoisAsync()
+            +Task~HashSet~ GetVisitedPoiIdsAsync()
             }
             class GeofenceCooldownStore {
-            IsOnCooldown(poiId) bool
-            SetCooldown(poiId, seconds) void
+            +bool IsOnCooldown(int poiId)
+            +void SetCooldown(int poiId, int seconds)
             }
             class RoutingService {
-            GetWalkingRouteAsync(waypoints) Task
+            +Task~List~ GetWalkingRouteAsync(List waypoints)
             }
-            IGpsService <|.. GpsService
-            IGeofenceService <|.. GeofenceService
-            INarrationService <|.. NarrationService
-            GeofenceService --> INarrationService : "triggers"
-            GeofenceService --> GeofenceCooldownStore : "cooldown"
-            NarrationService --> AudioCacheService : "cache"
-            SessionTrackingService --> SessionService : "session ID"
-            NarrationService --> SessionTrackingService : "log visit"
-            ConnectivityService --> LocalDbService : "save POIs"
-            ConnectivityService --> NarrationService : "prefetch"
+            IGpsService <|.. GpsService : implements IGeofenceService <|.. GeofenceService : implements
+              INarrationService <|.. NarrationService : implements GeofenceService --> INarrationService : "triggers"
+              GeofenceService --> GeofenceCooldownStore : "cooldown"
+              NarrationService --> AudioCacheService : "cache"
+              SessionTrackingService --> SessionService : "session ID"
+              NarrationService --> SessionTrackingService : "log visit"
+              ConnectivityService --> LocalDbService : "save POIs"
+              ConnectivityService --> NarrationService : "prefetch"
           </div>
         </div>
         <div class="logic-box">
@@ -5113,59 +5358,41 @@
       <div class="card">
         <h3>⚡ 14.3 Real-time Connectivity (Online Devices)</h3>
         <div class="dw">
-          <div class="dt">Sequence Diagram 14.3a — Luồng Theo Dõi Thiết Bị (Real-time Online)</div>
+          <div class="dt">Sequence Diagram — Online Device Tracking</div>
           <div class="mermaid">
             sequenceDiagram
             participant App as 📱 Tourist App (Mobile)
+            participant Admin as 💻 Admin Dashboard (Web)
+            box "🔧 Backend Service Layer"
             participant Hub as ⚡ VinhKhanhHub
             participant Tracker as 📊 ConnectionTracker
             participant API as 🌐 AdminController
-            participant Admin as 💻 Admin Dashboard
-
-            Note over App, Hub: [Kết nối]
-            App->>Hub: Connect (SignalR)
-            Hub->>Tracker: AddConnection(Id)
-            
-            loop Mỗi 10 giây (Polling)
-                Admin->>API: "GET /api/admin/summary"
-                API->>Tracker: GetOnlineCount()
-                Tracker-->>API: "return _connections.Count"
-                API-->>Admin: "JSON { activeUsers }"
             end
 
-            Note over App, Hub: [Ngắt kết nối]
-            App-xHub: Disconnect
-            Hub->>Tracker: RemoveConnection(Id)
-          </div>
-        </div>
+            Note over App, Admin: [Giai đoạn 1] Kết nối Real-time (SignalR)
+            App->>Hub: HubConnection.StartAsync()
+            activate Hub
+            Hub->>Tracker: OnConnectedAsync() -> AddConnection(ID)
+            Admin->>Hub: useSignalR() -> Connect
+            Hub->>Tracker: OnConnectedAsync() -> AddConnection(ID)
+            deactivate Hub
 
-        <div class="dw">
-          <div class="dt">Sequence Diagram 14.3b — Luồng Thống Kê Lượt Nghe (Visit Statistics)</div>
-          <div class="mermaid">
-            sequenceDiagram
-            participant App as 📱 Tourist App
-            participant API_A as 🌐 AnalyticsController
-            participant API_S as 🌐 AdminController
-            participant DB as 💾 Azure SQL DB
-            participant Admin as 💻 Admin Dashboard
-
-            Note over App, DB: [Ghi nhận khi khách nghe]
-            App->>API_A: POST /api/analytics/log
-            activate API_A
-            API_A->>DB: INSERT INTO PoiVisitLogs
-            DB-->>API_A: Success
-            API_A-->>App: 200 OK
-            deactivate API_A
-
-            Note over Admin, DB: [Cập nhật Dashboard]
-            loop Mỗi 10 giây (Polling)
-                Admin->>API_S: GET /api/admin/summary
-                activate API_S
-                API_S->>DB: CountAsync (PoiVisitLogs)
-                DB-->>API_S: return totalVisits
-                API_S-->>Admin: JSON { totalVisits }
-                deactivate API_S
+            Note over Admin, API: [Giai đoạn 2] Hiển thị chỉ số (Polling)
+            loop Mỗi 10 giây (TanStack Query)
+            Admin->>API: HTTP GET Summary()
+            activate API
+            API->>Tracker: GetOnlineCount()
+            Tracker-->>API: return _connections.Count
+            API-->>Admin: JSON { activeUsers: N }
+            Admin->>Admin: UpdateUI()
+            deactivate API
             end
+
+            Note over App, Hub: [Giai đoạn 3] Ngắt kết nối
+            App-xHub: HubConnection.StopAsync()
+            activate Hub
+            Hub->>Tracker: OnDisconnectedAsync() -> RemoveConnection(ID)
+            deactivate Hub
           </div>
         </div>
 
@@ -5179,7 +5406,7 @@
               <code>ConnectionTracker</code> lưu trữ vào <code>ConcurrentDictionary</code> trong RAM.
             </li>
             <li><strong>Chỉ số thực tế (Real-time Accuracy):</strong> Dashboard hiển thị chính xác số lượng các kết nối
-              SignalR hiện đang duy trì với máy chủ, đảm bảo tính trung thực của dữ liệu báo cáo.</li>
+              SignalR hiện đang duy trì với máy chủ, không thông qua các cơ chế ảo hóa con số.</li>
             <li><strong>Cơ chế cập nhật (Pull vs Push):</strong> Thay vì Hub chủ động Broadcast (gây tốn băng thông),
               Admin Dashboard sử dụng TanStack Query để kéo (Pull) dữ liệu từ endpoint <code>/api/admin/summary</code>.
               Điều này giúp Dashboard luôn đồng bộ với các thông số thống kê khác (POI, Tours, Visits).</li>
@@ -6667,6 +6894,21 @@
             <li><strong>Độ trễ API (Latency):</strong> Đảm bảo &lt;200ms cho tất cả các giao dịch GET (P95).</li>
             <li><strong>Tối ưu IO:</strong> Đọc dữ liệu local từ SQLite &lt;10ms, áp dụng <code>AsNoTracking</code> cho
               EF Core.</li>
+            <li><strong>Audio Cache (AudioCacheService):</strong> Pre-fetch và cache file audio MP3 xuống thiết bị trước
+              khi du khách đến gần POI. Khi trigger, phát ngay từ local file — không chờ download.
+              <code>PreFetchAllAsync</code> bulk pre-fetch toàn bộ audio khi sync.
+            </li>
+            <li><strong>Server-side Cache (IMemoryCache):</strong> Summary stats cache 5 phút, heatmap data cache 30
+              giây. Cache bị invalidate ngay khi có visit log mới.</li>
+            <li><strong>Batch GPS Upload:</strong> Gom 25 điểm/30s thành 1 HTTP request thay vì gửi từng điểm — giảm 25×
+              số lượng API calls.</li>
+            <li><strong>DB Indexes:</strong> INDEX trên <code>RecordedAt</code>, <code>SessionId</code>,
+              <code>VisitedAt</code>, <code>EventType</code>, <code>Latitude+Longitude</code>, <code>Category</code>,
+              <code>ContentVersion</code>, <code>StartedAt</code>, <code>DevicePlatform</code> — tối ưu tất cả query
+              analytics.
+            </li>
+            <li><strong>Concurrent Batch:</strong> <code>MovementController.BatchLog</code> dùng <code>AddRange</code> +
+              single <code>SaveChangesAsync</code> — xử lý 2000 điểm/batch trong 1 transaction.</li>
           </ul>
         </div>
         <div class="fc">
@@ -6743,6 +6985,39 @@
               của CPU.</li>
             <li><strong>Cân bằng Định vị:</strong> Sử dụng cấp độ chính xác GeolocationAccuracy.Medium thay vì Best để
               tối đa thời lượng pin.</li>
+          </ul>
+        </div>
+        <div class="fc" style="border: 1px solid #10b981;">
+          <h4>🔁 Xử Lý Trùng (Duplicate Prevention) — 3 Tầng</h4>
+          <ul>
+            <li><strong>Tầng 1 — Queue dedup:</strong> <code>_queuedKeys</code> (HashSet) trong
+              <code>NarrationService</code> — ngăn enqueue cùng POI+lang 2 lần vào queue.
+            </li>
+            <li><strong>Tầng 2 — Playback dedup:</strong> <code>_recentlyPlayed</code> với
+              <code>DuplicateWindow = 25s</code> — ngăn phát lại cùng POI trong vòng 25 giây.
+            </li>
+            <li><strong>Tầng 3 — Geofence cooldown:</strong> Per-POI <code>CooldownSeconds</code> + Global
+              <code>GlobalCooldownSeconds = 10s</code> + <code>GeofenceCooldownStore</code> persist vào Preferences
+              (survive app restart).
+            </li>
+            <li><strong>QR dedup:</strong> <code>_isProcessing</code> flag + 2s cooldown trong <code>QrScanPage</code> —
+              ngăn double-trigger khi camera quét liên tục.</li>
+          </ul>
+        </div>
+        <div class="fc" style="border: 1px solid #3b82f6;">
+          <h4>👥 Xử Lý Nhiều Du Khách Đồng Thời</h4>
+          <ul>
+            <li><strong>Per-device queue:</strong> Mỗi thiết bị chạy <code>NarrationService</code> độc lập — 100 du
+              khách đứng cùng quầy = 100 queue riêng biệt, không conflict.</li>
+            <li><strong>Server stateless:</strong> Server không điều phối audio — chỉ nhận log. Mọi logic phát thanh xảy
+              ra on-device.</li>
+            <li><strong>Overlap resolution:</strong> <code>GeofenceEvaluator.PickBestInside</code> chọn 1 POI tốt nhất
+              (score = Priority × 1,000,000 - distance) khi nhiều POI overlap — mỗi device tự quyết định.</li>
+            <li><strong>Concurrent batch:</strong> Server xử lý batch GPS từ nhiều SessionId đồng thời qua
+              <code>AddRange</code> + single transaction.
+            </li>
+            <li><strong>ConnectionTracker thread-safe:</strong> <code>ConcurrentDictionary&lt;string, byte&gt;</code>
+              đếm SignalR connections an toàn với nhiều thread.</li>
           </ul>
         </div>
       </div>
@@ -6986,17 +7261,440 @@
 
     </div>
 
-    <!-- FOOTER -->
-    <footer>
-      <p>📄 PRD — Thuyết Minh Tự Động Đa Ngôn Ngữ · Phố Ẩm Thực Vĩnh Khánh</p>
-      <p style="margin-top:6px;color:#5c6bc0;">Version 4.0 Updated · .NET 10 · C# 14 · ASP.NET Core 10 · React 19 ·
-        .NET
-        MAUI 10</p>
-      <p style="margin-top:4px;font-size:.75rem;">30+ chức năng · 3 Actors · 7 Ngôn ngữ · 50+ API Endpoints · 9 DB
-        Tables · 18 Chương · 60+ Sơ đồ UML</p>
-      <p style="margin-top:4px;font-size:.72rem;opacity:.6;">Được tạo từ phân tích toàn bộ codebase · Chính xác tuyệt
-        đối · Cập nhật: 24/04/2026</p>
-    </footer>
+    <!-- ===== CH19 TỔNG HỢP & CHỨNG MINH ===== -->
+    <div class="sec" id="ch19">
+      <div class="sh">
+        <div class="sn">19</div>
+        <div>
+          <h2>Tổng Hợp</h2>
+        </div>
+      </div>
+
+      <div class="card">
+        <div
+          style="max-height: 800px; overflow-y: auto; padding: 15px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius-md); white-space: pre-wrap; font-family: inherit; line-height: 1.6; font-size: 0.95em;">
+          5 Yêu Cầu — Thể Hiện Ở Đâu Trong PRD
+
+          1. Nhiều du khách tham gia (quét QR, không có account)
+
+          Thể hiện tại 3 vị trí:
+
+          Mục 02b (#ch02-anon) — Card riêng "Anonymous Flow (Không Cần Tài Khoản)": bảng 7 bước từ tạo SessionId GUID →
+          quét QR → nghe → log, tất cả Public API không cần JWT. Giải thích SessionService.SessionId = Guid.NewGuid(),
+          QrScanPage gọi /api/poi/qrcode/{code} (Public).
+
+          Mục 03 — Use Case UC-M02 (Quét mã QR) và UC-M14 (Nhập QR thủ công) trong bảng use case Khách Tham Quan.
+
+          Mục 16 (API Endpoints) — GET /api/poi/qrcode/{code} được đánh dấu Public, POST /api/analytics/log không yêu
+          cầu auth.
+
+          2. Monitoring (số người, ngày, lượt nghe, heatmap, thống kê)
+
+          Thể hiện tại 4 vị trí:
+
+          Mục 05 (#ch05) — Section 5.2 viết lại hoàn toàn: bảng 8 monitoring APIs với dữ liệu trả về cụ thể
+          (totalDevices, activeUsers real-time, returningRate, peak-hours UTC+7, poi-heatmap-stats unique visitors per
+          POI). Sequence diagram mới với ConnectionTracker.GetOnlineCount().
+
+          Mục 13 (Class Diagrams) — SessionTrackingService, DeviceSession, ConnectionTracker trong class diagram.
+
+          Mục 15 (Database) — Bảng DeviceSessions với đầy đủ fields: PoisVisited, DistanceMeters, IsReturning,
+          LastHeartbeatAt.
+
+          Mục 16 (API Endpoints) — GET /api/admin/sessions/stats, GET /api/admin/peak-hours, GET
+          /api/analytics/poi-heatmap-stats, GET /api/admin/sessions.
+
+          3. Xử lý trùng (duplicate prevention)
+
+          Thể hiện tại 3 vị trí:
+
+          Mục 04 — Section 4.2 Geofence: GlobalCooldownSeconds = 10, GeofenceCooldownStore persist vào Preferences,
+          ExitHysteresisFactor = 1.2, RequiredConsecutiveHits = 2.
+
+          Mục 04 — Section 4.3 Narration: DuplicateWindow = 25s, _queuedKeys HashSet, SemaphoreSlim(1,1). Sequence
+          diagram thể hiện Check DuplicateWindow (25s).
+
+          Mục 18 (NFR) — Card "🔁 Xử Lý Trùng — 3 Tầng": Tầng 1 _queuedKeys, Tầng 2 DuplicateWindow 25s, Tầng 3
+          GlobalCooldownSeconds + GeofenceCooldownStore persist. Thêm QR dedup _isProcessing + 2s cooldown.
+
+          4. Xử lý hàng đợi (nhiều người cùng khu vực, cùng quầy)
+
+          Thể hiện tại 3 vị trí:
+
+          Mục 04 — Section 4.3 Narration: đoạn đầu làm rõ "kiến trúc per-device — không phải server-side queue", giải
+          thích 100 du khách = 100 queue độc lập, không conflict.
+
+          Mục 04 — Section 4.2 Geofence: GeofenceEvaluator.PickBestInside chọn 1 POI tốt nhất khi nhiều POI overlap
+          (score = Priority × 1,000,000 - distance).
+
+          Mục 18 (NFR) — Card "👥 Xử Lý Nhiều Du Khách Đồng Thời": per-device queue, server stateless, overlap
+          resolution, AddRange concurrent batch, ConcurrentDictionary thread-safe.
+
+          5. Performance (nhanh, số lượng nhiều)
+
+          Thể hiện tại 3 vị trí:
+
+          Mục 04 — Section 4.1 GPS: Batch 25 điểm/30s, WeakReferenceMessenger tách biệt UI và GPS logic.
+
+          Mục 13 (Class Diagrams) — AudioCacheService trong class diagram với PreFetchAsync, GetAudioPathAsync.
+
+          Mục 18 (NFR) — Card "⚡ Hiệu Năng" mở rộng: AudioCacheService pre-fetch, IMemoryCache (5 phút/30 giây), Batch
+          25×, DB Indexes đầy đủ 9 trường, AddRange 2000 điểm/transaction, AsNoTracking EF Core.
+
+          Một Điểm Nhỏ Cần Lưu Ý
+
+          TOC có 3 dòng trùng 02b · Anonymous Visitor Flow do lần chèn trước. Tôi sẽ sửa ngay:
+
+          Read file(s)
+
+          VinhKhanh-PRD.html 700 - 731
+
+          TOC chỉ có 1 dòng 02b — không bị trùng. Kết quả grep trước hiển thị nhiều lần vì nó tìm trong cả nav bar. Kiểm
+          tra nav bar:
+
+          Read file(s)
+
+          VinhKhanh-PRD.html 625 - 661
+
+          File sạch, không có trùng lặp. PRD đã hoàn chỉnh. Đây là báo cáo cuối:
+
+          ✅ PRD Đã Chuẩn — Không Có Vấn Đề
+
+          File
+
+          VinhKhanh-PRD.html
+
+          hiện tại đúng, đầy đủ, không trùng lặp. Cấu trúc nav bar và TOC đều sạch.
+
+          Bản Đồ 5 Yêu Cầu → Vị Trí Trong PRD
+
+          # Yêu cầu Mục chính Mục phụ
+
+          1 Nhiều du khách, quét QR, không cần account 02b — Anonymous Visitor Flow (card mới, bảng 7 bước) Mục 03
+          (UC-M02, UC-M14), Mục 16 (Public endpoints)
+
+          2 Monitoring: số người, ngày, lượt nghe, heatmap, thống kê 05 — Section 5.2 (bảng 8 APIs, sequence diagram
+          mới) Mục 13 (Class: SessionTrackingService), Mục 15 (DeviceSessions table), Mục 16 (admin/sessions/stats,
+          peak-hours, poi-heatmap-stats)
+
+          3 Xử lý trùng 18 — NFR Card "🔁 Xử Lý Trùng — 3 Tầng" Mục 04 Section 4.2 (GlobalCooldownSeconds,
+          GeofenceCooldownStore persist), Mục 04 Section 4.3 (DuplicateWindow 25s, _queuedKeys)
+
+          4 Xử lý hàng đợi (nhiều người cùng quầy) 18 — NFR Card "👥 Xử Lý Nhiều Du Khách Đồng Thời" Mục 04 Section 4.3
+          (per-device, không phải server-side), Mục 04 Section 4.2 (GeofenceEvaluator.PickBestInside)
+
+          5 Performance (nhanh, số lượng nhiều) 18 — NFR Card "⚡ Hiệu Năng" (mở rộng) Mục 04 Section 4.1 (Batch 25
+          điểm/30s), Mục 13 (AudioCacheService class)
+          <br>
+          <br>
+
+          BẢN ĐỒ FILE CODE ↔ PRD ↔ LƯỢC ĐỒ
+
+          🟢 YÊU CẦU 1 — Nhiều Du Khách Tham Gia (QR, Không Cần Tài Khoản)
+
+          d:\CSharp\VinhKhanh\src\VinhKhanh.App\QrScanPage.xaml.cs
+
+          Làm gì: Màn hình quét mã QR trên điện thoại. Khi camera nhận diện được mã, gọi API tìm POI theo mã QR rồi tự
+          động điều hướng sang trang chi tiết và phát thuyết minh — hoàn toàn không yêu cầu đăng nhập. Có fallback nhập
+          mã thủ công khi camera lỗi. Chống double-trigger bằng _isProcessing flag và cooldown 2 giây.
+
+          Thể hiện trong PRD: Mục 02b (Anonymous Flow bảng bước 4), Mục 03 UC-M02 + UC-M14, Mục 04 Section 5.3 (QR Scan
+          sequence diagram), Mục 16 endpoint GET /api/poi/qrcode/{code}
+
+          d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\SessionService.cs
+
+          Làm gì: Tạo và lưu SessionId = Guid.NewGuid().ToString() vào Preferences của thiết bị khi cài App lần đầu.
+          GUID này là định danh ẩn danh duy nhất của du khách — không phải tài khoản, không cần đăng ký. Tất cả log
+          analytics đều dùng SessionId này để liên kết dữ liệu.
+
+          Thể hiện trong PRD: Mục 02b (cơ chế SessionId GUID), Mục 18 NFR Privacy ("Theo vết Ẩn danh")
+
+          d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\ApiClientService.cs
+
+          Làm gì: HTTP client trung tâm của Mobile App. Cung cấp GetPoiByQrCodeAsync(), GetPoiAsync(), GetAllPoisAsync()
+          — tất cả đều gọi Public API không cần JWT token. Tự động xử lý URL localhost → 10.0.2.2 cho Android emulator.
+
+          Thể hiện trong PRD: Mục 02b (bước 4 QR flow), Mục 04 Section 4.4 (Offline Sync sequence diagram)
+
+          d:\CSharp\VinhKhanh\src\VinhKhanh.API\Controllers\PoiController.cs
+
+          Làm gì: REST API quản lý POI. Endpoint GET /api/poi/qrcode/{code} và GET /api/poi/{id} là Public (không có
+          [Authorize]) — du khách quét QR gọi thẳng không cần token. Endpoint tạo/sửa/xóa POI yêu cầu JWT Owner/Admin.
+
+          Thể hiện trong PRD: Mục 16 bảng PoiController, Mục 03 UC-W06/W07/W08
+
+          d:\CSharp\VinhKhanh\src\VinhKhanh.API\Controllers\AnalyticsController.cs
+
+          Làm gì: Nhận log lượt nghe từ Mobile App (POST /api/analytics/log — Public, không cần JWT). Cung cấp API thống
+          kê top POI, heatmap GPS, POI heatmap stats cho Admin dashboard.
+
+          Thể hiện trong PRD: Mục 02b (bước 5 log lượt nghe), Mục 05 Section 5.2 (bảng monitoring APIs), Mục 16 bảng
+          AnalyticsController
+
+          d:\CSharp\VinhKhanh\src\VinhKhanh.API\Controllers\SessionController.cs
+
+          Làm gì: Quản lý vòng đời phiên du khách. Ba endpoint đều Public: POST /api/session/start (ghi nhận thiết bị
+          khi mở app), POST /api/session/heartbeat (cập nhật mỗi 60s), POST /api/session/end (đánh dấu kết thúc). Tự
+          động phát hiện IsReturning nếu SessionId đã từng tồn tại.
+
+          Thể hiện trong PRD: Mục 02b (bước 2, 6, 7), Mục 05 Section 5.2 (monitoring), Mục 16 bảng SessionController
+
+          d:\CSharp\VinhKhanh\src\VinhKhanh.API\Controllers\MovementController.cs
+
+          Làm gì: Nhận batch GPS từ Mobile App (POST /api/movement/batch — Public). Xử lý tối đa 2000 điểm/batch bằng
+          AddRange + single SaveChangesAsync. Cung cấp GET /api/movement/heatmap cho Admin.
+
+          Thể hiện trong PRD: Mục 04 Section 4.1 (GPS Tracking sequence diagram), Mục 05 Section 5.2, Mục 16 bảng
+          MovementController
+
+          d:\CSharp\VinhKhanh\src\VinhKhanh.API\Controllers\HistoryController.cs
+
+          Làm gì: Nhận event log từ Mobile App (POST /api/history/log — Public). Lưu các sự kiện GPS_TRIGGER, QR_SCAN,
+          AI_CHAT, TTS_PLAY, AUDIO_PLAY, SYNC_POI. Admin xem lịch sử qua GET /api/history với filter theo eventType,
+          ngôn ngữ, khoảng thời gian.
+
+          Thể hiện trong PRD: Mục 05 Section 5.2 (bảng monitoring APIs), Mục 16 bảng HistoryController
+
+          🔵 YÊU CẦU 2 — Monitoring (Số Người, Ngày, Lượt Nghe, Heatmap, Thống Kê)
+
+          d:\CSharp\VinhKhanh\src\VinhKhanh.API\Controllers\AdminController.cs
+
+          Làm gì: Trung tâm monitoring của Admin. Cung cấp:
+
+          GET /api/admin/summary — tổng POI, tour, unique devices (distinct SessionIds), total visits, activeUsers
+          real-time từ ConnectionTracker
+
+          GET /api/admin/sessions — danh sách phiên du khách phân trang, lọc theo ngày/platform, hiển thị IsActive
+          (heartbeat < 3 phút) GET /api/admin/sessions/stats — avg duration, avg POIs visited, avg distance,
+            returningRate, platformBreakdown, topDevices, topManufacturers, languageBreakdown GET /api/admin/peak-hours
+            — số phiên theo từng khung giờ 0-23 (UTC+7) Dùng IMemoryCache cache summary 5 phút, invalidate ngay khi có
+            visit log mới. Thể hiện trong PRD: Mục 05 Section 5.2 (bảng 8 monitoring APIs, sequence diagram), Mục 16
+            bảng Admin Sessions d:\CSharp\VinhKhanh\src\VinhKhanh.API\Services\ConnectionTracker.cs Làm gì: Đếm số người
+            đang kết nối SignalR real-time. Dùng ConcurrentDictionary<string, byte> thread-safe. AddConnection() khi
+            client kết nối, RemoveConnection() khi ngắt, GetOnlineCount() trả về số lượng tức thì.
+
+            Thể hiện trong PRD: Mục 05 Section 5.2 (sequence diagram Tracker-->>AdminAPI: return _connections.Count),
+            Mục 13 Class Diagram (ConnectionTracker class), Mục 14 Kiến Trúc (SignalR layer)
+
+            d:\CSharp\VinhKhanh\src\VinhKhanh.API\Services\IConnectionTracker.cs
+
+            Làm gì: Interface định nghĩa contract cho ConnectionTracker. Cho phép mock trong unit test và thay thế
+            implementation sau này.
+
+            Thể hiện trong PRD: Mục 13 Class Diagram
+
+            d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\SessionTrackingService.cs
+
+            Làm gì: Thu thập dữ liệu hành vi du khách trên thiết bị. Gửi session/start khi mở app với thông tin thiết bị
+            (model, platform, OS, manufacturer). Timer 60s gửi heartbeat với số POI đã ghé và quãng đường đi được. Lắng
+            nghe LocationUpdatedMessage để tính quãng đường bằng Haversine (bỏ qua jitter < 2m và nhảy> 500m).
+
+              Thể hiện trong PRD: Mục 02b (bước 2, 6, 7), Mục 05 Section 5.2, Mục 13 Class Diagram
+              (SessionTrackingService)
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.Infrastructure\Data\DeviceSession.cs
+
+              Làm gì: Model database lưu thông tin mỗi phiên du khách: thiết bị (model, platform, OS, version,
+              manufacturer), thời gian (StartedAt, LastHeartbeatAt, EndedAt), hành vi (PoisVisited, DistanceMeters,
+              LanguageUsed), và IsReturning (đã từng dùng app trước đó).
+
+              Thể hiện trong PRD: Mục 15 Database Schema (ER diagram DeviceSession entity, bảng mô tả chi tiết), Mục 05
+              Section 5.2
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.Infrastructure\Data\PoiVisitLog.cs
+
+              Làm gì: Model database ghi lại mỗi lượt nghe thuyết minh: POI nào, SessionId nào, ngôn ngữ gì, trigger
+              bằng GPS/QR/MANUAL, nghe bao nhiêu giây.
+
+              Thể hiện trong PRD: Mục 15 Database Schema (ER diagram PoiVisitLog entity), Mục 05 Section 5.2
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.Infrastructure\Data\ApplicationDbContext.cs
+
+              Làm gì: Cấu hình toàn bộ database schema. Khai báo 10 bảng, tất cả indexes (HasIndex), Global Query
+              Filters (HasQueryFilter(p => p.IsActive)), Foreign Key relationships, và seed data 5 POI + 1 Tour mẫu.
+
+              Thể hiện trong PRD: Mục 15 Database Schema (toàn bộ ER diagram và bảng mô tả), Mục 18 NFR Performance (DB
+              Indexes)
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\OutboxService.cs
+
+              Làm gì: Hàng đợi offline cho analytics logs. Khi mạng bị đứt, log được lưu vào SQLite local. Khi có mạng
+              trở lại, FlushAsync() gửi lại tất cả log tồn đọng với retry counter.
+
+              Thể hiện trong PRD: Mục 04 Section 4.4 (Offline Sync activity diagram và sequence diagram), Mục 18 NFR
+              Reliability
+
+              🟡 YÊU CẦU 3 — Xử Lý Trùng (Duplicate Prevention)
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\NarrationService.cs
+
+              Làm gì: Engine phát thuyết minh trên thiết bị. Xử lý trùng ở 2 tầng:
+
+              Tầng 1 — Queue dedup: _queuedKeys (HashSet) ngăn enqueue cùng POI+language 2 lần vào queue
+
+              Tầng 2 — Playback dedup: _recentlyPlayed dictionary + DuplicateWindow = 25 giây ngăn phát lại cùng POI
+              trong vòng 25 giây
+
+              SemaphoreSlim(1,1) khóa đơn luồng, đảm bảo không bao giờ phát 2 audio cùng lúc
+
+              InterruptIfHigherPriority() ngắt audio đang phát nếu có POI quan trọng hơn vào queue
+
+              Thể hiện trong PRD: Mục 04 Section 4.3 (Activity diagram, Sequence diagram với Check DuplicateWindow
+              (25s)), Mục 18 NFR "Xử Lý Trùng — 3 Tầng"
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\GeofenceService.cs
+
+              Làm gì: Kiểm tra vị trí GPS và quyết định kích hoạt POI. Xử lý trùng ở tầng 3:
+
+              _lastTriggered per-POI cooldown (mỗi quán có CooldownSeconds riêng)
+
+              GlobalCooldownSeconds = 10 — sau bất kỳ trigger nào, chờ 10 giây mới trigger tiếp
+
+              _insidePoiIds + ExitHysteresisFactor = 1.2 — chống jitter tại biên vùng geofence
+
+              RequiredConsecutiveHits = 2 — phải nhận 2 tọa độ liên tiếp trong vùng mới trigger
+
+              Thể hiện trong PRD: Mục 04 Section 4.2 (Activity diagram Geofence Check, Sequence diagram Geofence
+              Trigger), Mục 18 NFR "Xử Lý Trùng — 3 Tầng" Tầng 3
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\GeofenceCooldownStore.cs
+
+              Làm gì: Lưu trữ bền vững (persist) trạng thái cooldown của từng POI vào Preferences dưới dạng JSON. Khi
+              app bị kill và mở lại, cooldown vẫn còn hiệu lực — du khách không bị nghe lại thuyết minh vừa nghe xong.
+
+              Thể hiện trong PRD: Mục 04 Section 4.2 (logic box "Kiểm soát tần suất"), Mục 18 NFR "Xử Lý Trùng — 3 Tầng"
+              Tầng 3
+
+              🟠 YÊU CẦU 4 — Xử Lý Hàng Đợi (Per-Device, Nhiều Người Cùng Khu Vực)
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\NarrationService.cs
+
+              (đã liệt kê ở trên — cùng file, thêm khía cạnh queue)
+
+              Làm gì (về queue): _queue là List được sort theo Priority DESC — POI quan trọng hơn phát trước.
+              ProcessQueueAsync() xử lý tuần tự FIFO trong cùng priority. Khoảng nghỉ 3 giây giữa các audio. Mỗi thiết
+              bị có queue riêng hoàn toàn độc lập — 100 du khách đứng cùng quầy = 100 queue song song, không có shared
+              state trên server.
+
+              Thể hiện trong PRD: Mục 04 Section 4.3 (đoạn "Kiến trúc per-device"), Mục 18 NFR "Xử Lý Nhiều Du Khách
+              Đồng Thời"
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\GeofenceEvaluator.cs
+
+              Làm gì: Hàm tĩnh PickBestInside() — khi nhiều POI overlap (nhiều quán cùng khu vực), chọn 1 POI tốt nhất
+              theo công thức score = Priority × 1,000,000 - distance. POI có priority cao hơn luôn thắng; nếu bằng
+              priority thì POI gần hơn thắng.
+
+              Thể hiện trong PRD: Mục 18 NFR "Xử Lý Nhiều Du Khách Đồng Thời" (Overlap resolution)
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.API\Hubs\VinhKhanhHub.cs
+
+              Làm gì: SignalR Hub trung tâm. Khi Admin/Owner tạo/sửa POI hoặc Tour, server broadcast event PoiCreated,
+              PoiUpdated, TourUpdated đến tất cả Mobile clients đang kết nối — cập nhật real-time không cần poll.
+              ConnectionTracker theo dõi số connections qua OnConnectedAsync / OnDisconnectedAsync.
+
+              Thể hiện trong PRD: Mục 05 Section 5.1 (sequence diagram POI CRUD với hub.Clients.All.SendAsync), Mục 14
+              Kiến Trúc (SignalR layer)
+
+              🔴 YÊU CẦU 5 — Performance (Nhanh, Số Lượng Nhiều)
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\AudioCacheService.cs
+
+              Làm gì: Cache file audio MP3 xuống bộ nhớ thiết bị. PreFetchAsync() tải trước 1 file, PreFetchAllAsync()
+              tải trước toàn bộ audio của tất cả POI khi sync. GetAudioPathAsync() trả về đường dẫn local — phát ngay
+              lập tức không chờ download. Dùng hash URL làm tên file để tránh trùng.
+
+              Thể hiện trong PRD: Mục 04 Section 4.3 (sequence diagram audioCache.GetAudioPathAsync()), Mục 13 Class
+              Diagram (AudioCacheService), Mục 18 NFR Performance "Audio Cache"
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\LocalPoiCacheService.cs
+
+              Làm gì: Cache danh sách POI vào SQLite local. Khi mở app, load từ cache ngay lập tức để render UI — không
+              chờ API. Sau đó sync ngầm từ server và cập nhật cache.
+
+              Thể hiện trong PRD: Mục 04 Section 4.4 (Offline Sync activity diagram), Mục 04 Section 4.5 (Map View
+              sequence diagram Cache-->>BanDo: List[Poi])
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\LocalDbService.cs
+
+              Làm gì: SQLite database on-device. Lưu POI, Tour, Outbox logs. Cung cấp GetPoisAsync(), SavePoisAsync(),
+              GetToursAsync() — tất cả đọc/ghi local, không cần mạng.
+
+              Thể hiện trong PRD: Mục 04 Section 4.4 (sequence diagram App->>Cache: GetPoisAsync()), Mục 01 Phạm Vi Hệ
+              Thống (Mobile App row)
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.App\ViewModels\MainViewModel.cs
+
+              Làm gì: ViewModel trung tâm của Mobile App. Buffer GPS points vào list, flush khi đủ 25 điểm hoặc qua 30
+              giây. Lắng nghe LocationUpdatedMessage từ GPS service, gọi GeofenceService.CheckTriggeredAsync(), enqueue
+              vào NarrationService, gọi SessionTrackingService.IncrementPoisVisited().
+
+              Thể hiện trong PRD: Mục 04 Section 4.1 (GPS Tracking sequence diagram VM->>VM: BufferLocation), Mục 04
+              Section 4.2 (Geofence Trigger sequence diagram)
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\GpsService.cs
+
+              Làm gì: Lấy tọa độ GPS mỗi 3 giây (iOS) hoặc qua Android Foreground Service. Gửi LocationUpdatedMessage
+              qua WeakReferenceMessenger để tách biệt hoàn toàn GPS logic và UI logic.
+
+              Thể hiện trong PRD: Mục 04 Section 4.1 (Activity diagram GPS Tracking, Sequence diagram GPS->>VM:
+              WeakReferenceMessenger.Send)
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.App\Platforms\Android\ (GpsForegroundService)
+
+              Làm gì: Android Foreground Service giữ GPS chạy khi tắt màn hình. Hiển thị notification thường trực để OS
+              không kill process.
+
+              Thể hiện trong PRD: Mục 04 Section 4.1 (Activity diagram nhánh Android), Mục 18 NFR Battery Optimization
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.Infrastructure\Data\ApplicationDbContext.cs
+
+              Làm gì (về performance): Khai báo tất cả HasIndex — INDEX(RecordedAt), INDEX(SessionId), INDEX(VisitedAt),
+              INDEX(EventType), INDEX(Latitude, Longitude), INDEX(Category), INDEX(ContentVersion), INDEX(StartedAt),
+              INDEX(DevicePlatform). HasQueryFilter(p => p.IsActive) tự động lọc POI inactive ở mọi query.
+
+              Thể hiện trong PRD: Mục 15 Database Schema (bảng mô tả Indexes/Constraints), Mục 18 NFR Performance "DB
+              Indexes"
+
+              d:\CSharp\VinhKhanh\src\VinhKhanh.API\Services\ResilientTranslationService.cs
+
+              Làm gì: Chuỗi dịch thuật dự phòng 4 tầng: Gemini → Ollama → LibreTranslate → Microsoft Translator. Nếu
+              provider đầu fail, tự động thử provider tiếp theo. Chỉ gọi provider nào có config key.
+
+              Thể hiện trong PRD: Mục 04 Section 4.3 (Sequence diagram Narration với Translation Fallback — 4 tầng), Mục
+              11 Translation & Bulk Translate, Mục 18 NFR Reliability "AI Fallback Chain"
+
+              📄 TÀI LIỆU & LƯỢC ĐỒ
+
+              VinhKhanh-PRD.html
+
+              Làm gì: Tài liệu PRD đầy đủ 18 chương, 7120 dòng HTML. Chứa 60+ sơ đồ UML (Activity, Sequence, ER, Class,
+              State, Flowchart) được render bằng Mermaid.js. Mỗi chương tương ứng với một nhóm tính năng, liên kết trực
+              tiếp với code qua tên class/method/endpoint.
+
+              Các lược đồ quan trọng nhất:
+
+              ER Diagram (Mục 15) — 10 bảng database với relationships
+
+              Class Diagram (Mục 13) — toàn bộ services Mobile App
+
+              Sequence Diagram GPS (Mục 04.1) — luồng GPS → Buffer → Batch upload
+
+              Sequence Diagram Geofence (Mục 04.2) — luồng trigger → narration → log
+
+              Sequence Diagram Narration (Mục 04.3) — queue → audio/TTS → translation fallback
+
+              Sequence Diagram Analytics (Mục 05.2) — monitoring dashboard load
+
+              Activity Diagram Offline Sync (Mục 04.4) — cache → sync → outbox retry
+
+              d:\CSharp\VinhKhanh\.kiro\specs\restaurant-blank-screen-fix\bugfix.md
+
+              Làm gì: Spec bugfix cho lỗi màn hình trắng khi mở trang chi tiết quán. Không liên quan trực tiếp đến 5 yêu
+              cầu trên nhưng là ví dụ về quy trình spec-driven development trong dự án.
+        </div>
+      </div>
+    </div>
 
     <script>
       mermaid.initialize({
@@ -7081,6 +7779,20 @@
         });
       });
     </script>
+
+    <!-- FOOTER -->
+    <footer>
+      <p>📄 PRD — Thuyết Minh Tự Động Đa Ngôn Ngữ · Phố Ẩm Thực Vĩnh Khánh</p>
+      <p style="margin-top:6px;color:#5c6bc0;">Version 5.0 Updated · .NET 10 · C# 14 · ASP.NET Core 10 · React 19 ·
+        .NET
+        MAUI 10</p>
+      <p style="margin-top:4px;font-size:.75rem;">35+ chức năng · 3 Actors · 7 Ngôn ngữ · 54+ API Endpoints · 10 DB
+        Tables · 14 Controllers · 18 Chương · 60+ Sơ đồ UML</p>
+      <p style="margin-top:4px;font-size:.72rem;opacity:.6;">Được tạo từ phân tích toàn bộ codebase · Cập nhật đầy đủ 5
+        yêu cầu: Anonymous Visitor · Monitoring · Duplicate Prevention · Per-device Queue · Performance · Cập nhật:
+        06/05/2026</p>
+    </footer>
+
 </body>
 
 </html>

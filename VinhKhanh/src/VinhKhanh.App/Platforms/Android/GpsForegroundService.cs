@@ -6,6 +6,7 @@ using Android.OS;
 using AndroidX.Core.App;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Maui.Devices.Sensors;
+using VinhKhanh.App.Models;
 
 namespace VinhKhanh.App.Platforms.Android;
 
@@ -54,7 +55,7 @@ public class GpsForegroundService : Service
 				var loc = await Geolocation.Default.GetLocationAsync(
 					new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(5)), ct);
 				if (loc != null)
-					WeakReferenceMessenger.Default.Send(new Services.LocationUpdatedMessage(loc));
+					WeakReferenceMessenger.Default.Send(new LocationUpdatedMessage(loc));
 			}
 			catch (Exception ex) when (ex is not System.OperationCanceledException)
 			{

@@ -1,9 +1,8 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Maui.Devices.Sensors;
+using VinhKhanh.App.Models;
 
 namespace VinhKhanh.App.Services;
-
-public record LocationUpdatedMessage(Location Location);
 
 public class GpsService : IGpsService
 {
