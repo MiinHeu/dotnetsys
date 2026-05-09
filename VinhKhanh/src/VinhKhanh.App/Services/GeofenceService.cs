@@ -10,7 +10,7 @@ public class GeofenceService : IGeofenceService
 	private readonly Dictionary<int, int> _consecutiveHits = new();
 	private readonly HashSet<int> _insidePoiIds = [];
 	private const int RequiredConsecutiveHits = 2;
-	private const double ExitHysteresisFactor = 1.2;
+	private const double ExitHysteresisFactor = 1.5; // Tăng vùng đệm thoát để tránh GPS jitter
 	private DateTime _lastGlobalTrigger = DateTime.MinValue;
 	private const int GlobalCooldownSeconds = 10; // Khoảng nghỉ giữa 2 lần kích hoạt khác nhau
 

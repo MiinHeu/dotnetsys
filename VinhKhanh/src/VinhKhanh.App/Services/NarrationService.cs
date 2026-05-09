@@ -26,7 +26,7 @@ public sealed class NarrationService(
 	private CancellationTokenSource? _playCts;
 	private int _currentPriority;
 	private bool _isProcessing;
-	private static readonly TimeSpan DuplicateWindow = TimeSpan.FromSeconds(25);
+	private static readonly TimeSpan DuplicateWindow = TimeSpan.FromSeconds(90);
 	private static readonly int MinListenSeconds = 5;
 
 	/// <summary>Ngắt thuyết minh hiện tại nếu POI mới có priority cao hơn hoặc đang yêu cầu dừng.</summary>
