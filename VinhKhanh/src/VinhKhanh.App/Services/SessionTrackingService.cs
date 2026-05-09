@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net.Http.Json;
 using CommunityToolkit.Mvvm.Messaging;
 using VinhKhanh.Shared.DTOs;
+using VinhKhanh.App.Models;
 
 namespace VinhKhanh.App.Services;
 

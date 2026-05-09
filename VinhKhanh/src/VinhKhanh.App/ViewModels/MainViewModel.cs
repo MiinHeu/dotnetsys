@@ -163,6 +163,7 @@ public partial class MainViewModel : ObservableObject,
 		var domainPois = Pois.Select(p => new Poi {
 			Id = p.Id, Name = p.Name, Description = p.Description, Latitude = p.Latitude, Longitude = p.Longitude,
 			TriggerRadiusMeters = p.TriggerRadiusMeters, CooldownSeconds = p.CooldownSeconds, Priority = p.Priority,
+			AudioViUrl = p.AudioViUrl, ImageUrl = p.ImageUrl,
 			Translations = p.Translations?.Select(t => new PoiTranslation {
 				Id = t.Id, PoiId = t.PoiId, LanguageCode = t.LanguageCode, Name = t.Name, Description = t.Description, AudioUrl = t.AudioUrl
 			}).ToList()

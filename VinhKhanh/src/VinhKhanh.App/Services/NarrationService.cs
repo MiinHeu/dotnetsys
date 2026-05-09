@@ -87,7 +87,7 @@ public sealed class NarrationService(
 			{
 				var (poi, language, triggerType) = _queue[0];
 				_queue.RemoveAt(0);
-				_queuedKeys.Remove(BuildKey(poi.Id, language));
+				
 				_currentPriority = poi.Priority;
 				_playCts?.Cancel();
 				_playCts?.Dispose();
@@ -125,7 +125,10 @@ public sealed class NarrationService(
 				WeakReferenceMessenger.Default.Send(new NarrationStartedMessage(poiSnapshot, language, triggerType));
 
 				var duration = await PlayPoiAsync(poiSnapshot, language, apiRoot, _playCts.Token);
-				_recentlyPlayed[BuildKey(poi.Id, language)] = DateTime.UtcNow;
+				
+				var key = BuildKey(poi.Id, language);
+				_recentlyPlayed[key] = DateTime.UtcNow;
+				_queuedKeys.Remove(key); // Chỉ xóa khỏi hàng đợi chờ sau khi đã phát xong
 
 				// Thông báo kết thúc phát kèm theo thời lượng thực tế và context
 				WeakReferenceMessenger.Default.Send(new NarrationEndedMessage(poi.Id, duration, triggerType, language));
