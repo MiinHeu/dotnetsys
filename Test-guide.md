@@ -62,3 +62,8 @@ Kiểm thử bằng máy thật là bắt buộc khi bạn muốn test thực t�
 - Nếu khi Build báo lỗi liên quan tới `System.IO.IOException: The process cannot access the file ...` là do hệ điều hành đang khoá file thừa từ lần chạy trước. Chỉ cần tắt ứng dụng trên điện thoại, Clean Solution và bấm F5 lại là được.
 
 https://vinh-khanh-food-street-gvhceeg4gbakhjgc.eastasia-01.azurewebsites.net/
+
+SELECT * 
+FROM "PoiVisitLogs"
+WHERE "PoiId" = 1
+

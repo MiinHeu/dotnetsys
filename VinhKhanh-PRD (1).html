@@ -657,9 +657,9 @@
         10</span>
       <span class="badge b">React 19 + TypeScript</span><span class="badge b">.NET MAUI 10</span><span
         class="badge b">SignalR</span>
-      <span class="badge g">SQLite (Persistent)</span><span class="badge g">EF Core 10</span><span class="badge g">Redis
+      <span class="badge g">SQLite / PostgreSQL / Azure SQL</span><span class="badge g">EF Core 10</span><span class="badge g">Redis
         8</span>
-      <span class="badge v">Google Gemini 1.5 Flash</span><span class="badge v">Ollama llama3.2:3b</span><span
+      <span class="badge v">OpenRouter / Gemini 2.5 Flash / Groq / DeepSeek</span><span class="badge v">Ollama llama3.1:8b</span><span
         class="badge o">JWT Bearer + BCrypt</span>
     </div>
   </div>
@@ -714,7 +714,7 @@
       <a href="#ch09">09 · Tour Features</a>
       <a href="#ch10">10 · POI Detail &amp; Audio Upload</a>
       <a href="#ch11">11 · Translation &amp; Bulk Translate</a>
-      <a href="#ch12">12 · State Diagrams (5 sơ đồ)</a>
+      <a href="#ch12">12 · State Diagrams (6 sơ đồ)</a>
       <a href="#ch13">13 · Class Diagrams</a>
       <a href="#ch14">14 · Kiến Trúc Hệ Thống</a>
       <a href="#ch15">15 · Database Schema (ER)</a>
@@ -744,23 +744,22 @@
     <div class="fg">
       <div class="fc">
         <h4>📍 Location-based Geofencing</h4>
-        <p>Kiểm tra tọa độ liên tục bằng thuật toán Haversine với bán kính kích hoạt 15m. Tích hợp cơ chế Hysteresis
-          (vùng đệm thoát) và Double-hit để chống nhiễu tín hiệu GPS.</p>
+        <p>Kiểm tra tọa độ liên tục bằng thuật toán Haversine với bán kính kích hoạt mặc định 15m. Tích hợp cơ chế Hysteresis
+          (vùng đệm thoát 1.5×) và Double-hit (2 lần liên tiếp) để chống nhiễu tín hiệu GPS.</p>
       </div>
       <div class="fc">
         <h4>🌐 Dịch Thuật Tự Động (Auto-Translation)</h4>
         <p>Hỗ trợ 7 ngôn ngữ (vi, en, zh, ko, ja, km, th). Hệ thống dịch thuật dự phòng đa tầng (Resilient Translation
-          Chain): Gemini → Ollama → LibreTranslate → Microsoft Translator.</p>
+          Chain): Gemini → Ollama → LibreTranslate → Microsoft Translator. Chỉ gọi provider nào có config key.</p>
       </div>
       <div class="fc">
         <h4>🤖 Trợ Lý Ảo (AI Assistant)</h4>
-        <p>Tích hợp LLM (Gemini 1.5 Flash / Ollama) cung cấp thông tin theo ngữ cảnh (Context-aware) dựa trên dữ liệu
-          POI và Tour, hỗ trợ hỏi đáp trực tiếp 24/7.</p>
+        <p>Tích hợp nhiều LLM theo thứ tự ưu tiên: OpenRouter → DeepSeek → Groq → Gemini → Ollama. Cung cấp thông tin theo ngữ cảnh (Context-aware) dựa trên dữ liệu POI và Tour, hỗ trợ hỏi đáp trực tiếp 24/7.</p>
       </div>
       <div class="fc">
         <h4>📱 Kiến Trúc Offline-First</h4>
         <p>Ứng dụng .NET MAUI 10 tối ưu cho môi trường mạng chập chờn. Sử dụng SQLite Local Cache và pattern
-          OutboxService để đồng bộ hóa dữ liệu ngầm khi có kết nối.</p>
+          OutboxService để đồng bộ hóa dữ liệu ngầm khi có kết nối. Retry với exponential backoff (10s/30s/60s/300s/900s).</p>
       </div>
       <div class="fc">
         <h4>🏪 Hệ Quản Trị CMS</h4>
@@ -770,7 +769,7 @@
       <div class="fc">
         <h4>📊 Thu Thập & Phân Tích (Analytics)</h4>
         <p>Cơ chế thu thập tọa độ hàng loạt (Batch Processing) 25 điểm/30s. Hệ thống log lượt tham quan, vẽ bản đồ nhiệt
-          (Heatmap) và cung cấp báo cáo chi tiết cho Admin.</p>
+          (Heatmap) và cung cấp báo cáo chi tiết cho Admin. Theo dõi phiên du khách với IP geolocation.</p>
       </div>
     </div>
     <div class="card">
@@ -799,18 +798,18 @@
           </tr>
           <tr>
             <td>Database (Prod)</td>
-            <td>SQLite (Persistent)</td>
-            <td>Lưu trữ POI, Tour, Users, Logs (Azure Persistent)</td>
+            <td>SQLite / PostgreSQL / Azure SQL Server</td>
+            <td>Ưu tiên: Azure SQL → PostgreSQL → SQLite. Tự động detect qua connection string</td>
           </tr>
           <tr>
             <td>Database (Dev)</td>
             <td>SQLite</td>
-            <td>Development database (DEBUG mode)</td>
+            <td>Development database (EnsureCreated, không cần migration)</td>
           </tr>
           <tr>
             <td>AI Services</td>
-            <td>Gemini 1.5 Flash (primary) / Ollama (Local AI)</td>
-            <td>AI Chatbot + Auto-Translation</td>
+            <td>OpenRouter (primary) / DeepSeek / Groq / Gemini 2.5 Flash / Ollama (fallback)</td>
+            <td>Ưu tiên: OpenRouter → DeepSeek → Groq → Gemini → Ollama. Tự động chọn theo API key có sẵn</td>
           </tr>
           <tr>
             <td>Cache</td>
@@ -2106,11 +2105,10 @@
     <div class="card">
       <h3>🔔 4.2 Geofence / Kích Hoạt Điểm Thuyết Minh</h3>
       <p>Thuật toán Haversine tính khoảng cách, yêu cầu 2 lần va chạm liên tiếp
-        (<code>RequiredConsecutiveHits = 2</code>), hệ số vùng đệm thoát 1.2× (<code>ExitHysteresisFactor</code>),
+        (<code>RequiredConsecutiveHits = 2</code>), hệ số vùng đệm thoát 1.5× (<code>ExitHysteresisFactor</code>),
         cooldown per-POI (<code>CooldownSeconds</code> từng quán), <strong>global cooldown 10 giây</strong>
         (<code>GlobalCooldownSeconds = 10</code>) giữa bất kỳ 2 lần trigger nào, sắp xếp theo độ ưu tiên (Priority +
-        Distance), và hệ số bán kính tùy chỉnh từ cài đặt người dùng. <code>GeofenceCooldownStore</code> persist trạng
-        thái cooldown vào <code>Preferences</code> để survive app restart.</p>
+        Distance), và hệ số bán kính tùy chỉnh từ cài đặt người dùng. Trạng thái cooldown được lưu trong memory (Dictionary) — không persist vào Preferences.</p>
       <div class="dw">
         <div class="dt">Activity Diagram — Geofence Check</div>
         <div class="mermaid">
@@ -2150,7 +2148,7 @@
             thuật toán Haversine trực tiếp trên client để giảm thiểu độ trễ mạng (zero latency).</li>
           <li><strong>Cơ chế chống nhiễu (Signal Debouncing):</strong> Yêu cầu điều kiện
             <code>consecutiveHits >= 2</code> (hai lần nhận tọa độ liên tiếp đều nằm trong vùng) kết hợp cùng hệ số trễ
-            thoát <code>ExitHysteresis = 1.2</code> để loại bỏ hiện tượng kích hoạt giả (false positives) do nhiễu sóng
+            thoát <code>ExitHysteresisFactor = 1.5</code> để loại bỏ hiện tượng kích hoạt giả (false positives) do nhiễu sóng
             GPS.
           </li>
         </ol>
@@ -2160,9 +2158,9 @@
           <li><strong>Giám sát trạng thái (State Monitoring):</strong> <code>MainViewModel</code> liên tục cấp luồng tọa
             độ cho <code>GeofenceService</code>. Dịch vụ này duy trì trạng thái của các POI đã kích hoạt trong bộ nhớ.
           </li>
-          <li><strong>Kiểm soát tần suất (Rate Limiting):</strong> <code>GeofenceCooldownStore</code> thực thi logic
+          <li><strong>Kiểm soát tần suất (Rate Limiting):</strong> <code>GeofenceService</code> thực thi logic
             chặn kích hoạt lại trong khoảng thời gian quy định (CooldownSeconds), tránh trải nghiệm âm thanh lặp lại gây
-            khó chịu.</li>
+            khó chịu. Trạng thái lưu trong memory (Dictionary), reset khi app restart.</li>
           <li><strong>Khả năng chịu lỗi mạng (Fault Tolerance):</strong> Các bản tin phân tích hành vi (Analytics Logs)
             được định tuyến vào <code>OutboxService</code> nếu mạng bị đứt, đảm bảo tính toàn vẹn dữ liệu telemetry.
           </li>
@@ -2207,9 +2205,9 @@
       <p><strong>Kiến trúc per-device (quan trọng):</strong> Hàng đợi narration chạy <strong>hoàn toàn trên thiết bị của
           từng du khách</strong> — không phải server-side queue. Khi 100 du khách đứng cùng một quầy, mỗi người nghe
         trên điện thoại của mình, không có conflict. Server chỉ nhận log analytics sau khi phát xong.</p>
-      <p>Hàng đợi ưu tiên per-device, khóa đơn luồng (<code>SemaphoreSlim(1,1)</code>) để tránh phát chồng, ưu tiên file
-        âm thanh thu sẵn trước khi dùng giọng đọc tổng hợp, cửa sổ chống phát trùng 25 giây
-        (<code>DuplicateWindow</code>), tốc độ đọc 0.92, khoảng nghỉ 3s giữa các audio trong queue.</p>
+      <p>Hàng đợi per-device, khóa đơn luồng (<code>SemaphoreSlim(1,1)</code>) để tránh phát chồng, ưu tiên file
+        âm thanh thu sẵn trước khi dùng giọng đọc tổng hợp, cửa sổ chống phát trùng 90 giây
+        (<code>DuplicateWindow</code>), tốc độ đọc 0.92, khoảng nghỉ 10 giây giữa các audio trong queue. Hàng đợi không sắp xếp lại theo priority — giữ đúng thứ tự A → B → C, chỉ ngắt nếu POI mới có priority cực cao.</p>
       <div class="dw">
         <div class="dt">Activity Diagram — Narration Service</div>
         <div class="mermaid">
@@ -2288,7 +2286,7 @@
           GF->>TM: EnqueueAsync(poi, language)
           activate TM
           TM->>TM: ProcessQueueAsync()
-          TM->>TM: Check DuplicateWindow (25s)
+          TM->>TM: Check DuplicateWindow (90s)
           alt Điểm có ResolveAudioUrl(lang)
           TM->>TM: audioCache.GetAudioPathAsync()
           TM->>Loa: audioManager.CreatePlayer().Play()
@@ -2857,7 +2855,7 @@
       <div class="sn">06</div>
       <div>
         <h2>AI Features — Chatbot, Dịch Thuật, TTS</h2>
-        <p>Gemini 1.5 Flash · Ollama · ResilientTranslationService · TTS</p>
+        <p>OpenRouter / Gemini 2.5 Flash / Groq / DeepSeek · Ollama · ResilientTranslationService · TTS</p>
       </div>
     </div>
 
@@ -2901,9 +2899,7 @@
           <li><strong>Bộ nhớ hội thoại (Session Memory):</strong> App gửi kèm 10 tin nhắn gần nhất trong mỗi yêu cầu.
             Điều này cho phép khách hỏi các câu nối tiếp như "Quán đó có món gì ngon?" sau khi đã hỏi về vị trí của một
             quán cụ thể.</li>
-          <li><strong>Kiến trúc đa tầng (Multi-Engine):</strong> Hệ thống ưu tiên dùng <code>Gemini 1.5 Flash</code> vì
-            tốc độ cực nhanh và hiểu biết sâu. Tuy nhiên, nó cũng hỗ trợ <code>Ollama</code> chạy trực tiếp trên Server
-            (Local AI) để đảm bảo tính riêng tư hoặc dùng làm phương án dự phòng khi Cloud bị gián đoạn.</li>
+          <li><strong>Kiến trúc đa tầng (Multi-Engine):</strong> Hệ thống chọn AI provider theo thứ tự ưu tiên: <code>OpenRouter</code> (miễn phí, không bị chặn) → <code>DeepSeek</code> → <code>Groq</code> → <code>Gemini 2.5 Flash</code> → <code>Ollama</code> (local). Thứ tự được quyết định tại startup dựa trên API key nào có sẵn trong config.</li>
           <li><strong>Hỗ trợ đa ngôn ngữ tự động:</strong> Khách có thể hỏi bằng tiếng Anh, Hàn hoặc Nhật. Hệ thống sẽ
             nhận diện ngôn ngữ của câu hỏi và yêu cầu AI trả lời đúng bằng ngôn ngữ đó để tạo sự thân thiện tối đa.</li>
         </ol>
@@ -3514,7 +3510,7 @@
           D --> E{"Tài khoản Admin\nđã tồn tại?"}
           E -->|Không| F["Tạo tài khoản Admin mặc định"]
           E -->|Có| G["Bỏ qua, giữ nguyên tài khoản hiện tại"]
-          F --> H["Tạo dữ liệu quán mẫu (3 quán)"]
+          F --> H["Tạo dữ liệu quán mẫu (5 quán)"]
           G --> H
           H --> I["Tạo lộ trình tour mẫu (1 tour)"]
           I --> J["Trả về tổng kết số lượng đã tạo"]
@@ -3532,8 +3528,8 @@
           <li><strong>Cơ chế Idempotency (Chống trùng lặp):</strong> Hệ thống kiểm tra sự tồn tại của tài khoản Admin
             chính (username='admin'). Nếu đã có, nó sẽ bỏ qua bước tạo User để tránh ghi đè mật khẩu hiện tại, bảo vệ
             quyền truy cập của quản trị viên.</li>
-          <li><strong>Nạp dữ liệu mẫu chuẩn (Gold Data):</strong> Quá trình Seed sẽ nạp sẵn các quán ăn tiêu biểu (POI)
-            và các lộ trình tour (Tour) cơ bản. Điều này giúp các nhà phát triển hoặc người kiểm thử có ngay dữ liệu để
+          <li><strong>Nạp dữ liệu mẫu chuẩn (Gold Data):</strong> Quá trình Seed sẽ nạp sẵn 5 quán ăn tiêu biểu (POI: Ốc Oanh, Lẩu Bò Khu Nhà Cháy, Sushi Viên, Cơm Tấm Tú Mập, Chè Hiền Khánh)
+            và 1 lộ trình tour cơ bản. Điều này giúp các nhà phát triển hoặc người kiểm thử có ngay dữ liệu để
             trải nghiệm các tính năng GPS và Bản đồ mà không cần nhập tay từng bản ghi.</li>
           <li><strong>Mã hóa bảo mật:</strong> Mọi tài khoản mẫu đều được hash bằng BCrypt ngay trong lúc Seed, đảm bảo
             dữ liệu mẫu cũng tuân thủ nghiêm ngặt các tiêu chuẩn bảo mật của hệ thống thực tế.</li>
@@ -3554,7 +3550,7 @@
           API->>API: AuthClaims.IsAdmin(User)
           API->>DB: db.Database.MigrateAsync()
           API->>DB: Check if "admin" user exists
-          API->>DB: Add Mock Pois (3) & Mock Tour (1)
+          API->>DB: Add Seed Pois (5) & Seed Tour (1)
           API->>DB: SaveChangesAsync()
           API-->>Web: 200 OK (Stats JSON)
           deactivate API
@@ -4329,7 +4325,7 @@
       <div class="sn">12</div>
       <div>
         <h2>State Diagrams</h2>
-        <p>GPS State · POI Geofence · App Connectivity · Narration Queue · Tour Following</p>
+        <p>GPS State · POI Geofence · App Connectivity · Narration Queue · Tour Following · Device Session</p>
       </div>
     </div>
 
@@ -4490,7 +4486,7 @@
             bỏ qua để tránh việc thuyết minh lặp đi lặp lại gây khó chịu.
           </li>
           <li><strong>Vùng đệm thoát (Hysteresis):</strong> Trạng thái chỉ quay về <code>Outside</code> khi khách đã đi
-            xa khỏi quán hơn 1.2 lần bán kính gốc, đảm bảo tính ổn định tại vùng ranh giới.</li>
+            xa khỏi quán hơn 1.5 lần bán kính gốc, đảm bảo tính ổn định tại vùng ranh giới.</li>
         </ol>
       </div>
       <div class="dw">
@@ -4516,7 +4512,7 @@
           alt distance > adjustedRadius VÀ chưa ở trong
           GF->>GF: Reset consecutiveHits = 0
           else distance > exitRadius VÀ đang ở trong
-          GF->>GF: Xóa khỏi insidePoiIds (Hysteresis 1.2x)
+          GF->>GF: Xóa khỏi insidePoiIds (Hysteresis 1.5x)
           GF->>GF: Reset consecutiveHits = 0
           else Lọt vào vùng kích hoạt
           GF->>GF: consecutiveHits++
@@ -4674,8 +4670,9 @@
           KiểmTraHàngĐợi --> Rảnh : Hàng đợi trống
           note right of ĐangXửLý
           Khóa đơn luồng, tránh phát chồng
-          Sắp xếp theo độ ưu tiên
-          Cửa sổ chống trùng 25 giây
+          Giữ thứ tự FIFO (không sắp xếp lại)
+          Cửa sổ chống trùng 90 giây
+          Khoảng nghỉ 10 giây giữa các POI
           Tốc độ đọc 0.92
           end note
         </div>
@@ -4714,7 +4711,7 @@
           NS->>NS: BuildKey(poiId, lang)
           alt Key đã có trong hàng đợi
           NS-->>GF: Bỏ qua (trùng lặp)
-          else Key trong DuplicateWindow 25s
+          else Key trong DuplicateWindow 90s
           NS-->>GF: Bỏ qua (vừa phát)
           else Hợp lệ
           NS->>NS: Thêm vào queue + Sort theo Priority
@@ -4762,7 +4759,7 @@
           NS->>NS: recentlyPlayed[key] = now
           NS->>Gate: Release()
           alt Còn item tiếp theo
-          NS->>NS: Delay 3 giây (khoảng nghỉ)
+          NS->>NS: Delay 10 giây (khoảng nghỉ)
           end
           end
           Note over NS: Queue trống → trở về Idle
@@ -4866,6 +4863,113 @@
           VM->>GPS: StopTrackingAsync()
           VM->>VM: Tour = Cancelled
           end
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📱 12.6 Device Session Lifecycle</h3>
+      <p>Vòng đời phiên du khách: từ khi mở App đến khi đóng. <code>SessionTrackingService</code> tự động thu thập thông tin thiết bị, gửi heartbeat mỗi 60 giây, và tính quãng đường di chuyển. Server tự động lấy IP geolocation (Country, City) qua <code>ip-api.com</code>.</p>
+      <div class="dw">
+        <div class="dt">State Diagram — Device Session</div>
+        <div class="mermaid">
+          stateDiagram-v2
+          [*] --> ChưaBắtĐầu : App được cài đặt
+          ChưaBắtĐầu --> ĐangHoạtĐộng : Mở App lần đầu
+          ĐangHoạtĐộng --> ĐangHoạtĐộng : Heartbeat mỗi 60 giây
+          ĐangHoạtĐộng --> KếtThúc : Đóng App / Background
+          KếtThúc --> ĐangHoạtĐộng : Mở App lại (IsReturning = true)
+          KếtThúc --> [*]
+          note right of ĐangHoạtĐộng
+          Gửi heartbeat mỗi 60 giây
+          Cập nhật PoisVisited, DistanceMeters
+          Tính quãng đường bằng Haversine
+          Bỏ qua jitter < 2m và nhảy > 500m
+          end note
+          note right of KếtThúc
+          EndedAt được ghi nhận
+          Tổng thời gian được tính
+          Dữ liệu lưu vào DeviceSessions
+          end note
+        </div>
+      </div>
+      <div class="logic-box">
+        <h4>🧠 Giải Thích Chi Tiết — Vòng Đời Phiên Du Khách</h4>
+        <ol>
+          <li><strong>Khởi tạo phiên:</strong> Khi App mở, <code>SessionTrackingService.StartSessionAsync()</code> gửi thông tin thiết bị (model, platform, OS, manufacturer) lên server. Server tự động tra cứu IP geolocation để lấy Country và City.</li>
+          <li><strong>Nhận diện khách quay lại:</strong> Server kiểm tra <code>db.DeviceSessions.AnyAsync(s => s.SessionId == dto.SessionId)</code>. Nếu SessionId đã từng tồn tại → <code>IsReturning = true</code>.</li>
+          <li><strong>Heartbeat định kỳ:</strong> Timer 60 giây gửi <code>POST /api/session/heartbeat</code> với số POI đã ghé và quãng đường tích lũy. Server lấy giá trị lớn hơn (Max) để tránh giảm số liệu.</li>
+          <li><strong>Tính quãng đường:</strong> <code>SessionTrackingService</code> lắng nghe <code>LocationUpdatedMessage</code>, tính khoảng cách Haversine giữa 2 tọa độ liên tiếp. Bỏ qua GPS jitter &lt;2m và nhảy bất thường &gt;500m.</li>
+          <li><strong>Kết thúc phiên:</strong> Khi App đóng, <code>EndSessionAsync()</code> gửi <code>POST /api/session/end</code>. Server ghi <code>EndedAt</code> và tính tổng thời gian.</li>
+        </ol>
+      </div>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — Device Session Lifecycle (với IP Geolocation)</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant App as 📱 MAUI App
+          participant ST as SessionTrackingService
+          participant API as ApiClientService
+          participant Server as SessionController
+          participant DB as ApplicationDbContext
+          participant GeoIP as ip-api.com
+
+          Note over App, GeoIP: [Giai đoạn 1] Mở App — Tạo phiên mới
+          App->>ST: StartSessionAsync()
+          ST->>ST: Đọc DeviceInfo (Model, Platform, OS, Manufacturer)
+          ST->>ST: Đọc AppInfo.VersionString
+          ST->>ST: Đọc Preferences (UiLanguage)
+          ST->>API: PostSessionStartAsync(SessionStartDto)
+          API->>Server: POST /api/session/start
+          activate Server
+          Server->>DB: AnyAsync(SessionId) → IsReturning?
+          Server->>Server: GetClientIp() từ X-Forwarded-For
+          Server->>GeoIP: GET http://ip-api.com/json/{ip}
+          GeoIP-->>Server: { status: "success", country, city }
+          Server->>DB: DeviceSessions.Add(session)
+          DB-->>Server: Saved (Id: 123)
+          Server-->>API: 200 OK { isReturning, country }
+          deactivate Server
+          ST->>ST: _heartbeatTimer.Change(60s, 60s)
+
+          Note over ST, DB: [Giai đoạn 2] Heartbeat mỗi 60 giây
+          loop Mỗi 60 giây
+          ST->>ST: OnHeartbeatTick()
+          ST->>API: PostSessionHeartbeatAsync(HeartbeatDto)
+          API->>Server: POST /api/session/heartbeat
+          activate Server
+          Server->>DB: FindAsync(SessionId, EndedAt == null)
+          Server->>DB: session.LastHeartbeatAt = now
+          Server->>DB: session.PoisVisited = Max(current, dto)
+          Server->>DB: session.DistanceMeters = Max(current, dto)
+          Server->>DB: SaveChangesAsync()
+          Server-->>API: 200 OK
+          deactivate Server
+          end
+
+          Note over ST, DB: [Giai đoạn 3] Tính quãng đường (GPS events)
+          loop Mỗi khi GPS cập nhật
+          App->>ST: LocationUpdatedMessage(lat, lon)
+          ST->>ST: Haversine(lastLat, lastLon, lat, lon)
+          alt distance >= 2m AND distance <= 500m
+          ST->>ST: _totalDistanceMeters += distance
+          else GPS jitter hoặc nhảy bất thường
+          ST->>ST: Bỏ qua
+          end
+          end
+
+          Note over ST, DB: [Giai đoạn 4] Đóng App — Kết thúc phiên
+          App->>ST: EndSessionAsync()
+          ST->>ST: _heartbeatTimer.Change(Infinite, Infinite)
+          ST->>API: PostSessionEndAsync(SessionEndDto)
+          API->>Server: POST /api/session/end
+          activate Server
+          Server->>DB: FindAsync(SessionId, EndedAt == null)
+          Server->>DB: session.EndedAt = now
+          Server->>DB: SaveChangesAsync()
+          Server-->>API: 200 OK { durationMinutes }
+          deactivate Server
         </div>
       </div>
     </div>
@@ -5000,6 +5104,9 @@
           +double DistanceMeters
           +string LanguageUsed
           +bool IsReturning
+          +string? IpAddress
+          +string? Country
+          +string? City
           }
           AppUser "1" --> "0..*" Poi : owns (OwnerUserId)
           Poi "1" --> "0..*" PoiTranslation : has translations
@@ -5242,18 +5349,19 @@
             HEALTH["Health Check\n/health"]
             end
             subgraph DATA_LAYER["💾 Data Layer"]
-            PG["SQLite (Persistent)\nProduction DB\nPersistent Path: /home"]
+            PG["SQLite / PostgreSQL / Azure SQL\nProduction DB\nAuto-detect via connection string"]
             SQLITE["SQLite\nDevelopment DB\napp.db"]
             REDIS["Redis 8\nCache Layer\nPort 6379"]
             FS["File System\nwwwroot/audio\nwwwroot/images"]
             end
             subgraph AI_LAYER["🤖 AI Layer (PoC)"]
-            OLLAMA["Ollama Server\nllama3.2:3b\nPort 11434"]
+            OLLAMA["Ollama Server\nllama3.1:8b\nPort 11434"]
             LIBRE["LibreTranslate\nPort 5001"]
             end
             end
             subgraph CLOUD["☁️ Cloud Services (Production)"]
-            GEMINI_AI["Google Gemini AI\ngemini-1.5-flash\nPrimary AI + Translation"]
+            OPENROUTER["OpenRouter\ngoogle/gemini-2.0-flash-exp:free\nPrimary AI (Free)"]
+            GEMINI_AI["Google Gemini AI\ngemini-2.5-flash\nTranslation + AI Fallback"]
             AZURE_TTS["Azure Cognitive\nSpeech Services"]
             MS_TRANS["Microsoft Translator\nCognitive Services"]
             VOICERSS["VoiceRSS TTS\nAPI"]
@@ -5267,13 +5375,13 @@
             ASPNET --> SQLITE
             ASPNET --> REDIS
             ASPNET --> FS
-            ASPNET -->|"Primary AI"| GEMINI_AI
-            ASPNET -->|"PoC"| OLLAMA
-            ASPNET -->|"PoC"| LIBRE
-            ASPNET -->|"Production"| AZURE_AI
-            ASPNET -->|"Production"| AZURE_TTS
-            ASPNET -->|"Fallback"| MS_TRANS
-            ASPNET -->|"TTS"| VOICERSS
+            ASPNET -->|"Primary AI"| OPENROUTER
+            ASPNET -->|"AI Fallback"| GEMINI_AI
+            ASPNET -->|"Local AI"| OLLAMA
+            ASPNET -->|"Translation PoC"| LIBRE
+            ASPNET -->|"TTS Primary"| AZURE_TTS
+            ASPNET -->|"Translation Fallback"| MS_TRANS
+            ASPNET -->|"TTS Fallback"| VOICERSS
           </div>
         </div>
       </div>
@@ -5284,12 +5392,8 @@
           <li><strong>Docker Containerization:</strong> Toàn bộ Backend (ASP.NET) và Web Admin (React) được đóng gói vào
             các Container. Điều này giúp Admin dễ dàng di chuyển hệ thống từ Server này sang Server khác (ví dụ: từ máy
             chủ tại văn phòng lên Google Cloud) mà không sợ lỗi môi trường.</li>
-          <li><strong>Hybrid AI Architecture:</strong> Đây là điểm độc đáo của dự án. Hệ thống ưu tiên dùng Cloud AI
-            (Gemini) để có độ chính xác cao nhất, nhưng vẫn cài đặt sẵn <code>Ollama</code> trên Server vật lý để làm
-            phương án dự phòng hoàn hảo, đảm bảo phố ẩm thực vẫn "thông minh" kể cả khi đứt cáp quang quốc tế.</li>
-          <li><strong>Cơ sở dữ liệu bền bỉ:</strong> Sử dụng SQLite kết hợp với cơ chế <code>Auto-Backup</code>. File cơ
-            sở dữ liệu được lưu tại các đường dẫn cố định (Persistent Volumes) trên Server, giúp dữ liệu không bị mất
-            khi khởi động lại hệ thống hoặc cập nhật phiên bản mới.</li>
+          <li><strong>Hybrid AI Architecture:</strong> Hệ thống chọn AI provider tự động tại startup dựa trên API key có sẵn: <code>OpenRouter</code> (ưu tiên — miễn phí, không bị chặn) → <code>DeepSeek</code> → <code>Groq</code> → <code>Gemini 2.5 Flash</code> → <code>Ollama</code> (local fallback). Cấu hình trong <code>appsettings.json</code>, không cần sửa code.</li>
+          <li><strong>Cơ sở dữ liệu linh hoạt:</strong> Hỗ trợ 3 database engine: Azure SQL Server (production), PostgreSQL, SQLite. Tự động detect tại startup qua connection string. SQLite dùng <code>EnsureCreated</code> (không cần migration), SQL Server/PostgreSQL dùng <code>MigrateAsync</code>.</li>
           <li><strong>Bảo mật đa tầng:</strong> Mọi luồng dữ liệu giữa Mobile, Web và Server đều được mã hóa qua HTTPS.
             Lớp API chỉ cho phép các yêu cầu có JWT Token hợp lệ đi qua, ngăn chặn hoàn toàn các truy cập trái phép từ
             bên ngoài.</li>
@@ -5429,17 +5533,17 @@
             <tr>
               <td><code>VinhKhanh.API</code></td>
               <td>ASP.NET Core 10</td>
-              <td>13 Controllers, SignalR Hub, Services (AI/TTS/Translation/Gemini), Program.cs</td>
+              <td>14 Controllers (Auth/Poi/Tour/Ai/Audio/Upload/Analytics/Movement/History/Translation/Session/Admin/AppDownload/Tts), SignalR Hub, Services (AI/TTS/Translation/OpenRouter/Gemini/Groq/DeepSeek/Ollama), Program.cs</td>
             </tr>
             <tr>
               <td><code>VinhKhanh.App</code></td>
               <td>.NET MAUI 10</td>
-              <td>5 ViewModels, 15 Services, 7 Pages, Platforms (Android/iOS)</td>
+              <td>6 ViewModels, 17 Services, 10 Pages (+ 1 OnboardingPage), Platforms (Android/iOS)</td>
             </tr>
             <tr>
               <td><code>vinh-khanh-web</code></td>
               <td>React 19 + Vite 6</td>
-              <td>19 Pages, hooks (useSignalR, useAuth), Zustand store, TanStack Query</td>
+              <td>21 Pages, hooks (useSignalR, useAuth), Zustand store, TanStack Query</td>
             </tr>
             <tr>
               <td><code>VinhKhanh.Shared</code></td>
@@ -5578,6 +5682,9 @@
             double DistanceMeters
             string LanguageUsed
             bool IsReturning
+            string IpAddress
+            string Country
+            string City
             }
             AppUser ||--o{ Poi : "owns (OwnerUserId)"
             Poi ||--o{ PoiTranslation : "has translations"
@@ -5668,7 +5775,7 @@
             </tr>
             <tr>
               <td><code>DeviceSessions</code></td>
-              <td>Quản lý vòng đời và thông tin thiết bị của khách</td>
+              <td>Quản lý vòng đời và thông tin thiết bị của khách. Bao gồm IP geolocation (Country, City)</td>
               <td>INDEX(SessionId), INDEX(StartedAt), INDEX(DevicePlatform)</td>
             </tr>
           </table>
@@ -6084,8 +6191,8 @@
             <tr>
               <td><span class="tag tget">GET</span></td>
               <td><code>/api/admin/summary</code></td>
-              <td><span class="tag ta">Admin</span></td>
-              <td>Tổng quan: totalPois, totalTours, totalUsers, totalVisits, ownerStats</td>
+              <td><span class="tag tg2">Public</span></td>
+              <td>Tổng quan: totalPois, totalTours, totalDevices (unique SessionIds), totalVisits, activeUsers (real-time), ownerStats. Cache 5 phút, invalidate khi có visit log mới</td>
             </tr>
             <tr>
               <td><span class="tag tpost">POST</span></td>
@@ -6150,7 +6257,7 @@
               <td><span class="tag tpost">POST</span></td>
               <td><code>/api/session/start</code></td>
               <td><span class="tag tg2">Public</span></td>
-              <td>Ghi nhận phiên mới + thông tin thiết bị (model, platform, OS, version, manufacturer)</td>
+              <td>Ghi nhận phiên mới + thông tin thiết bị (model, platform, OS, version, manufacturer). Tự động lấy IP geolocation (country, city) qua ip-api.com. Đánh dấu IsReturning nếu SessionId đã từng tồn tại</td>
             </tr>
             <tr>
               <td><span class="tag tpost">POST</span></td>
@@ -6181,13 +6288,13 @@
             <tr>
               <td><span class="tag tget">GET</span></td>
               <td><code>/api/admin/sessions?page=1&size=50&days=7</code></td>
-              <td><span class="tag ta">Admin</span></td>
-              <td>Danh sách phiên du khách (phân trang, lọc platform/days)</td>
+              <td><span class="tag ta">Admin</span><span class="tag to">Owner</span></td>
+              <td>Danh sách phiên du khách (phân trang, lọc platform/days). Max 200/page</td>
             </tr>
             <tr>
               <td><span class="tag tget">GET</span></td>
               <td><code>/api/admin/sessions/stats?days=30</code></td>
-              <td><span class="tag ta">Admin</span></td>
+              <td><span class="tag ta">Admin</span><span class="tag to">Owner</span></td>
               <td>Thống kê tổng hợp: avg duration, returning rate, top devices, language breakdown</td>
             </tr>
             <tr>
@@ -6380,9 +6487,9 @@
             </tr>
             <tr>
               <td>DB (Prod)</td>
-              <td>SQLite (Persistent)</td>
-              <td>3.x</td>
-              <td>Microsoft.EntityFrameworkCore.Sqlite (Azure Persistent)</td>
+              <td>SQLite / PostgreSQL / Azure SQL Server</td>
+              <td>3.x / latest</td>
+              <td>Microsoft.EntityFrameworkCore.Sqlite / Npgsql / SqlServer. Tự động detect tại startup</td>
             </tr>
             <tr>
               <td>DB (Dev)</td>
@@ -6416,33 +6523,45 @@
             </tr>
             <tr>
               <td>AI Primary</td>
-              <td>Google Gemini 1.5 Flash</td>
+              <td>OpenRouter (Recommended)</td>
               <td>latest</td>
-              <td>HTTP REST via Google.GenAI. GeminiAiService + GeminiTranslationService</td>
+              <td>OpenRouterAiService — miễn phí, không bị chặn. Model: google/gemini-2.0-flash-exp:free</td>
             </tr>
             <tr>
-              <td>AI PoC</td>
-              <td>Ollama + llama3.2:3b</td>
+              <td>AI Fallback 1</td>
+              <td>DeepSeek</td>
               <td>latest</td>
-              <td>HTTP trực tiếp localhost:11434</td>
+              <td>DeepSeekAiService. Model: deepseek-chat</td>
             </tr>
             <tr>
-              <td>AI Primary</td>
-              <td>Google Gemini 1.5 Flash</td>
-              <td>v1.5</td>
-              <td>Google.AI.Gemini (Sử dụng API Key)</td>
+              <td>AI Fallback 2</td>
+              <td>Groq</td>
+              <td>latest</td>
+              <td>GroqAiService. Model: llama-3.3-70b-versatile</td>
+            </tr>
+            <tr>
+              <td>AI Fallback 3</td>
+              <td>Google Gemini 2.5 Flash</td>
+              <td>gemini-2.5-flash</td>
+              <td>GeminiAiService. HTTP REST via generativelanguage.googleapis.com</td>
+            </tr>
+            <tr>
+              <td>AI Local</td>
+              <td>Ollama + llama3.1:8b</td>
+              <td>latest</td>
+              <td>OllamaAiService — HTTP trực tiếp localhost:11434. Fallback cuối cùng</td>
             </tr>
             <tr>
               <td>Translation</td>
               <td>ResilientTranslationService</td>
               <td>custom</td>
-              <td>Gemini → Ollama → LibreTranslate → Microsoft Translator fallback</td>
+              <td>Gemini → Ollama → LibreTranslate → Microsoft Translator. Chỉ gọi provider có config key</td>
             </tr>
             <tr>
               <td>TTS Server</td>
               <td>VoiceRSS / Azure Cognitive Speech</td>
               <td>latest</td>
-              <td>VoiceRssTtsService / AzureTtsService</td>
+              <td>VoiceRssTtsService / AzureTtsService. ITtsService = AzureTtsService (default)</td>
             </tr>
             <tr>
               <td>Health Check</td>
@@ -6797,8 +6916,8 @@
             </tr>
             <tr>
               <td>PoiListPage</td>
-              <td>MainViewModel</td>
-              <td>Danh sách POI với search</td>
+              <td>—</td>
+              <td>Danh sách POI với search + pull-to-refresh. Code-behind (BindingContext = this), có RefreshCommand</td>
             </tr>
             <tr>
               <td>PoiDetailPage</td>
@@ -6841,15 +6960,15 @@
             </tr>
             <tr>
               <td>DB Production</td>
-              <td>SQLite</td>
-              <td>3.x</td>
-              <td>/home/vinhkhanh_persistent.db — Azure App Service</td>
+              <td>SQLite / PostgreSQL / Azure SQL Server</td>
+              <td>3.x / latest</td>
+              <td>Ưu tiên: Azure SQL (SqlServer conn string) → PostgreSQL (Default conn string) → SQLite (vinhkhanh_persistent.db). Tự động detect tại startup</td>
             </tr>
             <tr>
               <td>DB Development</td>
               <td>SQLite</td>
               <td>3.x</td>
-              <td>app.db — DEBUG mode, EnsureCreated fallback</td>
+              <td>vinhkhanh_local.db hoặc app.db — EnsureCreated (không cần migration)</td>
             </tr>
             <tr>
               <td>Cache</td>
@@ -6928,7 +7047,7 @@
             <li><strong>Phục hồi dữ liệu:</strong> OutboxService tự động Retry các log bị lỗi khi có mạng trở lại.</li>
             <li><strong>AI Fallback Chain:</strong> 4 tầng dự phòng (Gemini → Ollama → LibreTranslate → MS) triệt tiêu
               nguy cơ lỗi dịch thuật.</li>
-            <li><strong>Chống nhiễu (Debounce):</strong> Thuật toán Hysteresis (1.2×) và hệ số va chạm (Hits=2) loại trừ
+            <li><strong>Chống nhiễu (Debounce):</strong> Thuật toán Hysteresis (1.5×) và hệ số va chạm (Hits=2) loại trừ
               triệt để tín hiệu GPS rác.</li>
           </ul>
         </div>
@@ -6994,13 +7113,12 @@
               <code>NarrationService</code> — ngăn enqueue cùng POI+lang 2 lần vào queue.
             </li>
             <li><strong>Tầng 2 — Playback dedup:</strong> <code>_recentlyPlayed</code> với
-              <code>DuplicateWindow = 25s</code> — ngăn phát lại cùng POI trong vòng 25 giây.
+              <code>DuplicateWindow = 90s</code> — ngăn phát lại cùng POI trong vòng 90 giây.
             </li>
             <li><strong>Tầng 3 — Geofence cooldown:</strong> Per-POI <code>CooldownSeconds</code> + Global
-              <code>GlobalCooldownSeconds = 10s</code> + <code>GeofenceCooldownStore</code> persist vào Preferences
-              (survive app restart).
+              <code>GlobalCooldownSeconds = 10s</code> + <code>ExitHysteresisFactor = 1.5</code> (không persist vào Preferences).
             </li>
-            <li><strong>QR dedup:</strong> <code>_isProcessing</code> flag + 2s cooldown trong <code>QrScanPage</code> —
+            <li><strong>QR dedup:</strong> <code>_isProcessing</code> flag (SemaphoreSlim) trong <code>QrScanPage</code> —
               ngăn double-trigger khi camera quét liên tục.</li>
           </ul>
         </div>
@@ -7034,15 +7152,15 @@
             </tr>
             <tr>
               <td><code>GPS_LOOP_IOS</code></td>
-              <td>3 giây</td>
+              <td>1.5 giây</td>
               <td>GpsService.cs</td>
-              <td>CLLocationManager update interval</td>
+              <td>iOS loop interval (StartIosLoopAsync)</td>
             </tr>
             <tr>
               <td><code>GPS_MOCK_INTERVAL</code></td>
               <td>1.5 giây</td>
               <td>GpsService.cs</td>
-              <td>Mock route simulation interval</td>
+              <td>Mock route simulation interval (RunRouteSimulationAsync)</td>
             </tr>
             <tr>
               <td><code>REQUIRED_CONSECUTIVE_HITS</code></td>
@@ -7052,9 +7170,9 @@
             </tr>
             <tr>
               <td><code>EXIT_HYSTERESIS_FACTOR</code></td>
-              <td>1.2×</td>
+              <td>1.5×</td>
               <td>GeofenceService.cs</td>
-              <td>Hệ số mở rộng vùng thoát geofence</td>
+              <td>Hệ số mở rộng vùng thoát geofence (tăng để chống GPS jitter)</td>
             </tr>
             <tr>
               <td><code>DEFAULT_TRIGGER_RADIUS</code></td>
@@ -7070,9 +7188,9 @@
             </tr>
             <tr>
               <td><code>DUPLICATE_WINDOW</code></td>
-              <td>25 giây</td>
+              <td>90 giây</td>
               <td>NarrationService.cs</td>
-              <td>Cửa sổ tránh phát lại trùng</td>
+              <td>Cửa sổ tránh phát lại trùng (DuplicateWindow = TimeSpan.FromSeconds(90))</td>
             </tr>
             <tr>
               <td><code>MOVEMENT_BATCH_SIZE</code></td>
@@ -7255,6 +7373,11 @@
               <td>Race condition</td>
               <td>SemaphoreSlim.Wait(0) trong QrScanPage.HandleQrValueAsync</td>
             </tr>
+            <tr>
+              <td>PoiListPage màn hình trắng (release build)</td>
+              <td>RefreshView.Command="{Binding RefreshCommand}" nhưng PoiListPage.xaml.cs không có property RefreshCommand</td>
+              <td>Thêm <code>public ICommand RefreshCommand { get; }</code> và khởi tạo <code>RefreshCommand = new AsyncRelayCommand(LoadDataAsync)</code> trong constructor</td>
+            </tr>
           </table>
         </div>
       </div>
@@ -7308,14 +7431,14 @@
 
           Thể hiện tại 3 vị trí:
 
-          Mục 04 — Section 4.2 Geofence: GlobalCooldownSeconds = 10, GeofenceCooldownStore persist vào Preferences,
-          ExitHysteresisFactor = 1.2, RequiredConsecutiveHits = 2.
+          Mục 04 — Section 4.2 Geofence: GlobalCooldownSeconds = 10, ExitHysteresisFactor = 1.5,
+          RequiredConsecutiveHits = 2. Cooldown lưu trong memory (Dictionary), không persist vào Preferences.
 
-          Mục 04 — Section 4.3 Narration: DuplicateWindow = 25s, _queuedKeys HashSet, SemaphoreSlim(1,1). Sequence
-          diagram thể hiện Check DuplicateWindow (25s).
+          Mục 04 — Section 4.3 Narration: DuplicateWindow = 90s, _queuedKeys HashSet, SemaphoreSlim(1,1). Sequence
+          diagram thể hiện Check DuplicateWindow (90s). Khoảng nghỉ 10 giây giữa các POI.
 
-          Mục 18 (NFR) — Card "🔁 Xử Lý Trùng — 3 Tầng": Tầng 1 _queuedKeys, Tầng 2 DuplicateWindow 25s, Tầng 3
-          GlobalCooldownSeconds + GeofenceCooldownStore persist. Thêm QR dedup _isProcessing + 2s cooldown.
+          Mục 18 (NFR) — Card "🔁 Xử Lý Trùng — 3 Tầng": Tầng 1 _queuedKeys, Tầng 2 DuplicateWindow 90s, Tầng 3
+          GlobalCooldownSeconds = 10s + ExitHysteresisFactor = 1.5. QR dedup _isProcessing SemaphoreSlim.
 
           4. Xử lý hàng đợi (nhiều người cùng khu vực, cùng quầy)
 
@@ -7378,7 +7501,7 @@
           peak-hours, poi-heatmap-stats)
 
           3 Xử lý trùng 18 — NFR Card "🔁 Xử Lý Trùng — 3 Tầng" Mục 04 Section 4.2 (GlobalCooldownSeconds,
-          GeofenceCooldownStore persist), Mục 04 Section 4.3 (DuplicateWindow 25s, _queuedKeys)
+          ExitHysteresisFactor = 1.5, memory-only), Mục 04 Section 4.3 (DuplicateWindow 90s, _queuedKeys)
 
           4 Xử lý hàng đợi (nhiều người cùng quầy) 18 — NFR Card "👥 Xử Lý Nhiều Du Khách Đồng Thời" Mục 04 Section 4.3
           (per-device, không phải server-side), Mục 04 Section 4.2 (GeofenceEvaluator.PickBestInside)
@@ -7532,15 +7655,15 @@
 
               Tầng 1 — Queue dedup: _queuedKeys (HashSet) ngăn enqueue cùng POI+language 2 lần vào queue
 
-              Tầng 2 — Playback dedup: _recentlyPlayed dictionary + DuplicateWindow = 25 giây ngăn phát lại cùng POI
-              trong vòng 25 giây
+              Tầng 2 — Playback dedup: _recentlyPlayed dictionary + DuplicateWindow = 90 giây ngăn phát lại cùng POI
+              trong vòng 90 giây
 
               SemaphoreSlim(1,1) khóa đơn luồng, đảm bảo không bao giờ phát 2 audio cùng lúc
 
               InterruptIfHigherPriority() ngắt audio đang phát nếu có POI quan trọng hơn vào queue
 
               Thể hiện trong PRD: Mục 04 Section 4.3 (Activity diagram, Sequence diagram với Check DuplicateWindow
-              (25s)), Mục 18 NFR "Xử Lý Trùng — 3 Tầng"
+              (90s)), Mục 18 NFR "Xử Lý Trùng — 3 Tầng"
 
               d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\GeofenceService.cs
 
@@ -7550,7 +7673,7 @@
 
               GlobalCooldownSeconds = 10 — sau bất kỳ trigger nào, chờ 10 giây mới trigger tiếp
 
-              _insidePoiIds + ExitHysteresisFactor = 1.2 — chống jitter tại biên vùng geofence
+              _insidePoiIds + ExitHysteresisFactor = 1.5 — chống jitter tại biên vùng geofence
 
               RequiredConsecutiveHits = 2 — phải nhận 2 tọa độ liên tiếp trong vùng mới trigger
 
@@ -7559,8 +7682,7 @@
 
               d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\GeofenceCooldownStore.cs
 
-              Làm gì: Lưu trữ bền vững (persist) trạng thái cooldown của từng POI vào Preferences dưới dạng JSON. Khi
-              app bị kill và mở lại, cooldown vẫn còn hiệu lực — du khách không bị nghe lại thuyết minh vừa nghe xong.
+              Làm gì: File này tồn tại trong codebase nhưng GeofenceService hiện tại không sử dụng nó — cooldown được quản lý trực tiếp bằng Dictionary trong GeofenceService. GeofenceCooldownStore là class helper dự phòng.
 
               Thể hiện trong PRD: Mục 04 Section 4.2 (logic box "Kiểm soát tần suất"), Mục 18 NFR "Xử Lý Trùng — 3 Tầng"
               Tầng 3
@@ -7571,8 +7693,8 @@
 
               (đã liệt kê ở trên — cùng file, thêm khía cạnh queue)
 
-              Làm gì (về queue): _queue là List được sort theo Priority DESC — POI quan trọng hơn phát trước.
-              ProcessQueueAsync() xử lý tuần tự FIFO trong cùng priority. Khoảng nghỉ 3 giây giữa các audio. Mỗi thiết
+              Làm gì (về queue): _queue là List — không sắp xếp lại theo priority, giữ đúng thứ tự A → B → C.
+              ProcessQueueAsync() xử lý tuần tự FIFO. Khoảng nghỉ 10 giây giữa các audio. Mỗi thiết
               bị có queue riêng hoàn toàn độc lập — 100 du khách đứng cùng quầy = 100 queue song song, không có shared
               state trên server.
 
@@ -7783,14 +7905,12 @@
     <!-- FOOTER -->
     <footer>
       <p>📄 PRD — Thuyết Minh Tự Động Đa Ngôn Ngữ · Phố Ẩm Thực Vĩnh Khánh</p>
-      <p style="margin-top:6px;color:#5c6bc0;">Version 5.0 Updated · .NET 10 · C# 14 · ASP.NET Core 10 · React 19 ·
+      <p style="margin-top:6px;color:#5c6bc0;">Version 6.0 Updated · .NET 10 · C# 14 · ASP.NET Core 10 · React 19 ·
         .NET
         MAUI 10</p>
       <p style="margin-top:4px;font-size:.75rem;">35+ chức năng · 3 Actors · 7 Ngôn ngữ · 54+ API Endpoints · 10 DB
-        Tables · 14 Controllers · 18 Chương · 60+ Sơ đồ UML</p>
-      <p style="margin-top:4px;font-size:.72rem;opacity:.6;">Được tạo từ phân tích toàn bộ codebase · Cập nhật đầy đủ 5
-        yêu cầu: Anonymous Visitor · Monitoring · Duplicate Prevention · Per-device Queue · Performance · Cập nhật:
-        06/05/2026</p>
+        Tables · 14 Controllers · 19 Chương · 60+ Sơ đồ UML</p>
+      <p style="margin-top:4px;font-size:.72rem;opacity:.6;">Được tạo từ phân tích toàn bộ codebase · Cập nhật: AI Provider Chain (OpenRouter→DeepSeek→Groq→Gemini→Ollama) · DB Multi-engine (SQLite/PostgreSQL/Azure SQL) · ExitHysteresis=1.5 · DuplicateWindow=90s · RefreshCommand bugfix · IP Geolocation · Cập nhật: 2026</p>
     </footer>
 
 </body>

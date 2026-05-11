@@ -32,6 +32,8 @@ type SessionRow = {
   languageUsed: string
   isReturning: boolean
   isActive: boolean
+  country: string | null
+  city: string | null
 }
 
 type SessionStats = {
@@ -196,6 +198,7 @@ export function SessionsPage() {
                 <th className="p-4 font-semibold">Trạng thái</th>
                 <th className="p-4 font-semibold">Thiết bị</th>
                 <th className="p-4 font-semibold">Bắt đầu</th>
+                <th className="p-4 font-semibold">Quốc gia</th>
                 <th className="p-4 font-semibold">Thời lượng</th>
                 <th className="p-4 font-semibold text-right">Quãng đường</th>
                 <th className="p-4 font-semibold text-right">POI đã ghé</th>
@@ -228,6 +231,12 @@ export function SessionsPage() {
                   </td>
                   <td className="p-4 whitespace-nowrap text-slate-600">
                     {new Date(s.startedAt).toLocaleString()}
+                  </td>
+                  <td className="p-4 whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1.5 font-medium text-slate-700">
+                      <MapPin size={14} className="text-orange-500" />
+                      {s.country || 'Unknown'} {s.city ? `(${s.city})` : ''}
+                    </span>
                   </td>
                   <td className="p-4 font-mono text-slate-700">{s.durationMinutes} ph</td>
                   <td className="p-4 text-right font-mono text-slate-700">{s.distanceMeters}m</td>

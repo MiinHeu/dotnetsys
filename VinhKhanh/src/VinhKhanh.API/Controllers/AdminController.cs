@@ -153,6 +153,8 @@ public class AdminController(ApplicationDbContext db, IConnectionTracker tracker
 				DistanceMeters = Math.Round(s.DistanceMeters),
 				s.LanguageUsed,
 				s.IsReturning,
+				s.Country,
+				s.City,
 				IsActive = s.EndedAt == null && (DateTime.UtcNow - s.LastHeartbeatAt).TotalMinutes < 5
 			});
 
