@@ -20,7 +20,7 @@ export function Dashboard() {
   const analyticsTop = useQuery({
     queryKey: ['analytics', 'top'],
     queryFn: async () =>
-      (await api.get<{ poiId: number; count: number; avgDuration: number }[]>('/api/analytics/top?days=30'))
+      (await api.get<{ poiId: number; poiName: string; count: number; avgDuration: number }[]>('/api/analytics/top?days=30'))
         .data,
   })
 
@@ -46,9 +46,8 @@ export function Dashboard() {
 
   const chartData =
     analyticsTop.data?.map((a) => {
-      const matchedPoi = pois.data?.find((p) => p.id === a.poiId)
       return {
-        name: matchedPoi?.name || `Mã quán #${a.poiId}`,
+        name: a.poiName || `Mã quán #${a.poiId}`,
         count: a.count,
         duration: Math.round(a.avgDuration || 0),
       }
