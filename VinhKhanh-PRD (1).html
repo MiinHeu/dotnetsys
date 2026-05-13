@@ -645,6 +645,9 @@
       <li><a href="#ch16">API</a></li>
       <li><a href="#ch17">Tech Stack</a></li>
       <li><a href="#ch18">NFR</a></li>
+      <li><a href="#ch19">Tổng Hợp</a></li>
+      <li><a href="#ch20">Admin</a></li>
+      <li><a href="#ch21">Kiểm Thử</a></li>
     </ul>
   </nav>
 
@@ -722,6 +725,8 @@
       <a href="#ch17">17 · Technology Stack</a>
       <a href="#ch18">18 · Yêu Cầu Phi Chức Năng</a>
       <a href="#ch19">19 · Tổng Hợp & Chứng Minh</a>
+      <a href="#ch20">20 · Quản Trị Admin (Web)</a>
+      <a href="#ch21">21 · Hướng Dẫn Kiểm Thử & Deploy</a>
     </div>
   </div>
 
@@ -7818,28 +7823,194 @@
       </div>
     </div>
 
-  <!-- ===== CH19 ADDITIONAL SEQUENCE DIAGRAMS ===== -->
-  <div class="sec" id="ch19">
+  <!-- ===== CH20 QUẢN TRỊ ADMIN (WEB) ===== -->
+  <div class="sec" id="ch20">
     <div class="sh">
-      <div class="sn">19</div>
+      <div class="sn">20</div>
       <div>
-        <h2>Sequence Diagrams Bổ Sung</h2>
-        <p>Lấy Top POI · Theo dõi vị trí GPS · Xóa lượt nghe (Chỉ đích danh File Source Code)</p>
+        <h2>Sequence Diagrams — Hệ Thống Quản Trị (Admin Web)</h2>
+        <p>Chi tiết các luồng dữ liệu cho toàn bộ chức năng của Admin, từ Dashboard (Thống kê, Biểu đồ) đến CMS CRUD.</p>
       </div>
     </div>
 
     <div class="card">
-      <h3>📊 19.1 Lấy danh sách Top POI (Analytics)</h3>
+      <h3>📊 20.1.1 Ô Hiển Thị: Tổng Số Quán Ăn (Total POIs)</h3>
       <div class="dw">
-        <div class="dt">Sequence Diagram — AnalyticsController</div>
+        <div class="dt">Sequence Diagram — Fallback Logic cho Số Quán Ăn</div>
         <div class="mermaid">
           sequenceDiagram
           autonumber
-          participant UI as 💻 Dashboard.tsx
+          participant UI as 💻 Dashboard
+          participant ADM as 🌐 AdminController
+          participant POI as 🌐 PoiController
+          participant DB as 🗄️ ApplicationDbContext
+
+          par Fetch Chính
+              UI->>ADM: GET /api/admin/summary
+              activate ADM
+              ADM->>DB: db.Pois.Count()
+              DB-->>ADM: totalPois
+              ADM-->>UI: return { totalPois }
+              deactivate ADM
+          and Fetch Dự Phòng (Fallback)
+              UI->>POI: GET /api/poi?lang=vi
+              activate POI
+              POI->>DB: Truy vấn danh sách POI
+              DB-->>POI: List[Poi]
+              POI-->>UI: return List[Poi]
+              deactivate POI
+          end
+          
+          alt API summary lỗi hoặc đang tải
+              UI->>UI: value = pois.data.length
+          else API summary thành công
+              UI->>UI: value = summary.data.totalPois
+          end
+          UI-->>UI: Render thẻ màu Cam (Quán ăn)
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📊 20.1.2 Ô Hiển Thị: Tổng Số Lộ Trình (Total Tours)</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — Fallback Logic cho Số Lộ Trình</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant UI as 💻 Dashboard
+          participant ADM as 🌐 AdminController
+          participant TOUR as 🌐 TourController
+          participant DB as 🗄️ ApplicationDbContext
+
+          par Fetch Chính
+              UI->>ADM: GET /api/admin/summary
+              activate ADM
+              ADM->>DB: db.Tours.Count()
+              DB-->>ADM: totalTours
+              ADM-->>UI: return { totalTours }
+              deactivate ADM
+          and Fetch Dự Phòng (Fallback)
+              UI->>TOUR: GET /api/tour?lang=vi
+              activate TOUR
+              TOUR->>DB: Truy vấn danh sách Lộ trình
+              DB-->>TOUR: List[Tour]
+              TOUR-->>UI: return List[Tour]
+              deactivate TOUR
+          end
+          
+          alt API summary lỗi hoặc đang tải
+              UI->>UI: value = tours.data.length
+          else API summary thành công
+              UI->>UI: value = summary.data.totalTours
+          end
+          UI-->>UI: Render thẻ màu Xanh (Lộ trình)
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📊 20.1.3 Ô Hiển Thị: Số Lượt Nghe TTS (Total Visits)</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — Fallback Logic cho Lượt Nghe</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant UI as 💻 Dashboard
+          participant ADM as 🌐 AdminController
+          participant ANY as 🌐 AnalyticsController
+          participant DB as 🗄️ ApplicationDbContext
+
+          par Fetch Chính
+              UI->>ADM: GET /api/admin/summary
+              activate ADM
+              ADM->>DB: db.PoiVisitLogs.Count()
+              DB-->>ADM: totalVisits
+              ADM-->>UI: return { totalVisits }
+              deactivate ADM
+          and Fetch Dự Phòng (Fallback)
+              UI->>ANY: GET /api/analytics/top?days=30
+              activate ANY
+              ANY->>DB: GroupBy PoiId -> Lấy Count
+              DB-->>ANY: Top POI Data
+              ANY-->>UI: return [{count: 50}, {count: 20}]
+              deactivate ANY
+          end
+          
+          alt API summary lỗi hoặc đang tải
+              UI->>UI: value = Sum(analyticsTop.data.count)
+          else API summary thành công
+              UI->>UI: value = summary.data.totalVisits
+          end
+          UI-->>UI: Render thẻ màu Đỏ (Lượt nghe TTS)
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📊 20.1.4 Ô Hiển Thị: Số Thiết Bị Cài Đặt (Total Installs)</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — Thống kê thiết bị duy nhất</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant UI as 💻 Dashboard
+          participant ADM as 🌐 AdminController
+          participant DB as 🗄️ ApplicationDbContext
+
+          UI->>ADM: GET /api/admin/summary
+          activate ADM
+          ADM->>DB: db.DeviceSessions.Select(DeviceId).Distinct().Count()
+          DB-->>ADM: totalDevices
+          ADM-->>UI: return { totalDevices }
+          deactivate ADM
+          UI->>UI: value = summary.data.totalDevices
+          UI-->>UI: Render thẻ màu Xanh Teal (Thiết bị đã cài)
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🟢 20.1.5 Ô Hiển Thị: Thiết Bị Trực Tuyến (Active Users)</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — Realtime Tracking Polling</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant UI as 💻 Dashboard
+          participant ADM as 🌐 AdminController
+          participant TRK as ⚙️ ConnectionTracker
+
+          loop RefetchInterval: Mỗi 10 giây
+              UI->>ADM: GET /api/admin/summary
+              activate ADM
+              ADM->>TRK: GetOnlineCount() (Đếm ConnectionID trong RAM)
+              TRK-->>ADM: activeUsers
+              ADM-->>UI: return { activeUsers }
+              deactivate ADM
+              UI->>UI: value = summary.data.activeUsers
+              UI-->>UI: Render thẻ màu Xanh Lá có chấm nhấp nháy (Online)
+          end
+        </div>
+      </div>
+    </div>
+
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📈 20.2 Dashboard — Biểu Đồ Top Địa Điểm Lắng Nghe</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — AnalyticsController Top POIs</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 Dashboard
           participant API as 🌐 AnalyticsController
           participant DB as 🗄️ ApplicationDbContext
 
-          UI->>API: api.get('/api/analytics/top?days=30')
+          UI->>API: GET /api/analytics/top?days=30
           activate API
           API->>DB: db.PoiVisitLogs.Where(VisitedAt >= since)
           DB-->>API: List[PoiVisitLog]
@@ -7849,82 +8020,215 @@
           API->>API: Map PoiName = names.TryGetValue()
           API-->>UI: return Ok(result) -> JSON List
           deactivate API
-          UI->>UI: setQueryData() -> Render Chart/Table
+          UI->>UI: Xử lý mảng dữ liệu (name, count, duration)
+          UI-->>Admin: Render biểu đồ cột (BarChart) bằng Recharts
         </div>
       </div>
     </div>
 
     <div class="card">
-      <h3>📍 19.2 Cập nhật vị trí theo GPS (Location Tracking)</h3>
+      <h3>🔥 20.3 Bản Đồ Nhiệt (Heatmap) & Lịch Sử Di Chuyển</h3>
       <div class="dw">
-        <div class="dt">Sequence Diagram — GpsForegroundService & SessionTrackingService</div>
+        <div class="dt">Sequence Diagram — HeatmapPage</div>
         <div class="mermaid">
           sequenceDiagram
           autonumber
-          participant GPS as 📡 Android OS
-          participant FG as 📱 GpsForegroundService
-          participant Msg as ✉️ WeakReferenceMessenger
-          participant ST as ⚙️ SessionTrackingService
-          participant Geo as 🎯 GeofenceService
-          participant ApiClient as 🌐 ApiClientService
-          participant Server as 🔧 SessionController
-
-          GPS->>FG: OnLocationChanged(Location)
-          FG->>Msg: Send(new LocationUpdatedMessage(lat, lon))
-          Msg->>ST: Receive(LocationUpdatedMessage)
-          activate ST
-          ST->>ST: Location.CalculateDistance(lastLoc, currentLoc)
-          ST->>ST: if (distance >= 2 AND distance <= 500) _totalDistanceMeters += distance
-          ST->>Geo: CheckGeofencesAsync(lat, lon)
-          Geo->>Geo: _narrationService.QueueNarrationAsync(poi)
-          deactivate ST
-          
-          loop Timer: OnHeartbeatTick() mỗi 60 giây
-            ST->>ApiClient: PostSessionHeartbeatAsync(HeartbeatDto)
-            ApiClient->>Server: POST /api/session/heartbeat
-            activate Server
-            Server->>Server: db.DeviceSessions.FindAsync(SessionId)
-            Server->>Server: session.DistanceMeters = Max(current, dto.DistanceMeters)
-            Server->>Server: await db.SaveChangesAsync()
-            Server-->>ApiClient: return Ok()
-            deactivate Server
-          end
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>🗑️ 19.3 Xoá một lượt nghe (Delete Visit Log)</h3>
-      <div class="dw">
-        <div class="dt">Sequence Diagram — AnalyticsController Delete</div>
-        <div class="mermaid">
-          sequenceDiagram
-          autonumber
-          participant UI as 💻 SessionsPage.tsx
-          participant ApiClient as 🌐 api.ts
-          participant API as 🔧 AnalyticsController
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 HeatmapPage
+          participant API as 🌐 AnalyticsController
           participant DB as 🗄️ ApplicationDbContext
-          participant Cache as 🧠 IMemoryCache
+          participant Cache as 🧠 MemoryCache
 
-          UI->>UI: window.confirm("Bạn có chắc muốn xóa?")
-          UI->>ApiClient: api.delete(`/api/analytics/log/${id}`)
-          ApiClient->>API: DELETE /api/analytics/log/{id} (Kèm JWT)
+          Admin->>UI: Mở trang Bản đồ nhiệt
+          UI->>API: GET /api/analytics/heatmap?hours=24
           activate API
-          API->>DB: await db.PoiVisitLogs.FindAsync(id)
-          DB-->>API: entity
-          alt (entity != null)
-            API->>DB: db.PoiVisitLogs.Remove(entity)
-            API->>DB: await db.SaveChangesAsync()
-            API->>Cache: _cache.Remove("admin_summary_stats")
-            API-->>ApiClient: return Ok()
-          else
-            API-->>ApiClient: return NotFound()
+          API->>Cache: Lấy cache (Thời gian tồn tại 30s để tránh spam query)
+          alt Cache Miss
+              API->>DB: MovementLogs.Where(RecordedAt >= since)
+              API->>DB: GroupBy(SessionId, Lat, Lon)
+              DB-->>API: Danh sách Tọa độ (Lat, Lon)
+              API->>Cache: Lưu Cache (30 giây)
           end
+          API-->>UI: return Array[{Latitude, Longitude}]
           deactivate API
-          ApiClient-->>UI: Promise.resolve()
-          UI->>UI: queryClient.invalidateQueries(['sessions'])
+          UI->>UI: Đổ dữ liệu vào Google Maps HeatmapLayer
+          UI-->>Admin: Render biểu đồ Nhiệt đỏ/vàng/xanh trên bản đồ
         </div>
       </div>
+    </div>
+
+    <div class="card">
+      <h3>🏪 20.4 Quản Lý Địa Điểm (PoiEditor CRUD)</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — PoiEditor</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 PoiEditor
+          participant UPL as 🌐 UploadController
+          participant API as 🌐 PoiController
+          participant DB as 🗄️ ApplicationDbContext
+
+          Admin->>UI: Điền thông tin (Tên, Tọa độ, Bán kính...)
+          opt Nếu có chọn Ảnh mới
+              UI->>UPL: POST /api/upload (MultipartFormData)
+              activate UPL
+              UPL-->>UI: return { url: "https://..." }
+              deactivate UPL
+          end
+          Admin->>UI: Bấm "Lưu"
+          UI->>API: POST/PUT /api/poi (Kèm imageUrl)
+          activate API
+          API->>DB: db.Pois.Add() hoặc Update()
+          DB-->>API: SaveChangesAsync()
+          API-->>UI: return 200 OK
+          deactivate API
+          UI->>UI: Điều hướng về danh sách /pois
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🗺️ 20.5 Quản Lý Lộ Trình (TourEditor CRUD)</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — TourEditor</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 TourEditor
+          participant API as 🌐 TourController
+          participant DB as 🗄️ ApplicationDbContext
+
+          Admin->>UI: Kéo thả thêm/bớt POI vào lộ trình
+          Admin->>UI: Bấm "Lưu lộ trình"
+          UI->>API: POST/PUT /api/tour
+          activate API
+          API->>DB: Lưu thông tin Tour
+          API->>DB: Xóa liên kết TourPois cũ & Thêm TourPois mới
+          DB-->>API: SaveChangesAsync()
+          API-->>UI: return 200 OK
+          deactivate API
+          UI->>UI: Thông báo thành công
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🎵 20.6 Quản Lý Âm Thanh (AudioPage Upload)</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — AudioPage</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 AudioPage
+          participant AUD as 🌐 AudioController
+          participant POI as 🌐 PoiController
+          participant DB as 🗄️ ApplicationDbContext
+
+          Admin->>UI: Chọn File Audio (.mp3/.wav) & Bấm "Upload" tại NN (VD: 'en')
+          UI->>AUD: POST /api/audio/upload (MultipartFormData)
+          activate AUD
+          AUD-->>UI: return { url: "audio_file.mp3" }
+          deactivate AUD
+          
+          UI->>POI: PUT /api/poi/{id} (Cập nhật audioUrl vào bản dịch tiếng 'en')
+          activate POI
+          POI->>DB: Update PoiTranslations (languageCode = 'en')
+          DB-->>POI: SaveChangesAsync()
+          POI-->>UI: return Ok()
+          deactivate POI
+          UI-->>Admin: Hiển thị Audio Player & Nút xóa file
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🔐 20.7 Quản Lý Người Dùng & Chủ Quán (UserManagement)</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — UserManagement</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 UserManagement
+          participant API as 🌐 AuthController
+          participant DB as 🗄️ ApplicationDbContext
+
+          Admin->>UI: Bấm "Duyệt" (Approve) hoặc "Khóa" (Ban) tài khoản
+          UI->>API: PUT /api/auth/users/{id}/status (isApproved, isActive)
+          activate API
+          API->>DB: Find(AppUser, id)
+          DB-->>API: user entity
+          API->>DB: Cập nhật isApproved / isActive
+          DB-->>API: SaveChangesAsync()
+          API-->>UI: return 200 OK
+          deactivate API
+          UI->>UI: queryClient.invalidateQueries(['users']) -> Tải lại lưới dữ liệu
+          UI-->>Admin: Hiển thị trạng thái mới
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ===== CH21 HƯỚNG DẪN KIỂM THỬ ===== -->
+  <div class="sec" id="ch21">
+    <div class="sh">
+      <div class="sn">21</div>
+      <div>
+        <h2>Hướng Dẫn Kiểm Thử & Deploy</h2>
+        <p>Cách thiết lập chạy ứng dụng .NET MAUI trên Máy Ảo (Emulator) và Máy Thật (Physical Device)</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>💻 21.1 Kiểm Thử Bằng Máy Ảo (Android Emulator)</h3>
+      <p>Máy ảo rất tiện lợi để test giao diện và các luồng đi cơ bản (Navigation, Data loading) mà không cần chuẩn bị cáp nối.</p>
+      <h4>Các Bước Thực Hiện</h4>
+      <ul style="margin-top: 8px;">
+        <li><strong>Khởi động API Server:</strong> Mở terminal, chạy <code>dotnet run</code> ở thư mục <code>VinhKhanh.API</code> để server backend hoạt động ở port <code>5283</code>.</li>
+        <li><strong>Chọn Emulator:</strong> Trong thanh công cụ của Visual Studio ở góc trên cùng, đảm bảo mục thiết bị đang chọn là một Android Emulator (Ví dụ: <em>Pixel 5 - API 34</em>).</li>
+        <li><strong>Chạy Ứng Dụng:</strong> Nhấn nút mũi tên xanh (hoặc phím <code>F5</code>) để build và deploy app lên máy ảo.</li>
+      </ul>
+      <h4 style="margin-top: 16px;">Lưu Ý & Khắc Phục Lỗi</h4>
+      <ul style="margin-top: 8px;">
+        <li><strong>Lỗi mạng (Connection Timeout):</strong> Máy ảo Android tự hiểu <code>localhost</code> là chính nó. Để gọi API trên máy host, hệ thống đã được cấu hình tự động trỏ về <code>10.0.2.2:5283</code>. Không cần sửa code IP.</li>
+        <li><strong>Test GPS (Định vị):</strong> Nhấn vào biểu tượng <strong>(...)</strong> cạnh máy ảo -> Chọn mục <strong>Location</strong> -> Nhập tọa độ vĩ độ (Latitude) và kinh độ (Longitude) của một quán ăn -> Nhấn <strong>Set Location</strong>. Geofence sẽ kích hoạt.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>📱 21.2 Kiểm Thử Bằng Máy Thật (Physical Phone)</h3>
+      <p>Kiểm thử bằng máy thật là bắt buộc khi bạn muốn test thực tế hiệu năng âm thanh, GPS ngoài trời, Scan QR bằng camera, hoặc ứng dụng chạy ngầm (Background Service).</p>
+      
+      <h4 style="margin-top: 16px;">Giai Đoạn 1: Chuẩn Bị Thiết Bị</h4>
+      <ul style="margin-top: 8px;">
+        <li>Cắm cáp USB kết nối điện thoại Android vào máy tính.</li>
+        <li>Bật <strong>Chế độ nhà phát triển</strong> (Nhấn 7 lần vào Build Number).</li>
+        <li>Bật tính năng <strong>Gỡ lỗi USB (USB Debugging)</strong> và Allow kết nối. <em>(Dùng lệnh <code>adb devices</code> để kiểm tra)</em>.</li>
+      </ul>
+
+      <h4 style="margin-top: 16px;">Giai Đoạn 2: Đồng Bộ Mạng (Cực Kỳ Quan Trọng)</h4>
+      <p>Điện thoại và máy tính <strong>bắt buộc phải kết nối chung một mạng Wi-Fi</strong>.</p>
+      <ol style="margin-top: 8px; padding-left: 20px;">
+        <li style="margin-bottom: 8px;">Lấy địa chỉ IP Wi-Fi của máy tính (VD: <code>192.168.1.5</code> hoặc <code>172.16.0.152</code>).</li>
+        <li style="margin-bottom: 8px;">Sửa file <code>ApiClientService.cs</code> trong <code>VinhKhanh.App/Services/</code>:
+          <pre style="background:var(--bg-elevated);padding:10px;border-radius:4px;margin:8px 0;overflow-x:auto;"><code>return Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, "http://172.16.0.152:5283/");</code></pre>
+        </li>
+        <li><strong>Mở Tường Lửa (Firewall):</strong> Mở Port 5283 để thiết bị khác có thể truy cập:
+          <pre style="background:var(--bg-elevated);padding:10px;border-radius:4px;margin:8px 0;overflow-x:auto;"><code>netsh advfirewall firewall add rule name="Open Port 5283" dir=in action=allow protocol=TCP localport=5283</code></pre>
+        </li>
+      </ol>
+
+      <h4 style="margin-top: 16px;">Giai Đoạn 3: Khởi Chạy & Khắc Phục Lỗi</h4>
+      <ul style="margin-top: 8px;">
+        <li>Đảm bảo Backend API Server (port <code>5283</code>) đang chạy.</li>
+        <li>Trong Visual Studio, chọn thiết bị thật và bấm <strong>F5</strong>.</li>
+        <li><strong>Lỗi trắng màn hình/Không load POI:</strong> Do điện thoại không kết nối tới IP máy tính. Kiểm tra chung Wi-Fi và tắt thử Windows Defender Firewall.</li>
+        <li><strong>Đổi Wi-Fi:</strong> Phải cập nhật lại IP mới trong <code>ApiClientService.cs</code>.</li>
+        <li><strong>Lỗi IO Access:</strong> Tắt ứng dụng trên điện thoại, Clean Solution và F5 lại.</li>
+      </ul>
     </div>
   </div>
 

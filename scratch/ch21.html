@@ -1,0 +1,59 @@
+  <!-- ===== CH21 HƯỚNG DẪN KIỂM THỬ ===== -->
+  <div class="sec" id="ch21">
+    <div class="sh">
+      <div class="sn">21</div>
+      <div>
+        <h2>Hướng Dẫn Kiểm Thử & Deploy</h2>
+        <p>Cách thiết lập chạy ứng dụng .NET MAUI trên Máy Ảo (Emulator) và Máy Thật (Physical Device)</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>💻 21.1 Kiểm Thử Bằng Máy Ảo (Android Emulator)</h3>
+      <p>Máy ảo rất tiện lợi để test giao diện và các luồng đi cơ bản (Navigation, Data loading) mà không cần chuẩn bị cáp nối.</p>
+      <h4>Các Bước Thực Hiện</h4>
+      <ul style="margin-top: 8px;">
+        <li><strong>Khởi động API Server:</strong> Mở terminal, chạy <code>dotnet run</code> ở thư mục <code>VinhKhanh.API</code> để server backend hoạt động ở port <code>5283</code>.</li>
+        <li><strong>Chọn Emulator:</strong> Trong thanh công cụ của Visual Studio ở góc trên cùng, đảm bảo mục thiết bị đang chọn là một Android Emulator (Ví dụ: <em>Pixel 5 - API 34</em>).</li>
+        <li><strong>Chạy Ứng Dụng:</strong> Nhấn nút mũi tên xanh (hoặc phím <code>F5</code>) để build và deploy app lên máy ảo.</li>
+      </ul>
+      <h4 style="margin-top: 16px;">Lưu Ý & Khắc Phục Lỗi</h4>
+      <ul style="margin-top: 8px;">
+        <li><strong>Lỗi mạng (Connection Timeout):</strong> Máy ảo Android tự hiểu <code>localhost</code> là chính nó. Để gọi API trên máy host, hệ thống đã được cấu hình tự động trỏ về <code>10.0.2.2:5283</code>. Không cần sửa code IP.</li>
+        <li><strong>Test GPS (Định vị):</strong> Nhấn vào biểu tượng <strong>(...)</strong> cạnh máy ảo -> Chọn mục <strong>Location</strong> -> Nhập tọa độ vĩ độ (Latitude) và kinh độ (Longitude) của một quán ăn -> Nhấn <strong>Set Location</strong>. Geofence sẽ kích hoạt.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>📱 21.2 Kiểm Thử Bằng Máy Thật (Physical Phone)</h3>
+      <p>Kiểm thử bằng máy thật là bắt buộc khi bạn muốn test thực tế hiệu năng âm thanh, GPS ngoài trời, Scan QR bằng camera, hoặc ứng dụng chạy ngầm (Background Service).</p>
+      
+      <h4 style="margin-top: 16px;">Giai Đoạn 1: Chuẩn Bị Thiết Bị</h4>
+      <ul style="margin-top: 8px;">
+        <li>Cắm cáp USB kết nối điện thoại Android vào máy tính.</li>
+        <li>Bật <strong>Chế độ nhà phát triển</strong> (Nhấn 7 lần vào Build Number).</li>
+        <li>Bật tính năng <strong>Gỡ lỗi USB (USB Debugging)</strong> và Allow kết nối. <em>(Dùng lệnh <code>adb devices</code> để kiểm tra)</em>.</li>
+      </ul>
+
+      <h4 style="margin-top: 16px;">Giai Đoạn 2: Đồng Bộ Mạng (Cực Kỳ Quan Trọng)</h4>
+      <p>Điện thoại và máy tính <strong>bắt buộc phải kết nối chung một mạng Wi-Fi</strong>.</p>
+      <ol style="margin-top: 8px; padding-left: 20px;">
+        <li style="margin-bottom: 8px;">Lấy địa chỉ IP Wi-Fi của máy tính (VD: <code>192.168.1.5</code> hoặc <code>172.16.0.152</code>).</li>
+        <li style="margin-bottom: 8px;">Sửa file <code>ApiClientService.cs</code> trong <code>VinhKhanh.App/Services/</code>:
+          <pre style="background:var(--bg-elevated);padding:10px;border-radius:4px;margin:8px 0;overflow-x:auto;"><code>return Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, "http://172.16.0.152:5283/");</code></pre>
+        </li>
+        <li><strong>Mở Tường Lửa (Firewall):</strong> Mở Port 5283 để thiết bị khác có thể truy cập:
+          <pre style="background:var(--bg-elevated);padding:10px;border-radius:4px;margin:8px 0;overflow-x:auto;"><code>netsh advfirewall firewall add rule name="Open Port 5283" dir=in action=allow protocol=TCP localport=5283</code></pre>
+        </li>
+      </ol>
+
+      <h4 style="margin-top: 16px;">Giai Đoạn 3: Khởi Chạy & Khắc Phục Lỗi</h4>
+      <ul style="margin-top: 8px;">
+        <li>Đảm bảo Backend API Server (port <code>5283</code>) đang chạy.</li>
+        <li>Trong Visual Studio, chọn thiết bị thật và bấm <strong>F5</strong>.</li>
+        <li><strong>Lỗi trắng màn hình/Không load POI:</strong> Do điện thoại không kết nối tới IP máy tính. Kiểm tra chung Wi-Fi và tắt thử Windows Defender Firewall.</li>
+        <li><strong>Đổi Wi-Fi:</strong> Phải cập nhật lại IP mới trong <code>ApiClientService.cs</code>.</li>
+        <li><strong>Lỗi IO Access:</strong> Tắt ứng dụng trên điện thoại, Clean Solution và F5 lại.</li>
+      </ul>
+    </div>
+  </div>

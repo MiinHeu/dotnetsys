@@ -67,3 +67,5 @@ SELECT *
 FROM "PoiVisitLogs"
 WHERE "PoiId" = 1
 
+DELETE FROM PoiVisitLogs 
+WHERE Id = 150 AND PoiId = 5;

@@ -1,0 +1,259 @@
+  <!-- ===== CH20 QUẢN TRỊ ADMIN (WEB) ===== -->
+  <div class="sec" id="ch20">
+    <div class="sh">
+      <div class="sn">20</div>
+      <div>
+        <h2>Sequence Diagrams — Hệ Thống Quản Trị (Admin Web)</h2>
+        <p>Chi tiết các luồng dữ liệu cho toàn bộ chức năng của Admin, từ Dashboard (Thống kê, Biểu đồ) đến CMS CRUD.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📊 20.1 Dashboard — Các Thẻ Thống Kê (Overview Cards) & Thiết Bị Trực Tuyến</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — Lấy dữ liệu cho các ô hiển thị tổng quát (Parallel Fetching & Polling)</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 Dashboard
+          participant ADM as 🌐 AdminController
+          participant TRK as ⚙️ ConnectionTracker
+          participant POI as 🌐 PoiController
+          participant DB as 🗄️ ApplicationDbContext
+
+          Admin->>UI: Truy cập trang Dashboard
+          par Lấy thống kê chung (Visits, Devices, POIs, Tours)
+              UI->>ADM: GET /api/admin/summary
+              activate ADM
+              ADM->>DB: Truy vấn Count(Pois, Tours, Devices, Visits)
+              ADM->>DB: Pois.Where(Owner!=null).GroupBy(Owner)
+              DB-->>ADM: Dữ liệu đếm tổng & Cơ cấu chủ quán
+              ADM->>TRK: Gọi GetOnlineCount() (Lấy số liệu từ RAM)
+              TRK-->>ADM: activeUsers
+              ADM-->>UI: return { totalPois, totalTours, activeUsers, ownerStats... }
+              deactivate ADM
+          and Lấy dự phòng (Fallback)
+              UI->>POI: GET /api/poi?lang=vi
+              POI-->>UI: List[Poi]
+          end
+          UI->>UI: Tính toán & xử lý fallback nếu summary lỗi
+          UI-->>Admin: Render Thẻ màu (Quán ăn, Lộ trình, Cài đặt, Lượt nghe, Online)
+          
+          loop Polling mỗi 10 giây (React Query)
+              UI->>ADM: GET /api/admin/summary (Background refetch)
+              ADM->>TRK: GetOnlineCount()
+              ADM-->>UI: Cập nhật activeUsers mới
+              UI-->>Admin: Render chấm xanh nhấp nháy báo hiệu thiết bị Online
+          end
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📈 20.2 Dashboard — Biểu Đồ Top Địa Điểm Lắng Nghe</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — AnalyticsController Top POIs</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 Dashboard
+          participant API as 🌐 AnalyticsController
+          participant DB as 🗄️ ApplicationDbContext
+
+          UI->>API: GET /api/analytics/top?days=30
+          activate API
+          API->>DB: db.PoiVisitLogs.Where(VisitedAt >= since)
+          DB-->>API: List[PoiVisitLog]
+          API->>API: .GroupBy(PoiId).Select(Count, AvgDuration).Take(20)
+          API->>DB: db.Pois.ToDictionaryAsync(Id, Name)
+          DB-->>API: Dictionary[int, string]
+          API->>API: Map PoiName = names.TryGetValue()
+          API-->>UI: return Ok(result) -> JSON List
+          deactivate API
+          UI->>UI: Xử lý mảng dữ liệu (name, count, duration)
+          UI-->>Admin: Render biểu đồ cột (BarChart) bằng Recharts
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🔥 20.3 Bản Đồ Nhiệt (Heatmap) & Lịch Sử Di Chuyển</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — HeatmapPage</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 HeatmapPage
+          participant API as 🌐 AnalyticsController
+          participant DB as 🗄️ ApplicationDbContext
+          participant Cache as 🧠 MemoryCache
+
+          Admin->>UI: Mở trang Bản đồ nhiệt
+          UI->>API: GET /api/analytics/heatmap?hours=24
+          activate API
+          API->>Cache: Lấy cache (Thời gian tồn tại 30s để tránh spam query)
+          alt Cache Miss
+              API->>DB: MovementLogs.Where(RecordedAt >= since)
+              API->>DB: GroupBy(SessionId, Lat, Lon)
+              DB-->>API: Danh sách Tọa độ (Lat, Lon)
+              API->>Cache: Lưu Cache (30 giây)
+          end
+          API-->>UI: return Array[{Latitude, Longitude}]
+          deactivate API
+          UI->>UI: Đổ dữ liệu vào Google Maps HeatmapLayer
+          UI-->>Admin: Render biểu đồ Nhiệt đỏ/vàng/xanh trên bản đồ
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🏪 20.4 Quản Lý Địa Điểm (PoiEditor CRUD)</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — PoiEditor</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 PoiEditor
+          participant UPL as 🌐 UploadController
+          participant API as 🌐 PoiController
+          participant DB as 🗄️ ApplicationDbContext
+
+          Admin->>UI: Điền thông tin (Tên, Tọa độ, Bán kính...)
+          opt Nếu có chọn Ảnh mới
+              UI->>UPL: POST /api/upload (MultipartFormData)
+              activate UPL
+              UPL-->>UI: return { url: "https://..." }
+              deactivate UPL
+          end
+          Admin->>UI: Bấm "Lưu"
+          UI->>API: POST/PUT /api/poi (Kèm imageUrl)
+          activate API
+          API->>DB: db.Pois.Add() hoặc Update()
+          DB-->>API: SaveChangesAsync()
+          API-->>UI: return 200 OK
+          deactivate API
+          UI->>UI: Điều hướng về danh sách /pois
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🗺️ 20.5 Quản Lý Lộ Trình (TourEditor CRUD)</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — TourEditor</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 TourEditor
+          participant API as 🌐 TourController
+          participant DB as 🗄️ ApplicationDbContext
+
+          Admin->>UI: Kéo thả thêm/bớt POI vào lộ trình
+          Admin->>UI: Bấm "Lưu lộ trình"
+          UI->>API: POST/PUT /api/tour
+          activate API
+          API->>DB: Lưu thông tin Tour
+          API->>DB: Xóa liên kết TourPois cũ & Thêm TourPois mới
+          DB-->>API: SaveChangesAsync()
+          API-->>UI: return 200 OK
+          deactivate API
+          UI->>UI: Thông báo thành công
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🎵 20.6 Quản Lý Âm Thanh (AudioPage Upload)</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — AudioPage</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 AudioPage
+          participant AUD as 🌐 AudioController
+          participant POI as 🌐 PoiController
+          participant DB as 🗄️ ApplicationDbContext
+
+          Admin->>UI: Chọn File Audio (.mp3/.wav) & Bấm "Upload" tại NN (VD: 'en')
+          UI->>AUD: POST /api/audio/upload (MultipartFormData)
+          activate AUD
+          AUD-->>UI: return { url: "audio_file.mp3" }
+          deactivate AUD
+          
+          UI->>POI: PUT /api/poi/{id} (Cập nhật audioUrl vào bản dịch tiếng 'en')
+          activate POI
+          POI->>DB: Update PoiTranslations (languageCode = 'en')
+          DB-->>POI: SaveChangesAsync()
+          POI-->>UI: return Ok()
+          deactivate POI
+          UI-->>Admin: Hiển thị Audio Player & Nút xóa file
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🔐 20.7 Quản Lý Người Dùng & Chủ Quán (UserManagement)</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — UserManagement</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 UserManagement
+          participant API as 🌐 AuthController
+          participant DB as 🗄️ ApplicationDbContext
+
+          Admin->>UI: Bấm "Duyệt" (Approve) hoặc "Khóa" (Ban) tài khoản
+          UI->>API: PUT /api/auth/users/{id}/status (isApproved, isActive)
+          activate API
+          API->>DB: Find(AppUser, id)
+          DB-->>API: user entity
+          API->>DB: Cập nhật isApproved / isActive
+          DB-->>API: SaveChangesAsync()
+          API-->>UI: return 200 OK
+          deactivate API
+          UI->>UI: queryClient.invalidateQueries(['users']) -> Tải lại lưới dữ liệu
+          UI-->>Admin: Hiển thị trạng thái mới
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🗑️ 20.8 Quản Lý Lịch Sử Truy Cập (SessionsPage Delete)</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — AnalyticsController Delete Log</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 SessionsPage
+          participant API as 🌐 AnalyticsController
+          participant DB as 🗄️ ApplicationDbContext
+          participant Cache as 🧠 MemoryCache
+
+          Admin->>UI: Bấm Xóa (Delete) trên 1 dòng lịch sử truy cập
+          UI->>UI: window.confirm("Bạn có chắc muốn xóa?")
+          UI->>API: DELETE /api/analytics/log/{id} (Kèm JWT)
+          activate API
+          API->>DB: db.PoiVisitLogs.FindAsync(id)
+          DB-->>API: entity
+          alt Nếu tìm thấy (entity != null)
+            API->>DB: db.PoiVisitLogs.Remove(entity)
+            API->>DB: await db.SaveChangesAsync()
+            API->>Cache: _cache.Remove("admin_summary_stats") (Xóa cache thống kê)
+            API-->>UI: return 200 OK
+          else Lỗi hoặc không tồn tại
+            API-->>UI: return 404 NotFound
+          end
+          deactivate API
+          UI->>UI: queryClient.invalidateQueries(['sessions'])
+          UI-->>Admin: Cập nhật lại danh sách lượt nghe trên UI
+        </div>
+      </div>
+    </div>
