@@ -660,10 +660,11 @@
         10</span>
       <span class="badge b">React 19 + TypeScript</span><span class="badge b">.NET MAUI 10</span><span
         class="badge b">SignalR</span>
-      <span class="badge g">SQLite / PostgreSQL / Azure SQL</span><span class="badge g">EF Core 10</span><span class="badge g">Redis
+      <span class="badge g">SQLite / PostgreSQL / Azure SQL</span><span class="badge g">EF Core 10</span><span
+        class="badge g">Redis
         8</span>
-      <span class="badge v">OpenRouter / Gemini 2.5 Flash / Groq / DeepSeek</span><span class="badge v">Ollama llama3.1:8b</span><span
-        class="badge o">JWT Bearer + BCrypt</span>
+      <span class="badge v">OpenRouter / Gemini 2.5 Flash / Groq / DeepSeek</span><span class="badge v">Ollama
+        llama3.1:8b</span><span class="badge o">JWT Bearer + BCrypt</span>
     </div>
   </div>
 
@@ -749,7 +750,8 @@
     <div class="fg">
       <div class="fc">
         <h4>📍 Location-based Geofencing</h4>
-        <p>Kiểm tra tọa độ liên tục bằng thuật toán Haversine với bán kính kích hoạt mặc định 15m. Tích hợp cơ chế Hysteresis
+        <p>Kiểm tra tọa độ liên tục bằng thuật toán Haversine với bán kính kích hoạt mặc định 15m. Tích hợp cơ chế
+          Hysteresis
           (vùng đệm thoát 1.5×) và Double-hit (2 lần liên tiếp) để chống nhiễu tín hiệu GPS.</p>
       </div>
       <div class="fc">
@@ -759,12 +761,14 @@
       </div>
       <div class="fc">
         <h4>🤖 Trợ Lý Ảo (AI Assistant)</h4>
-        <p>Tích hợp nhiều LLM theo thứ tự ưu tiên: OpenRouter → DeepSeek → Groq → Gemini → Ollama. Cung cấp thông tin theo ngữ cảnh (Context-aware) dựa trên dữ liệu POI và Tour, hỗ trợ hỏi đáp trực tiếp 24/7.</p>
+        <p>Tích hợp nhiều LLM theo thứ tự ưu tiên: OpenRouter → DeepSeek → Groq → Gemini → Ollama. Cung cấp thông tin
+          theo ngữ cảnh (Context-aware) dựa trên dữ liệu POI và Tour, hỗ trợ hỏi đáp trực tiếp 24/7.</p>
       </div>
       <div class="fc">
         <h4>📱 Kiến Trúc Offline-First</h4>
         <p>Ứng dụng .NET MAUI 10 tối ưu cho môi trường mạng chập chờn. Sử dụng SQLite Local Cache và pattern
-          OutboxService để đồng bộ hóa dữ liệu ngầm khi có kết nối. Retry với exponential backoff (10s/30s/60s/300s/900s).</p>
+          OutboxService để đồng bộ hóa dữ liệu ngầm khi có kết nối. Retry với exponential backoff
+          (10s/30s/60s/300s/900s).</p>
       </div>
       <div class="fc">
         <h4>🏪 Hệ Quản Trị CMS</h4>
@@ -2097,7 +2101,7 @@
           GPS->>VM: WeakReferenceMessenger.Send(LocationUpdatedMessage)
           VM->>VM: BufferLocation(Location)
           alt Đủ 25 điểm hoặc qua 30 giây
-          VM->>API: HTTP POST UploadBatchAsync()
+          VM->>API: UploadBatch(batch)
           API-->>VM: 200 OK (Success)
           end
           end
@@ -2113,7 +2117,8 @@
         (<code>RequiredConsecutiveHits = 2</code>), hệ số vùng đệm thoát 1.5× (<code>ExitHysteresisFactor</code>),
         cooldown per-POI (<code>CooldownSeconds</code> từng quán), <strong>global cooldown 10 giây</strong>
         (<code>GlobalCooldownSeconds = 10</code>) giữa bất kỳ 2 lần trigger nào, sắp xếp theo độ ưu tiên (Priority +
-        Distance), và hệ số bán kính tùy chỉnh từ cài đặt người dùng. Trạng thái cooldown được lưu trong memory (Dictionary) — không persist vào Preferences.</p>
+        Distance), và hệ số bán kính tùy chỉnh từ cài đặt người dùng. Trạng thái cooldown được lưu trong memory
+        (Dictionary) — không persist vào Preferences.</p>
       <div class="dw">
         <div class="dt">Activity Diagram — Geofence Check</div>
         <div class="mermaid">
@@ -2153,7 +2158,8 @@
             thuật toán Haversine trực tiếp trên client để giảm thiểu độ trễ mạng (zero latency).</li>
           <li><strong>Cơ chế chống nhiễu (Signal Debouncing):</strong> Yêu cầu điều kiện
             <code>consecutiveHits >= 2</code> (hai lần nhận tọa độ liên tiếp đều nằm trong vùng) kết hợp cùng hệ số trễ
-            thoát <code>ExitHysteresisFactor = 1.5</code> để loại bỏ hiện tượng kích hoạt giả (false positives) do nhiễu sóng
+            thoát <code>ExitHysteresisFactor = 1.5</code> để loại bỏ hiện tượng kích hoạt giả (false positives) do nhiễu
+            sóng
             GPS.
           </li>
         </ol>
@@ -2179,25 +2185,25 @@
           participant VM as MainViewModel
           participant GF as GeofenceService
           participant TM as NarrationService
-          participant API as PoiController
+          participant API as AnalyticsController
           participant Log as OutboxService
 
-          VM->>GF: "CheckTriggeredAsync(Location, Pois)"
+          VM->>GF: CheckTriggeredAsync(Location, Pois)
           activate GF
           GF->>GF: GetRadiusMultiplier()
-          loop "foreach poi in pois"
-          GF->>GF: "GeoMath.Haversine()"
-          alt "Hits >= Required && !Cooldown"
-          GF-->>VM: "return triggered (List[Poi])"
+          loop foreach poi in pois
+          GF->>GF: GeoMath.Haversine()
+          alt Hits >= Required && !Cooldown
+          GF-->>VM: return triggered (List[Poi])
           end
           end
           deactivate GF
 
-          loop "foreach poi in triggered"
-          VM->>TM: "EnqueueAsync(poi, language)"
-          VM->>API: "HTTP POST LogVisitAsync(PoiId)"
-          alt "Mạng bị lỗi (Exception)"
-          VM->>Log: "EnqueueLogAsync(PoiId, 'Trigger')"
+          loop foreach poi in triggered
+          VM->>TM: EnqueueAsync(poi, language)
+          VM->>API: LogVisit(PoiId)
+          alt Mạng bị lỗi (Exception)
+          VM->>Log: EnqueueLogAsync(PoiId, 'Trigger')
           end
           end
         </div>
@@ -2212,7 +2218,8 @@
         trên điện thoại của mình, không có conflict. Server chỉ nhận log analytics sau khi phát xong.</p>
       <p>Hàng đợi per-device, khóa đơn luồng (<code>SemaphoreSlim(1,1)</code>) để tránh phát chồng, ưu tiên file
         âm thanh thu sẵn trước khi dùng giọng đọc tổng hợp, cửa sổ chống phát trùng 90 giây
-        (<code>DuplicateWindow</code>), tốc độ đọc 0.92, khoảng nghỉ 10 giây giữa các audio trong queue. Hàng đợi không sắp xếp lại theo priority — giữ đúng thứ tự A → B → C, chỉ ngắt nếu POI mới có priority cực cao.</p>
+        (<code>DuplicateWindow</code>), tốc độ đọc 0.92, khoảng nghỉ 10 giây giữa các audio trong queue. Hàng đợi không
+        sắp xếp lại theo priority — giữ đúng thứ tự A → B → C, chỉ ngắt nếu POI mới có priority cực cao.</p>
       <div class="dw">
         <div class="dt">Activity Diagram — Narration Service</div>
         <div class="mermaid">
@@ -2373,30 +2380,30 @@
         <div class="dt">Sequence Diagram — Offline Sync</div>
         <div class="mermaid">
           sequenceDiagram
-          actor KH as "Khách Tham Quan"
-          participant App as "Ứng dụng (MAUI)"
-          participant Cache as "LocalDbService (SQLite)"
-          participant Server as "PoiController (API)"
-          participant HangCho as "OutboxService"
+          actor KH as Khách Tham Quan
+          participant App as Ứng dụng (MAUI)
+          participant Cache as LocalDbService (SQLite)
+          participant Server as PoiController (API)
+          participant HangCho as OutboxService
 
-          App->>Cache: "GetPoisAsync()"
-          Cache-->>App: "List[Poi]"
-          App->>App: "Connectivity.NetworkAccess == Internet"
+          App->>Cache: GetPoisAsync()
+          Cache-->>App: List[Poi]
+          App->>App: Connectivity.NetworkAccess == Internet
           alt Có kết nối mạng
-          App->>Server: "HTTP GET GetAll(lang)"
-          Server-->>App: "JSON List[Poi]"
-          App->>Cache: "SavePoisAsync(pois)"
-          App->>HangCho: "FlushAsync()"
-          loop "foreach log in outbox"
-          HangCho->>Server: "HTTP POST /api/analytics/log"
+          App->>Server: Get(lang) [GET /api/poi]
+          Server-->>App: JSON List[Poi]
+          App->>Cache: SavePoisAsync(pois)
+          App->>HangCho: FlushAsync()
+          loop foreach log in outbox
+          HangCho->>Server: LogVisit(log) [POST /api/analytics/log]
           alt Success
-          HangCho->>HangCho: "DeleteLogAsync(id)"
+          HangCho->>HangCho: DeleteLogAsync(id)
           else Fail
-          HangCho->>HangCho: "IncrementRetryCount(id)"
+          HangCho->>HangCho: IncrementRetryCount(id)
           end
           end
           else Không có mạng
-          App-->>KH: "Hiển thị dữ liệu offline"
+          App-->>KH: Hiển thị dữ liệu offline
           end
         </div>
       </div>
@@ -2559,22 +2566,22 @@
         <div class="dt">Sequence Diagram — POI CRUD (Owner)</div>
         <div class="mermaid">
           sequenceDiagram
-          actor OW as "Chủ Quán (Owner)"
-          participant Web as "Web Admin (React)"
+          actor OW as Chủ Quán (Owner)
+          participant Web as Web Admin (React)
           participant API as PoiController
           participant DB as ApplicationDbContext
           participant Hub as VinhKhanhHub
 
           OW->>Web: Submit Form (Save)
-          Web->>API: "HTTP POST Create(poi)"
+          Web->>API: Create(poi)
           activate API
           API->>API: AuthClaims.TryGetUserId()
-          API->>API: "NormalizeQr(poi.QrCode)"
+          API->>API: NormalizeQr(poi.QrCode)
           API->>DB: db.Pois.Add(poi)
           API->>DB: SaveChangesAsync()
-          DB-->>API: "Created (Id: 123)"
+          DB-->>API: Created (Id: 123)
           API->>Hub: hub.Clients.All.SendAsync("PoiCreated", poi)
-          API-->>Web: "201 Created (poi)"
+          API-->>Web: 201 Created (poi)
           deactivate API
           Web-->>OW: Show Success Toast
         </div>
@@ -2721,37 +2728,37 @@
         <div class="mermaid">
           sequenceDiagram
           actor ADM as Admin
-          participant Web as "Dashboard (React)"
+          participant Web as Dashboard (React)
           participant AdminAPI as AdminController
           participant AnalyticsAPI as AnalyticsController
           participant Tracker as ConnectionTracker
           participant DB as ApplicationDbContext
 
           ADM->>Web: Mở trang Thống kê
-          Web->>AdminAPI: HTTP GET Summary()
+          Web->>AdminAPI: Summary()
           activate AdminAPI
-          AdminAPI->>DB: "db.PoiVisitLogs.Select(x=>x.SessionId).Distinct().Count()"
+          AdminAPI->>DB: db.PoiVisitLogs.AsNoTracking().Select(x=>x.SessionId).Distinct().CountAsync()
           AdminAPI->>Tracker: GetOnlineCount()
-          Tracker-->>AdminAPI: "return _connections.Count (real-time)"
-          AdminAPI-->>Web: "JSON { totalDevices, totalVisits, activeUsers }"
+          Tracker-->>AdminAPI: return _connections.Count (real-time)
+          AdminAPI-->>Web: JSON { totalDevices, totalVisits, activeUsers }
           deactivate AdminAPI
 
-          Web->>AnalyticsAPI: "HTTP GET GetTop(days=7)"
+          Web->>AnalyticsAPI: GetTop(days=7)
           activate AnalyticsAPI
-          AnalyticsAPI->>DB: "db.PoiVisitLogs.GroupBy(PoiId).Select(Count, AvgDuration)"
-          AnalyticsAPI-->>Web: "JSON List[TopPoiDto]"
+          AnalyticsAPI->>DB: db.PoiVisitLogs.AsNoTracking().GroupBy(PoiId).Select(Count, AvgDuration)
+          AnalyticsAPI-->>Web: JSON List[TopPoiDto]
           deactivate AnalyticsAPI
 
-          Web->>AdminAPI: "HTTP GET GetSessionStats(days=30)"
+          Web->>AdminAPI: GetSessionStats(days=30)
           activate AdminAPI
-          AdminAPI->>DB: "db.DeviceSessions.Where(StartedAt >= since)"
-          AdminAPI-->>Web: "JSON { avgDuration, returningRate, platformBreakdown, peakHours }"
+          AdminAPI->>DB: db.DeviceSessions.AsNoTracking().Where(StartedAt >= since)
+          AdminAPI-->>Web: JSON { avgDuration, returningRate, platformBreakdown, peakHours }
           deactivate AdminAPI
 
-          Web->>AnalyticsAPI: "HTTP GET GetHeatmap(hours=0.1)"
+          Web->>AnalyticsAPI: GetHeatmap(hours=0.1)
           activate AnalyticsAPI
-          AnalyticsAPI->>DB: "db.MovementLogs.GroupBy(SessionId+RoundedCoords)"
-          AnalyticsAPI-->>Web: "JSON List[CoordinateDto] (cached 30s)"
+          AnalyticsAPI->>DB: db.MovementLogs.AsNoTracking().GroupBy(SessionId+RoundedCoords)
+          AnalyticsAPI-->>Web: JSON List[CoordinateDto] (cached 30s)
           deactivate AnalyticsAPI
 
           Web-->>ADM: Render Charts, Heatmap, Session Stats
@@ -2828,26 +2835,26 @@
         <div class="mermaid">
           sequenceDiagram
           actor KH as Khách Tham Quan
-          participant Page as "QrScanPage (MAUI)"
-          participant Camera as "ScannerView (ZXing)"
+          participant Page as QrScanPage (MAUI)
+          participant Camera as ScannerView (ZXing)
           participant API as ApiClientService
           participant TM as NarrationService
           participant Outbox as OutboxService
 
           KH->>Page: OnAppearing()
-          Page->>Camera: "Scanner.IsDetecting = true"
-          Camera-->>Page: "OnBarcodesDetected()"
-          Page->>Page: "HandleQrValueAsync(raw)"
-          Page->>Camera: "Scanner.IsDetecting = false"
-          Page->>API: "GetPoiByQrCodeAsync(key)"
-          API-->>Page: "Poi record (Id: 123)"
-          Page->>Page: "Shell.Current.GoToAsync(PoiDetailPage)"
+          Page->>Camera: Scanner.IsDetecting = true
+          Camera-->>Page: OnBarcodesDetected()
+          Page->>Page: HandleQrValueAsync(raw)
+          Page->>Camera: Scanner.IsDetecting = false
+          Page->>API: GetPoiByQrCode(key)
+          API-->>Page: Poi record (Id: 123)
+          Page->>Page: Shell.Current.GoToAsync(PoiDetailPage)
 
           Note over Page, TM: [Tại PoiDetailPage]
-          Page->>TM: "EnqueueAsync(poi, language)"
+          Page->>TM: EnqueueAsync(poi, language)
           TM-->>KH: PlayPoiAsync()
 
-          Page->>Outbox: "EnqueueLogAsync(PoiId, 'QR')"
+          Page->>Outbox: EnqueueLogAsync(PoiId, 'QR')
           Outbox-->>KH: Success
         </div>
       </div>
@@ -2904,7 +2911,11 @@
           <li><strong>Bộ nhớ hội thoại (Session Memory):</strong> App gửi kèm 10 tin nhắn gần nhất trong mỗi yêu cầu.
             Điều này cho phép khách hỏi các câu nối tiếp như "Quán đó có món gì ngon?" sau khi đã hỏi về vị trí của một
             quán cụ thể.</li>
-          <li><strong>Kiến trúc đa tầng (Multi-Engine):</strong> Hệ thống chọn AI provider theo thứ tự ưu tiên: <code>OpenRouter</code> (miễn phí, không bị chặn) → <code>DeepSeek</code> → <code>Groq</code> → <code>Gemini 2.5 Flash</code> → <code>Ollama</code> (local). Thứ tự được quyết định tại startup dựa trên API key nào có sẵn trong config.</li>
+          <li><strong>Kiến trúc đa tầng (Multi-Engine):</strong> Hệ thống chọn AI provider theo thứ tự ưu tiên:
+            <code>OpenRouter</code> (miễn phí, không bị chặn) → <code>DeepSeek</code> → <code>Groq</code> →
+            <code>Gemini 2.5 Flash</code> → <code>Ollama</code> (local). Thứ tự được quyết định tại startup dựa trên API
+            key nào có sẵn trong config.
+          </li>
           <li><strong>Hỗ trợ đa ngôn ngữ tự động:</strong> Khách có thể hỏi bằng tiếng Anh, Hàn hoặc Nhật. Hệ thống sẽ
             nhận diện ngôn ngữ của câu hỏi và yêu cầu AI trả lời đúng bằng ngôn ngữ đó để tạo sự thân thiện tối đa.</li>
         </ol>
@@ -2914,23 +2925,23 @@
         <div class="mermaid">
           sequenceDiagram
           actor KH as Khách Tham Quan
-          participant Chat as "ChatPage (ViewModel)"
+          participant Chat as ChatPage (ViewModel)
           participant API as AiController
           participant AI as GeminiAiService
           participant DB as ApplicationDbContext
 
           KH->>Chat: Nhập câu hỏi và gửi
-          Chat->>Chat: "History.Add(UserMessage)"
-          Chat->>API: "HTTP POST Chat(ChatRequest)"
+          Chat->>Chat: History.Add(UserMessage)
+          Chat->>API: Chat(ChatRequest)
           activate API
-          API->>DB: "db.Pois.Include(Translations).ToListAsync()"
-          API->>DB: "db.Tours.Include(Stops).ToListAsync()"
+          API->>DB: db.Pois.AsNoTracking().Include(Translations).ToListAsync()
+          API->>DB: db.Tours.AsNoTracking().Include(Stops).ToListAsync()
           API->>API: BuildSystemPrompt(pois, tours)
           API->>AI: ChatAsync(system, userMessage, history)
-          AI-->>API: "return reply (string)"
-          API-->>Chat: "200 OK (reply, language)"
+          AI-->>API: return reply (string)
+          API-->>Chat: 200 OK (reply, language)
           deactivate API
-          Chat->>Chat: "History.Add(AiMessage)"
+          Chat->>Chat: History.Add(AiMessage)
           Chat-->>KH: Hiển thị câu trả lời trên giao diện
         </div>
       </div>
@@ -3013,26 +3024,26 @@
           participant LibreT as LibreTranslateService
           participant MsT as MicrosoftTranslatorService
 
-          TM->>DT: "TranslateAsync(text, from, to)"
+          TM->>DT: TranslateAsync(text, from, to)
           activate DT
-          DT->>Gemini: "TranslateAsync()"
-          alt "Gemini OK"
-          Gemini-->>DT: "return translatedText"
-          else "Gemini Fail"
-          DT->>Ollama: "TranslateAsync()"
-          alt "Ollama OK"
-          Ollama-->>DT: "return translatedText"
-          else "Ollama Fail"
-          DT->>LibreT: "TranslateAsync()"
-          alt "Libre OK"
-          LibreT-->>DT: "return translatedText"
-          else "Libre Fail"
-          DT->>MsT: "TranslateAsync()"
-          MsT-->>DT: "return translatedText"
+          DT->>Gemini: TranslateAsync()
+          alt Gemini OK
+          Gemini-->>DT: return translatedText
+          else Gemini Fail
+          DT->>Ollama: TranslateAsync()
+          alt Ollama OK
+          Ollama-->>DT: return translatedText
+          else Ollama Fail
+          DT->>LibreT: TranslateAsync()
+          alt Libre OK
+          LibreT-->>DT: return translatedText
+          else Libre Fail
+          DT->>MsT: TranslateAsync()
+          MsT-->>DT: return translatedText
           end
           end
           end
-          DT-->>TM: "return finalResult"
+          DT-->>TM: return finalResult
           deactivate DT
         </div>
       </div>
@@ -3089,22 +3100,22 @@
         <div class="dt">Sequence Diagram — Generate TTS Audio (Admin/Owner)</div>
         <div class="mermaid">
           sequenceDiagram
-          actor OW as "Chủ Quán"
-          participant Web as "Web Admin (React)"
-          participant API as "AiController"
-          participant TTS as "AzureTtsService / VoiceRssService"
-          participant FS as "Physical File Storage"
+          actor OW as Chủ Quán
+          participant Web as Web Admin (React)
+          participant API as AiController
+          participant TTS as AzureTtsService / VoiceRssService
+          participant FS as Physical File Storage
 
-          OW->>Web: "Click 'Generate TTS'"
-          Web->>API: "HTTP POST Synthesize(TtsRequest)"
+          OW->>Web: Click "Generate TTS"
+          Web->>API: Synthesize(TtsRequest)
           activate API
-          API->>API: "NormalizeLang() & DefaultVoice()"
-          API->>TTS: "SynthesizeAsync(text, lang, voice)"
-          TTS-->>API: "return byte[] (Audio Data)"
-          API->>FS: "File.WriteAllBytesAsync(guid.mp3)"
-          API-->>Web: "200 OK (File URL)"
+          API->>API: NormalizeLang() & DefaultVoice()
+          API->>TTS: SynthesizeAsync(text, lang, voice)
+          TTS-->>API: return byte[] (Audio Data)
+          API->>FS: File.WriteAllBytesAsync(guid.mp3)
+          API-->>Web: 200 OK (File URL)
           deactivate API
-          Web-->>OW: "Render audio player for preview"
+          Web-->>OW: Render audio player for preview
         </div>
       </div>
     </div>
@@ -3168,20 +3179,20 @@
         <div class="dt">Sequence Diagram — Đăng Nhập</div>
         <div class="mermaid">
           sequenceDiagram
-          actor U as "Người dùng (Admin/Owner)"
-          participant Web as "Web Dashboard (React)"
+          actor U as Người dùng (Admin/Owner)
+          participant Web as Web Dashboard (React)
           participant API as AuthController
           participant DB as ApplicationDbContext
 
           U->>Web: Nhập Username/Password + Login
-          Web->>API: "HTTP POST Login(LoginRequest)"
+          Web->>API: Login(LoginRequest)
           activate API
-          API->>DB: db.AppUsers.FirstOrDefaultAsync(Username)
-          DB-->>API: "AppUser record (with PasswordHash)"
-          API->>API: "BCrypt.Verify(req.Password, user.PasswordHash)"
+          API->>DB: db.AppUsers.AsNoTracking().FirstOrDefaultAsync(Username)
+          DB-->>API: AppUser record (with PasswordHash)
+          API->>API: BCrypt.Verify(req.Password, user.PasswordHash)
           alt Password Valid
           API->>API: GenerateJwtToken(user.Id, user.Role)
-          API-->>Web: "200 OK (Token, Role, Expires)"
+          API-->>Web: 200 OK (Token, Role, Expires)
           Web->>Web: Store in localStorage
           Web-->>U: Navigate to Dashboard based on Role
           else Password Invalid / User Not Found
@@ -3300,7 +3311,7 @@
           participant DB as ApplicationDbContext
 
           ADM->>Web: Nhập User Info + Select Role + Create
-          Web->>API: HTTP POST Register(RegisterRequest) [JWT]
+          Web->>API: Register(RegisterRequest)
           activate API
           API->>API: AuthClaims.IsAdmin(User)
           API->>API: Validate Username & Role
@@ -3351,7 +3362,7 @@
           participant DB as ApplicationDbContext
 
           U->>Web: Nhập Current/New Password + Save
-          Web->>API: HTTP PUT ChangePassword(req) [JWT]
+          Web->>API: ChangePassword(req)
           activate API
           API->>API: AuthClaims.TryGetUserId()
           API->>DB: db.AppUsers.FirstOrDefaultAsync(Id)
@@ -3404,7 +3415,7 @@
           participant DB as ApplicationDbContext
 
           U->>Web: Nhập Username + New Password + Reset
-          Web->>API: HTTP POST ForgotPassword(req)
+          Web->>API: ForgotPassword(req)
           activate API
           API->>DB: db.AppUsers.FirstOrDefaultAsync(Username)
           alt Not Found
@@ -3462,7 +3473,7 @@
 
           ADM->>Web: Toggle "Active" status on User row
           Web->>Web: Show Confirmation Dialog
-          Web->>API: HTTP PUT UpdateUserStatus(id, req) [JWT]
+          Web->>API: UpdateUserStatus(id, req)
           activate API
           API->>API: AuthClaims.IsAdmin(User)
           API->>DB: db.AppUsers.FindAsync(id)
@@ -3488,13 +3499,15 @@
         <div class="dt">Sequence Diagram — Get Owners List</div>
         <div class="mermaid">
           sequenceDiagram
+          actor ADM as Admin
           participant Web as Web Admin (React)
           participant API as AuthController
           participant DB as ApplicationDbContext
 
-          Web->>API: HTTP GET GetOwners() [JWT]
+          ADM->>Web: Load Form / Page
+          Web->>API: GetOwners()
           activate API
-          API->>DB: db.AppUsers.Where(Role == "Owner" && IsActive)
+          API->>DB: db.AppUsers.AsNoTracking().Where(Role == "Owner" && IsActive)
           DB-->>API: List of Owners
           API-->>Web: 200 OK (JSON List)
           deactivate API
@@ -3533,7 +3546,8 @@
           <li><strong>Cơ chế Idempotency (Chống trùng lặp):</strong> Hệ thống kiểm tra sự tồn tại của tài khoản Admin
             chính (username='admin'). Nếu đã có, nó sẽ bỏ qua bước tạo User để tránh ghi đè mật khẩu hiện tại, bảo vệ
             quyền truy cập của quản trị viên.</li>
-          <li><strong>Nạp dữ liệu mẫu chuẩn (Gold Data):</strong> Quá trình Seed sẽ nạp sẵn 5 quán ăn tiêu biểu (POI: Ốc Oanh, Lẩu Bò Khu Nhà Cháy, Sushi Viên, Cơm Tấm Tú Mập, Chè Hiền Khánh)
+          <li><strong>Nạp dữ liệu mẫu chuẩn (Gold Data):</strong> Quá trình Seed sẽ nạp sẵn 5 quán ăn tiêu biểu (POI: Ốc
+            Oanh, Lẩu Bò Khu Nhà Cháy, Sushi Viên, Cơm Tấm Tú Mập, Chè Hiền Khánh)
             và 1 lộ trình tour cơ bản. Điều này giúp các nhà phát triển hoặc người kiểm thử có ngay dữ liệu để
             trải nghiệm các tính năng GPS và Bản đồ mà không cần nhập tay từng bản ghi.</li>
           <li><strong>Mã hóa bảo mật:</strong> Mọi tài khoản mẫu đều được hash bằng BCrypt ngay trong lúc Seed, đảm bảo
@@ -3550,7 +3564,7 @@
           participant DB as ApplicationDbContext
 
           ADM->>Web: Click "Seed Database"
-          Web->>API: HTTP POST SeedDatabase() [JWT]
+          Web->>API: SeedDatabase()
           activate API
           API->>API: AuthClaims.IsAdmin(User)
           API->>DB: db.Database.MigrateAsync()
@@ -3684,28 +3698,28 @@
         <div class="mermaid">
           sequenceDiagram
           actor KH as Khách Tham Quan
-          participant Settings as "SettingsPage (MAUI)"
-          participant Pref as "Preferences (Device)"
+          participant Settings as SettingsPage (MAUI)
+          participant Pref as Preferences (Device)
           participant API as ApiClientService
           participant DB as LocalDbService
 
           KH->>Settings: Thay đổi Ngôn ngữ / Bán kính
-          Settings->>Pref: "Set(AppPreferences.UiLanguage, 'ko')"
-          Settings->>Pref: "Set(AppPreferences.GpsRadiusMultiplier, 1.5)"
+          Settings->>Pref: Set(AppPreferences.UiLanguage, 'ko')
+          Settings->>Pref: Set(AppPreferences.GpsRadiusMultiplier, 1.5)
           Settings-->>KH: Update UI Strings & Radius Preview
 
           KH->>Settings: Click "Sync Now"
           activate Settings
           Settings->>Settings: Set IsSyncing = true
-          Settings->>API: "HTTP GET GetAll(lang='ko')"
-          API-->>Settings: "JSON List[Poi]"
+          Settings->>API: Get(lang='ko') [GET /api/poi]
+          API-->>Settings: JSON List[Poi]
           Settings->>DB: SavePoisAsync(pois)
-          Settings->>API: "HTTP GET GetTours(lang='ko')"
-          API-->>Settings: "JSON List[Tour]"
+          Settings->>API: GetTours(lang='ko') [GET /api/tour]
+          API-->>Settings: JSON List[Tour]
           Settings->>DB: SaveToursAsync(tours)
           Settings->>Settings: Set IsSyncing = false
           deactivate Settings
-          Settings-->>KH: "Show Success Alert (Synced 42 POIs)"
+          Settings-->>KH: Show Success Alert (Synced 42 POIs)
         </div>
       </div>
     </div>
@@ -3842,7 +3856,7 @@
         <ul>
           <li><strong>Ghi dữ liệu phức hợp:</strong> Sequence minh họa việc ghi dữ liệu vào hai bảng khác nhau (Tours và
             TourStops). Toàn bộ quá trình này được bọc trong <code>DbContext Transaction</code> để đảm bảo nếu một điểm
-            dừng lỗi, toàn bộ Tour sẽ không được tạo, tránh rác dữ liệu.</li>
+            dừng lỗi, toàn bộ Tour sẽ không được tạo.</li>
           <li><strong>Thông báo đa nền tảng:</strong> Sau khi DB xác nhận, Server sử dụng SignalR để quảng bá sự kiện
             <code>TourCreated</code>. Sequence cho thấy App React cũng nhận được tin này để cập nhật ngay danh sách mà
             không cần F5 trình duyệt.
@@ -3855,24 +3869,24 @@
         <div class="mermaid">
           sequenceDiagram
           actor ADM as Admin
-          participant Web as "Web Admin (React)"
+          participant Web as Web Admin (React)
           participant API as TourController
           participant DB as ApplicationDbContext
           participant Hub as VinhKhanhHub
 
           ADM->>Web: Nhập Tour Data + Stops + Save
-          Web->>API: "HTTP POST Create(TourCreateDto) [JWT]"
+          Web->>API: Create(TourCreateDto)
           activate API
-          API->>API: "TryValidateTour(dto)"
-          API->>DB: Check all PoiIds exist
+          API->>API: TryValidateTour(dto)
+          API->>DB: db.Pois.AsNoTracking().AnyAsync(id)
           API->>DB: db.Tours.Add(tour)
           loop Từng điểm dừng
-          API->>DB: "tour.Stops.Add(stop)"
+          API->>DB: tour.Stops.Add(stop)
           end
           API->>DB: SaveChangesAsync()
-          DB-->>API: "Created (Id: 456)"
-          API->>Hub: "hub.Clients.All.SendAsync('TourCreated', tour)"
-          API-->>Web: "201 Created (tour)"
+          DB-->>API: Created (Id: 456)
+          API->>Hub: hub.Clients.All.SendAsync('TourCreated', tour)
+          API-->>Web: 201 Created (tour)
           deactivate API
           Web-->>ADM: Redirect to Tour List with Success Toast
         </div>
@@ -3940,21 +3954,21 @@
         <div class="mermaid">
           sequenceDiagram
           actor KH as Khách Tham Quan
-          participant Page as "PoiDetailPage (MAUI)"
+          participant Page as PoiDetailPage (MAUI)
           participant API as ApiClientService
           participant TM as NarrationService
 
-          KH->>Page: "OnNavigatedTo(PoiId)"
-          Page->>API: "GetPoiAsync(id)"
-          API-->>Page: "Poi record (JSON)"
-          Page->>Page: "ResolveName() & ResolveDescription()"
+          KH->>Page: OnNavigatedTo(PoiId)
+          Page->>API: GetPoi(id) [GET /api/poi/id]
+          API-->>Page: Poi record (JSON)
+          Page->>Page: ResolveName() & ResolveDescription()
           Page-->>KH: Hiển thị thông tin quán & hình ảnh
-          alt "AutoPlay == true"
-          Page->>TM: "EnqueueAsync(poi, language)"
+          alt AutoPlay == true
+          Page->>TM: EnqueueAsync(poi, language)
           TM-->>KH: PlayPoiAsync()
           end
           KH->>Page: Click "Replay"
-          Page->>TM: "EnqueueAsync(poi, language)"
+          Page->>TM: EnqueueAsync(poi, language)
           TM-->>KH: PlayPoiAsync()
         </div>
       </div>
@@ -4006,20 +4020,20 @@
         <div class="dt">Sequence Diagram — Upload Audio</div>
         <div class="mermaid">
           sequenceDiagram
-          actor OW as "Admin/Chủ Quán"
-          participant Web as "Web Admin (React)"
-          participant API as "AudioController"
-          participant FS as "Physical File Storage"
+          actor OW as Admin/Chủ Quán
+          participant Web as Web Admin (React)
+          participant API as AudioController
+          participant FS as Physical File Storage
 
-          OW->>Web: "Select File + Click 'Upload'"
-          Web->>Web: "Check file.size <= 50MB" Web->>API: "HTTP POST Upload(file) [JWT]"
+          OW->>Web: Select File + Click "Upload"
+          Web->>Web: Check file.size <= 50MB Web->>API: Upload(file)
             activate API
-            API->>API: "Check extension (.mp3, .wav, .m4a)"
-            API->>API: "Generate unique filename (GUID)"
-            API->>FS: "FileStream.CopyToAsync()"
-            API-->>Web: "200 OK (URL, filename)"
+            API->>API: Check extension (.mp3, .wav, .m4a)
+            API->>API: Generate unique filename (GUID)
+            API->>FS: FileStream.CopyToAsync()
+            API-->>Web: 200 OK (URL, filename)
             deactivate API
-            Web-->>OW: "Render audio player for preview"
+            Web-->>OW: Render audio player for preview
         </div>
       </div>
     </div>
@@ -4066,15 +4080,15 @@
           participant QR as QRCoder.QRCodeGenerator
 
           ADM->>Web: Click "View QR Code"
-          Web->>API: "HTTP GET GenerateQrCode(id) [JWT]"
+          Web->>API: GenerateQrCode(id)
           activate API
-          API->>API: "Check poi.QrCode is not null"
-          API->>QR: "CreateQrCode(poi.QrCode, ECCLevel.Q)"
+          API->>API: Check poi.QrCode is not null
+          API->>QR: CreateQrCode(poi.QrCode, ECCLevel.Q)
           QR-->>API: return PngByteQRCode
-          API->>API: "GetGraphic(20)"
-          API-->>Web: "200 OK (Content-Type: image/png)"
+          API->>API: GetGraphic(20)
+          API-->>Web: 200 OK (Content-Type: image/png)
           deactivate API
-          Web-->>ADM: "Render img with API URL + Download option"
+          Web-->>ADM: Render img with API URL + Download option
         </div>
       </div>
     </div>
@@ -4148,27 +4162,27 @@
         <div class="mermaid">
           sequenceDiagram
           actor OW as Admin/Chủ Quán
-          participant Web as "Web Admin (React)"
+          participant Web as Web Admin (React)
           participant API as PoiController
           participant AI as ResilientTranslationService
           participant DB as ApplicationDbContext
           participant Hub as VinhKhanhHub
 
-          OW->>Web: "Click 'Auto Translate' (Language: JA)"
-          Web->>API: "HTTP POST Translate(req) [Internal/External AI]"
+          OW->>Web: Click "Auto Translate" (Language: JA)
+          Web->>API: Translate(req)
           activate API
-          API->>AI: "TranslateAsync(description, 'vi', 'ja')"
+          API->>AI: TranslateAsync(description, 'vi', 'ja')
           AI-->>API: return translatedText
-          API-->>Web: "200 OK (translatedText)"
+          API-->>Web: 200 OK (translatedText)
           deactivate API
-          OW->>Web: "Review & Click 'Save Translation'"
-          Web->>API: "HTTP POST AddTranslation(id, PoiTranslationDto) [JWT]"
+          OW->>Web: Review & Click "Save Translation"
+          Web->>API: AddTranslation(id, PoiTranslationDto)
           activate API
-          API->>DB: "db.PoiTranslations.Upsert(lang, content)"
+          API->>DB: db.PoiTranslations.Upsert(lang, content)
           API->>DB: poi.ContentVersion++
           API->>DB: SaveChangesAsync()
-          API->>Hub: "hub.Clients.All.SendAsync('PoiUpdated', poi)"
-          API-->>Web: "200 OK (Success)"
+          API->>Hub: hub.Clients.All.SendAsync("PoiUpdated", poi)
+          API-->>Web: 200 OK (Success)
           deactivate API
           Web-->>OW: Show Success Notification
         </div>
@@ -4225,27 +4239,27 @@
         <div class="mermaid">
           sequenceDiagram
           actor ADM as Admin
-          participant Web as "Web Admin (React)"
+          participant Web as Web Admin (React)
           participant API as PoiController
           participant AI as ResilientTranslationService
           participant DB as ApplicationDbContext
 
-          ADM->>Web: "Click 'Bulk Translate' (Overwrite: false)"
-          Web->>API: "HTTP POST BulkTranslate(overwrite=false) [JWT]"
+          ADM->>Web: Click "Bulk Translate" (Overwrite: false)
+          Web->>API: BulkTranslate(overwrite=false)
           activate API
-          API->>DB: "db.Pois.Include(Translations).ToListAsync()"
+          API->>DB: db.Pois.AsNoTracking().Include(Translations).ToListAsync()
           loop foreach poi in pois
           loop foreach lang in [en, ja, ko, zh]
           API->>API: Check if translation exists
-          alt "Missing or Overwrite == true"
-          API->>AI: "TranslateAsync(description, 'vi', lang)"
+          alt Missing or Overwrite == true
+          API->>AI: TranslateAsync(description, 'vi', lang)
           AI-->>API: return translatedText
-          API->>API: "poi.Translations.Add/Update(lang)"
+          API->>API: poi.Translations.Add/Update(lang)
           end
           end
-          API->>DB: "SaveChangesAsync() (Per POI Batch)"
+          API->>DB: SaveChangesAsync() (Per POI Batch)
           end
-          API-->>Web: "200 OK (Total New Translations)"
+          API-->>Web: 200 OK (Total New Translations)
           deactivate API
           Web-->>ADM: Show Bulk Completion Toast
         </div>
@@ -4291,33 +4305,33 @@
         <div class="mermaid">
           sequenceDiagram
           actor ADM as Admin
-          participant Web as "Web Admin (React)"
+          participant Web as Web Admin (React)
           participant API as TourController
           participant DB as ApplicationDbContext
           participant Hub as VinhKhanhHub
 
-          ADM->>Web: "Click 'Add Translation' (Tour)"
-          Web->>API: "HTTP POST AddTranslation(id, dto) [JWT]"
+          ADM->>Web: Click "Add Translation" (Tour)
+          Web->>API: AddTranslation(id, dto)
           activate API
-          API->>DB: "db.TourTranslations.AnyAsync(langCode)"
+          API->>DB: db.TourTranslations.AnyAsync(langCode)
           alt Lang exists
           API-->>Web: 409 Conflict
           else New lang
-          API->>DB: "db.TourTranslations.Add(trans)"
+          API->>DB: db.TourTranslations.Add(trans)
           API->>DB: SaveChangesAsync()
-          API->>Hub: "hub.Clients.All.SendAsync('TourUpdated', tour)"
-          API-->>Web: "200 OK (Success)"
+          API->>Hub: hub.Clients.All.SendAsync('TourUpdated', tour)
+          API-->>Web: 200 OK (Success)
           end
           deactivate API
 
-          ADM->>Web: "Click 'Update Translation' (Tour)"
-          Web->>API: "HTTP PUT UpdateTranslation(id, lang, dto) [JWT]"
+          ADM->>Web: Click "Update Translation" (Tour)
+          Web->>API: UpdateTranslation(id, lang, dto)
           activate API
-          API->>DB: "db.TourTranslations.FirstOrDefaultAsync()"
-          API->>DB: "trans.Name = dto.Name..."
+          API->>DB: db.TourTranslations.AsNoTracking().FirstOrDefaultAsync()
+          API->>DB: trans.Name = dto.Name...
           API->>DB: SaveChangesAsync()
-          API->>Hub: "hub.Clients.All.SendAsync('TourUpdated', tour) "
-          API-->>Web: "200 OK (Success)"
+          API->>Hub: hub.Clients.All.SendAsync('TourUpdated', tour)
+          API-->>Web: 200 OK (Success)
           deactivate API
         </div>
       </div>
@@ -4392,7 +4406,7 @@
         <div class="mermaid">
           sequenceDiagram
           autonumber
-          participant User as Du Khách
+          actor User as Du Khách
           participant App as MauiApp
           participant GPS as GpsService
           participant FG as GpsForegroundService
@@ -4436,7 +4450,7 @@
           Note over Buffer: Lưu điểm vào bộ đệm
           App->>Buffer: Thêm tọa độ mới
           alt Đủ 25 điểm hoặc 30 giây
-          Buffer->>API: POST /api/movement/batch
+          Buffer->>API: UploadBatch(dto) [POST /api/movement/batch]
           API-->>Buffer: 200 OK
           end
 
@@ -4874,7 +4888,9 @@
 
     <div class="card">
       <h3>📱 12.6 Device Session Lifecycle</h3>
-      <p>Vòng đời phiên du khách: từ khi mở App đến khi đóng. <code>SessionTrackingService</code> tự động thu thập thông tin thiết bị, gửi heartbeat mỗi 60 giây, và tính quãng đường di chuyển. Server tự động lấy IP geolocation (Country, City) qua <code>ip-api.com</code>.</p>
+      <p>Vòng đời phiên du khách: từ khi mở App đến khi đóng. <code>SessionTrackingService</code> tự động thu thập thông
+        tin thiết bị, gửi heartbeat mỗi 60 giây, và tính quãng đường di chuyển. Server tự động lấy IP geolocation
+        (Country, City) qua <code>ip-api.com</code>.</p>
       <div class="dw">
         <div class="dt">State Diagram — Device Session</div>
         <div class="mermaid">
@@ -4889,23 +4905,34 @@
           Gửi heartbeat mỗi 60 giây
           Cập nhật PoisVisited, DistanceMeters
           Tính quãng đường bằng Haversine
-          Bỏ qua jitter < 2m và nhảy > 500m
-          end note
-          note right of KếtThúc
-          EndedAt được ghi nhận
-          Tổng thời gian được tính
-          Dữ liệu lưu vào DeviceSessions
-          end note
+          Bỏ qua jitter < 2m và nhảy> 500m
+            end note
+            note right of KếtThúc
+            EndedAt được ghi nhận
+            Tổng thời gian được tính
+            Dữ liệu lưu vào DeviceSessions
+            end note
         </div>
       </div>
       <div class="logic-box">
         <h4>🧠 Giải Thích Chi Tiết — Vòng Đời Phiên Du Khách</h4>
         <ol>
-          <li><strong>Khởi tạo phiên:</strong> Khi App mở, <code>SessionTrackingService.StartSessionAsync()</code> gửi thông tin thiết bị (model, platform, OS, manufacturer) lên server. Server tự động tra cứu IP geolocation để lấy Country và City.</li>
-          <li><strong>Nhận diện khách quay lại:</strong> Server kiểm tra <code>db.DeviceSessions.AnyAsync(s => s.SessionId == dto.SessionId)</code>. Nếu SessionId đã từng tồn tại → <code>IsReturning = true</code>.</li>
-          <li><strong>Heartbeat định kỳ:</strong> Timer 60 giây gửi <code>POST /api/session/heartbeat</code> với số POI đã ghé và quãng đường tích lũy. Server lấy giá trị lớn hơn (Max) để tránh giảm số liệu.</li>
-          <li><strong>Tính quãng đường:</strong> <code>SessionTrackingService</code> lắng nghe <code>LocationUpdatedMessage</code>, tính khoảng cách Haversine giữa 2 tọa độ liên tiếp. Bỏ qua GPS jitter &lt;2m và nhảy bất thường &gt;500m.</li>
-          <li><strong>Kết thúc phiên:</strong> Khi App đóng, <code>EndSessionAsync()</code> gửi <code>POST /api/session/end</code>. Server ghi <code>EndedAt</code> và tính tổng thời gian.</li>
+          <li><strong>Khởi tạo phiên:</strong> Khi App mở, <code>SessionTrackingService.StartSessionAsync()</code> gửi
+            thông tin thiết bị (model, platform, OS, manufacturer) lên server. Server tự động tra cứu IP geolocation để
+            lấy Country và City.</li>
+          <li><strong>Nhận diện khách quay lại:</strong> Server kiểm tra
+            <code>db.DeviceSessions.AnyAsync(s => s.SessionId == dto.SessionId)</code>. Nếu SessionId đã từng tồn tại →
+            <code>IsReturning = true</code>.
+          </li>
+          <li><strong>Heartbeat định kỳ:</strong> Timer 60 giây gửi <code>POST /api/session/heartbeat</code> với số POI
+            đã ghé và quãng đường tích lũy. Server lấy giá trị lớn hơn (Max) để tránh giảm số liệu.</li>
+          <li><strong>Tính quãng đường:</strong> <code>SessionTrackingService</code> lắng nghe
+            <code>LocationUpdatedMessage</code>, tính khoảng cách Haversine giữa 2 tọa độ liên tiếp. Bỏ qua GPS jitter
+            &lt;2m và nhảy bất thường &gt;500m.
+          </li>
+          <li><strong>Kết thúc phiên:</strong> Khi App đóng, <code>EndSessionAsync()</code> gửi
+            <code>POST /api/session/end</code>. Server ghi <code>EndedAt</code> và tính tổng thời gian.
+          </li>
         </ol>
       </div>
       <div class="dw">
@@ -4957,24 +4984,23 @@
           loop Mỗi khi GPS cập nhật
           App->>ST: LocationUpdatedMessage(lat, lon)
           ST->>ST: Haversine(lastLat, lastLon, lat, lon)
-          alt distance >= 2m AND distance <= 500m
-          ST->>ST: _totalDistanceMeters += distance
-          else GPS jitter hoặc nhảy bất thường
-          ST->>ST: Bỏ qua
-          end
-          end
+          alt distance >= 2m AND distance <= 500m ST->>ST: _totalDistanceMeters += distance
+            else GPS jitter hoặc nhảy bất thường
+            ST->>ST: Bỏ qua
+            end
+            end
 
-          Note over ST, DB: [Giai đoạn 4] Đóng App — Kết thúc phiên
-          App->>ST: EndSessionAsync()
-          ST->>ST: _heartbeatTimer.Change(Infinite, Infinite)
-          ST->>API: PostSessionEndAsync(SessionEndDto)
-          API->>Server: POST /api/session/end
-          activate Server
-          Server->>DB: FindAsync(SessionId, EndedAt == null)
-          Server->>DB: session.EndedAt = now
-          Server->>DB: SaveChangesAsync()
-          Server-->>API: 200 OK { durationMinutes }
-          deactivate Server
+            Note over ST, DB: [Giai đoạn 4] Đóng App — Kết thúc phiên
+            App->>ST: EndSessionAsync()
+            ST->>ST: _heartbeatTimer.Change(Infinite, Infinite)
+            ST->>API: PostSessionEndAsync(SessionEndDto)
+            API->>Server: POST /api/session/end
+            activate Server
+            Server->>DB: FindAsync(SessionId, EndedAt == null)
+            Server->>DB: session.EndedAt = now
+            Server->>DB: SaveChangesAsync()
+            Server-->>API: 200 OK { durationMinutes }
+            deactivate Server
         </div>
       </div>
     </div>
@@ -5363,7 +5389,6 @@
             OLLAMA["Ollama Server\nllama3.1:8b\nPort 11434"]
             LIBRE["LibreTranslate\nPort 5001"]
             end
-            end
             subgraph CLOUD["☁️ Cloud Services (Production)"]
             OPENROUTER["OpenRouter\ngoogle/gemini-2.0-flash-exp:free\nPrimary AI (Free)"]
             GEMINI_AI["Google Gemini AI\ngemini-2.5-flash\nTranslation + AI Fallback"]
@@ -5397,8 +5422,14 @@
           <li><strong>Docker Containerization:</strong> Toàn bộ Backend (ASP.NET) và Web Admin (React) được đóng gói vào
             các Container. Điều này giúp Admin dễ dàng di chuyển hệ thống từ Server này sang Server khác (ví dụ: từ máy
             chủ tại văn phòng lên Google Cloud) mà không sợ lỗi môi trường.</li>
-          <li><strong>Hybrid AI Architecture:</strong> Hệ thống chọn AI provider tự động tại startup dựa trên API key có sẵn: <code>OpenRouter</code> (ưu tiên — miễn phí, không bị chặn) → <code>DeepSeek</code> → <code>Groq</code> → <code>Gemini 2.5 Flash</code> → <code>Ollama</code> (local fallback). Cấu hình trong <code>appsettings.json</code>, không cần sửa code.</li>
-          <li><strong>Cơ sở dữ liệu linh hoạt:</strong> Hỗ trợ 3 database engine: Azure SQL Server (production), PostgreSQL, SQLite. Tự động detect tại startup qua connection string. SQLite dùng <code>EnsureCreated</code> (không cần migration), SQL Server/PostgreSQL dùng <code>MigrateAsync</code>.</li>
+          <li><strong>Hybrid AI Architecture:</strong> Hệ thống chọn AI provider tự động tại startup dựa trên API key có
+            sẵn: <code>OpenRouter</code> (ưu tiên — miễn phí, không bị chặn) → <code>DeepSeek</code> → <code>Groq</code>
+            → <code>Gemini 2.5 Flash</code> → <code>Ollama</code> (local fallback). Cấu hình trong
+            <code>appsettings.json</code>, không cần sửa code.
+          </li>
+          <li><strong>Cơ sở dữ liệu linh hoạt:</strong> Hỗ trợ 3 database engine: Azure SQL Server (production),
+            PostgreSQL, SQLite. Tự động detect tại startup qua connection string. SQLite dùng <code>EnsureCreated</code>
+            (không cần migration), SQL Server/PostgreSQL dùng <code>MigrateAsync</code>.</li>
           <li><strong>Bảo mật đa tầng:</strong> Mọi luồng dữ liệu giữa Mobile, Web và Server đều được mã hóa qua HTTPS.
             Lớp API chỉ cho phép các yêu cầu có JWT Token hợp lệ đi qua, ngăn chặn hoàn toàn các truy cập trái phép từ
             bên ngoài.</li>
@@ -5538,7 +5569,9 @@
             <tr>
               <td><code>VinhKhanh.API</code></td>
               <td>ASP.NET Core 10</td>
-              <td>14 Controllers (Auth/Poi/Tour/Ai/Audio/Upload/Analytics/Movement/History/Translation/Session/Admin/AppDownload/Tts), SignalR Hub, Services (AI/TTS/Translation/OpenRouter/Gemini/Groq/DeepSeek/Ollama), Program.cs</td>
+              <td>14 Controllers
+                (Auth/Poi/Tour/Ai/Audio/Upload/Analytics/Movement/History/Translation/Session/Admin/AppDownload/Tts),
+                SignalR Hub, Services (AI/TTS/Translation/OpenRouter/Gemini/Groq/DeepSeek/Ollama), Program.cs</td>
             </tr>
             <tr>
               <td><code>VinhKhanh.App</code></td>
@@ -6197,7 +6230,8 @@
               <td><span class="tag tget">GET</span></td>
               <td><code>/api/admin/summary</code></td>
               <td><span class="tag tg2">Public</span></td>
-              <td>Tổng quan: totalPois, totalTours, totalDevices (unique SessionIds), totalVisits, activeUsers (real-time), ownerStats. Cache 5 phút, invalidate khi có visit log mới</td>
+              <td>Tổng quan: totalPois, totalTours, totalDevices (unique SessionIds), totalVisits, activeUsers
+                (real-time), ownerStats. Cache 5 phút, invalidate khi có visit log mới</td>
             </tr>
             <tr>
               <td><span class="tag tpost">POST</span></td>
@@ -6262,7 +6296,8 @@
               <td><span class="tag tpost">POST</span></td>
               <td><code>/api/session/start</code></td>
               <td><span class="tag tg2">Public</span></td>
-              <td>Ghi nhận phiên mới + thông tin thiết bị (model, platform, OS, version, manufacturer). Tự động lấy IP geolocation (country, city) qua ip-api.com. Đánh dấu IsReturning nếu SessionId đã từng tồn tại</td>
+              <td>Ghi nhận phiên mới + thông tin thiết bị (model, platform, OS, version, manufacturer). Tự động lấy IP
+                geolocation (country, city) qua ip-api.com. Đánh dấu IsReturning nếu SessionId đã từng tồn tại</td>
             </tr>
             <tr>
               <td><span class="tag tpost">POST</span></td>
@@ -6922,7 +6957,8 @@
             <tr>
               <td>PoiListPage</td>
               <td>—</td>
-              <td>Danh sách POI với search + pull-to-refresh. Code-behind (BindingContext = this), có RefreshCommand</td>
+              <td>Danh sách POI với search + pull-to-refresh. Code-behind (BindingContext = this), có RefreshCommand
+              </td>
             </tr>
             <tr>
               <td>PoiDetailPage</td>
@@ -6967,7 +7003,8 @@
               <td>DB Production</td>
               <td>SQLite / PostgreSQL / Azure SQL Server</td>
               <td>3.x / latest</td>
-              <td>Ưu tiên: Azure SQL (SqlServer conn string) → PostgreSQL (Default conn string) → SQLite (vinhkhanh_persistent.db). Tự động detect tại startup</td>
+              <td>Ưu tiên: Azure SQL (SqlServer conn string) → PostgreSQL (Default conn string) → SQLite
+                (vinhkhanh_persistent.db). Tự động detect tại startup</td>
             </tr>
             <tr>
               <td>DB Development</td>
@@ -7121,9 +7158,11 @@
               <code>DuplicateWindow = 90s</code> — ngăn phát lại cùng POI trong vòng 90 giây.
             </li>
             <li><strong>Tầng 3 — Geofence cooldown:</strong> Per-POI <code>CooldownSeconds</code> + Global
-              <code>GlobalCooldownSeconds = 10s</code> + <code>ExitHysteresisFactor = 1.5</code> (không persist vào Preferences).
+              <code>GlobalCooldownSeconds = 10s</code> + <code>ExitHysteresisFactor = 1.5</code> (không persist vào
+              Preferences).
             </li>
-            <li><strong>QR dedup:</strong> <code>_isProcessing</code> flag (SemaphoreSlim) trong <code>QrScanPage</code> —
+            <li><strong>QR dedup:</strong> <code>_isProcessing</code> flag (SemaphoreSlim) trong <code>QrScanPage</code>
+              —
               ngăn double-trigger khi camera quét liên tục.</li>
           </ul>
         </div>
@@ -7380,8 +7419,11 @@
             </tr>
             <tr>
               <td>PoiListPage màn hình trắng (release build)</td>
-              <td>RefreshView.Command="{Binding RefreshCommand}" nhưng PoiListPage.xaml.cs không có property RefreshCommand</td>
-              <td>Thêm <code>public ICommand RefreshCommand { get; }</code> và khởi tạo <code>RefreshCommand = new AsyncRelayCommand(LoadDataAsync)</code> trong constructor</td>
+              <td>RefreshView.Command="{Binding RefreshCommand}" nhưng PoiListPage.xaml.cs không có property
+                RefreshCommand</td>
+              <td>Thêm <code>public ICommand RefreshCommand { get; }</code> và khởi tạo
+                <code>RefreshCommand = new AsyncRelayCommand(LoadDataAsync)</code> trong constructor
+              </td>
             </tr>
           </table>
         </div>
@@ -7440,7 +7482,7 @@
           RequiredConsecutiveHits = 2. Cooldown lưu trong memory (Dictionary), không persist vào Preferences.
 
           Mục 04 — Section 4.3 Narration: DuplicateWindow = 90s, _queuedKeys HashSet, SemaphoreSlim(1,1). Sequence
-          diagram thể hiện Check DuplicateWindow (90s). Khoảng nghỉ 10 giây giữa các POI.
+          diagram mới thể hiện Check DuplicateWindow (90s). Khoảng nghỉ 10 giây giữa các POI.
 
           Mục 18 (NFR) — Card "🔁 Xử Lý Trùng — 3 Tầng": Tầng 1 _queuedKeys, Tầng 2 DuplicateWindow 90s, Tầng 3
           GlobalCooldownSeconds = 10s + ExitHysteresisFactor = 1.5. QR dedup _isProcessing SemaphoreSlim.
@@ -7469,50 +7511,6 @@
           Mục 18 (NFR) — Card "⚡ Hiệu Năng" mở rộng: AudioCacheService pre-fetch, IMemoryCache (5 phút/30 giây), Batch
           25×, DB Indexes đầy đủ 9 trường, AddRange 2000 điểm/transaction, AsNoTracking EF Core.
 
-          Một Điểm Nhỏ Cần Lưu Ý
-
-          TOC có 3 dòng trùng 02b · Anonymous Visitor Flow do lần chèn trước. Tôi sẽ sửa ngay:
-
-          Read file(s)
-
-          VinhKhanh-PRD.html 700 - 731
-
-          TOC chỉ có 1 dòng 02b — không bị trùng. Kết quả grep trước hiển thị nhiều lần vì nó tìm trong cả nav bar. Kiểm
-          tra nav bar:
-
-          Read file(s)
-
-          VinhKhanh-PRD.html 625 - 661
-
-          File sạch, không có trùng lặp. PRD đã hoàn chỉnh. Đây là báo cáo cuối:
-
-          ✅ PRD Đã Chuẩn — Không Có Vấn Đề
-
-          File
-
-          VinhKhanh-PRD.html
-
-          hiện tại đúng, đầy đủ, không trùng lặp. Cấu trúc nav bar và TOC đều sạch.
-
-          Bản Đồ 5 Yêu Cầu → Vị Trí Trong PRD
-
-          # Yêu cầu Mục chính Mục phụ
-
-          1 Nhiều du khách, quét QR, không cần account 02b — Anonymous Visitor Flow (card mới, bảng 7 bước) Mục 03
-          (UC-M02, UC-M14), Mục 16 (Public endpoints)
-
-          2 Monitoring: số người, ngày, lượt nghe, heatmap, thống kê 05 — Section 5.2 (bảng 8 APIs, sequence diagram
-          mới) Mục 13 (Class: SessionTrackingService), Mục 15 (DeviceSessions table), Mục 16 (admin/sessions/stats,
-          peak-hours, poi-heatmap-stats)
-
-          3 Xử lý trùng 18 — NFR Card "🔁 Xử Lý Trùng — 3 Tầng" Mục 04 Section 4.2 (GlobalCooldownSeconds,
-          ExitHysteresisFactor = 1.5, memory-only), Mục 04 Section 4.3 (DuplicateWindow 90s, _queuedKeys)
-
-          4 Xử lý hàng đợi (nhiều người cùng quầy) 18 — NFR Card "👥 Xử Lý Nhiều Du Khách Đồng Thời" Mục 04 Section 4.3
-          (per-device, không phải server-side), Mục 04 Section 4.2 (GeofenceEvaluator.PickBestInside)
-
-          5 Performance (nhanh, số lượng nhiều) 18 — NFR Card "⚡ Hiệu Năng" (mở rộng) Mục 04 Section 4.1 (Batch 25
-          điểm/30s), Mục 13 (AudioCacheService class)
           <br>
           <br>
 
@@ -7527,7 +7525,8 @@
           mã thủ công khi camera lỗi. Chống double-trigger bằng _isProcessing flag và cooldown 2 giây.
 
           Thể hiện trong PRD: Mục 02b (Anonymous Flow bảng bước 4), Mục 03 UC-M02 + UC-M14, Mục 04 Section 5.3 (QR Scan
-          sequence diagram), Mục 16 endpoint GET /api/poi/qrcode/{code}
+          sequence diagram), Mục 16 endpoint GET /api/poi/qrcode/{code} được đánh dấu Public, POST /api/analytics/log
+          không yêu cầu auth.
 
           d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\SessionService.cs
 
@@ -7687,7 +7686,8 @@
 
               d:\CSharp\VinhKhanh\src\VinhKhanh.App\Services\GeofenceCooldownStore.cs
 
-              Làm gì: File này tồn tại trong codebase nhưng GeofenceService hiện tại không sử dụng nó — cooldown được quản lý trực tiếp bằng Dictionary trong GeofenceService. GeofenceCooldownStore là class helper dự phòng.
+              Làm gì: File này tồn tại trong codebase nhưng GeofenceService hiện tại không sử dụng nó — cooldown được
+              quản lý trực tiếp bằng Dictionary trong GeofenceService. GeofenceCooldownStore là class helper dự phòng.
 
               Thể hiện trong PRD: Mục 04 Section 4.2 (logic box "Kiểm soát tần suất"), Mục 18 NFR "Xử Lý Trùng — 3 Tầng"
               Tầng 3
@@ -7823,354 +7823,762 @@
       </div>
     </div>
 
-  <!-- ===== CH20 QUẢN TRỊ ADMIN (WEB) ===== -->
-  <div class="sec" id="ch20">
-    <div class="sh">
-      <div class="sn">20</div>
-      <div>
-        <h2>Sequence Diagrams — Hệ Thống Quản Trị (Admin Web)</h2>
-        <p>Chi tiết các luồng dữ liệu cho toàn bộ chức năng của Admin, từ Dashboard (Thống kê, Biểu đồ) đến CMS CRUD.</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>📊 20.1.1 Ô Hiển Thị: Tổng Số Quán Ăn (Total POIs)</h3>
-      <div class="dw">
-        <div class="dt">Sequence Diagram — Fallback Logic cho Số Quán Ăn</div>
-        <div class="mermaid">
-          sequenceDiagram
-          autonumber
-          participant UI as 💻 Dashboard
-          participant ADM as 🌐 AdminController
-          participant POI as 🌐 PoiController
-          participant DB as 🗄️ ApplicationDbContext
-
-          par Fetch Chính
-              UI->>ADM: GET /api/admin/summary
-              activate ADM
-              ADM->>DB: db.Pois.Count()
-              DB-->>ADM: totalPois
-              ADM-->>UI: return { totalPois }
-              deactivate ADM
-          and Fetch Dự Phòng (Fallback)
-              UI->>POI: GET /api/poi?lang=vi
-              activate POI
-              POI->>DB: Truy vấn danh sách POI
-              DB-->>POI: List[Poi]
-              POI-->>UI: return List[Poi]
-              deactivate POI
-          end
-          
-          alt API summary lỗi hoặc đang tải
-              UI->>UI: value = pois.data.length
-          else API summary thành công
-              UI->>UI: value = summary.data.totalPois
-          end
-          UI-->>UI: Render thẻ màu Cam (Quán ăn)
+    <!-- ===== CH20 QUẢN TRỊ ADMIN (WEB) ===== -->
+    <div class="sec" id="ch20">
+      <div class="sh">
+        <div class="sn">20</div>
+        <div>
+          <h2>Sequence Diagrams — Hệ Thống Quản Trị (Admin Web)</h2>
+          <p>Chi tiết các luồng dữ liệu cho toàn bộ chức năng của Admin, từ Dashboard (Thống kê, Biểu đồ) đến CMS CRUD.
+          </p>
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <h3>📊 20.1.2 Ô Hiển Thị: Tổng Số Lộ Trình (Total Tours)</h3>
-      <div class="dw">
-        <div class="dt">Sequence Diagram — Fallback Logic cho Số Lộ Trình</div>
-        <div class="mermaid">
-          sequenceDiagram
-          autonumber
-          participant UI as 💻 Dashboard
-          participant ADM as 🌐 AdminController
-          participant TOUR as 🌐 TourController
-          participant DB as 🗄️ ApplicationDbContext
+      <div class="card">
+        <h3>📊 20.1.1 Tổng Số Quán Ăn (Total POIs)</h3>
+        <div class="dw">
+          <div class="dt">Sequence Diagram — Fallback Logic cho Số Quán Ăn</div>
+          <div class="mermaid">
+            sequenceDiagram
+            autonumber
+            participant Admin as 👨‍💼 Quản Trị Viên
+            participant UI as 💻 Dashboard
+            participant ADM as 🌐 AdminController
+            participant POI as 🌐 PoiController
+            participant DB as 🗄️ ApplicationDbContext
 
-          par Fetch Chính
-              UI->>ADM: GET /api/admin/summary
-              activate ADM
-              ADM->>DB: db.Tours.Count()
-              DB-->>ADM: totalTours
-              ADM-->>UI: return { totalTours }
-              deactivate ADM
-          and Fetch Dự Phòng (Fallback)
-              UI->>TOUR: GET /api/tour?lang=vi
-              activate TOUR
-              TOUR->>DB: Truy vấn danh sách Lộ trình
-              DB-->>TOUR: List[Tour]
-              TOUR-->>UI: return List[Tour]
-              deactivate TOUR
-          end
-          
-          alt API summary lỗi hoặc đang tải
-              UI->>UI: value = tours.data.length
-          else API summary thành công
-              UI->>UI: value = summary.data.totalTours
-          end
-          UI-->>UI: Render thẻ màu Xanh (Lộ trình)
+            Admin->>UI: Mở Dashboard
+            par Fetch Chính (Ưu tiên)
+            UI->>ADM: Summary()
+            activate ADM
+            ADM->>Cache: GetOrCreateAsync("admin_summary_stats", TTL=5m)
+            alt Cache Miss
+            ADM->>DB: db.Pois.AsNoTracking().CountAsync()
+            DB-->>ADM: totalPois
+            end
+            ADM-->>UI: return { totalPois }
+            deactivate ADM
+            and Fetch Dự Phòng (Fallback)
+            UI->>POI: GetAll(lang="vi")
+            activate POI
+            POI->>DB: db.Pois.AsNoTracking().ToListAsync()
+            DB-->>POI: List[Poi]
+            POI-->>UI: return List[Poi]
+            deactivate POI
+            end
+
+            alt API summary thành công
+            UI->>UI: value = summary.data.totalPois
+            else API summary lỗi hoặc đang tải
+            UI->>UI: value = pois.data.length (Dự phòng)
+            end
+            UI-->>UI: Render thẻ màu Cam (Quán ăn)
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <h3>📊 20.1.3 Ô Hiển Thị: Số Lượt Nghe TTS (Total Visits)</h3>
-      <div class="dw">
-        <div class="dt">Sequence Diagram — Fallback Logic cho Lượt Nghe</div>
-        <div class="mermaid">
-          sequenceDiagram
-          autonumber
-          participant UI as 💻 Dashboard
-          participant ADM as 🌐 AdminController
-          participant ANY as 🌐 AnalyticsController
-          participant DB as 🗄️ ApplicationDbContext
+      <div class="card">
+        <h3>🗺️ 20.1.1b Bản Đồ Quản Trị (Admin Global Map)</h3>
+        <div class="dw">
+          <div class="dt">Sequence Diagram — Hiển thị toàn bộ POI trên bản đồ Admin</div>
+          <div class="mermaid">
+            sequenceDiagram
+            autonumber
+            participant Admin as 👨‍💼 Quản Trị Viên
+            participant UI as 💻 MapView
+            participant POI as 🌐 PoiController
+            participant DB as 🗄️ ApplicationDbContext
 
-          par Fetch Chính
-              UI->>ADM: GET /api/admin/summary
-              activate ADM
-              ADM->>DB: db.PoiVisitLogs.Count()
-              DB-->>ADM: totalVisits
-              ADM-->>UI: return { totalVisits }
-              deactivate ADM
-          and Fetch Dự Phòng (Fallback)
-              UI->>ANY: GET /api/analytics/top?days=30
-              activate ANY
-              ANY->>DB: GroupBy PoiId -> Lấy Count
-              DB-->>ANY: Top POI Data
-              ANY-->>UI: return [{count: 50}, {count: 20}]
-              deactivate ANY
-          end
-          
-          alt API summary lỗi hoặc đang tải
-              UI->>UI: value = Sum(analyticsTop.data.count)
-          else API summary thành công
-              UI->>UI: value = summary.data.totalVisits
-          end
-          UI-->>UI: Render thẻ màu Đỏ (Lượt nghe TTS)
+            Admin->>UI: Mở menu "Bản Đồ"
+            UI->>POI: GetAll(lang="vi")
+            activate POI
+            POI->>DB: db.Pois.Include(Translations).Include(Owner).AsNoTracking().ToListAsync()
+            DB-->>POI: List[Poi] (Tọa độ Lat, Lon)
+            POI-->>UI: return Ok(pois)
+            deactivate POI
+            UI->>UI: Load Google Maps API & Vẽ Markers
+            UI-->>Admin: Hiển thị bản đồ với các điểm POI nhấp nháy
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <h3>📊 20.1.4 Ô Hiển Thị: Số Thiết Bị Cài Đặt (Total Installs)</h3>
-      <div class="dw">
-        <div class="dt">Sequence Diagram — Thống kê thiết bị duy nhất</div>
-        <div class="mermaid">
-          sequenceDiagram
-          autonumber
-          participant UI as 💻 Dashboard
-          participant ADM as 🌐 AdminController
-          participant DB as 🗄️ ApplicationDbContext
+      <div class="card">
+        <h3>📊 20.1.2 Tổng Số Lộ Trình (Total Tours)</h3>
+        <div class="dw">
+          <div class="dt">Sequence Diagram — Fallback Logic cho Số Lộ Trình</div>
+          <div class="mermaid">
+            sequenceDiagram
+            autonumber
+            participant Admin as 👨‍💼 Quản Trị Viên
+            participant UI as 💻 Dashboard
+            participant ADM as 🌐 AdminController
+            participant TOUR as 🌐 TourController
+            participant DB as 🗄️ ApplicationDbContext
 
-          UI->>ADM: GET /api/admin/summary
-          activate ADM
-          ADM->>DB: db.DeviceSessions.Select(DeviceId).Distinct().Count()
-          DB-->>ADM: totalDevices
-          ADM-->>UI: return { totalDevices }
-          deactivate ADM
-          UI->>UI: value = summary.data.totalDevices
-          UI-->>UI: Render thẻ màu Xanh Teal (Thiết bị đã cài)
+            Admin->>UI: Mở Dashboard
+            par Fetch Chính (Ưu tiên)
+            UI->>ADM: Summary()
+            activate ADM
+            ADM->>Cache: GetOrCreateAsync("admin_summary_stats", TTL=5m)
+            alt Cache Miss
+            ADM->>DB: db.Tours.AsNoTracking().CountAsync()
+            DB-->>ADM: totalTours
+            end
+            ADM-->>UI: return { totalTours }
+            deactivate ADM
+            and Fetch Dự Phòng (Fallback)
+            UI->>TOUR: GetAll(lang="vi")
+            activate TOUR
+            TOUR->>DB: db.Tours.Include(Translations).Include(Stops).AsNoTracking().ToListAsync()
+            DB-->>TOUR: List[Tour]
+            TOUR-->>UI: return List[Tour]
+            deactivate TOUR
+            end
+
+            alt API summary thành công
+            UI->>UI: value = summary.data.totalTours
+            else API summary lỗi hoặc đang tải
+            UI->>UI: value = tours.data.length (Dự phòng)
+            end
+            UI-->>UI: Render thẻ màu Xanh (Lộ trình)
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <h3>🟢 20.1.5 Ô Hiển Thị: Thiết Bị Trực Tuyến (Active Users)</h3>
-      <div class="dw">
-        <div class="dt">Sequence Diagram — Realtime Tracking Polling</div>
-        <div class="mermaid">
-          sequenceDiagram
-          autonumber
-          participant UI as 💻 Dashboard
-          participant ADM as 🌐 AdminController
-          participant TRK as ⚙️ ConnectionTracker
+      <div class="card">
+        <h3>📊 20.1.3 Số Lượt Nghe TTS (Total Visits)</h3>
+        <div class="dw">
+          <div class="dt">Sequence Diagram — Fallback Logic cho Lượt Nghe</div>
+          <div class="mermaid">
+            sequenceDiagram
+            autonumber
+            participant Admin as 👨‍💼 Quản Trị Viên
+            participant UI as 💻 Dashboard
+            participant ADM as 🌐 AdminController
+            participant ANY as 🌐 AnalyticsController
+            participant Cache as 🧠 IMemoryCache
+            participant DB as 🗄️ ApplicationDbContext
 
-          loop RefetchInterval: Mỗi 10 giây
-              UI->>ADM: GET /api/admin/summary
-              activate ADM
-              ADM->>TRK: GetOnlineCount() (Đếm ConnectionID trong RAM)
-              TRK-->>ADM: activeUsers
-              ADM-->>UI: return { activeUsers }
-              deactivate ADM
-              UI->>UI: value = summary.data.activeUsers
-              UI-->>UI: Render thẻ màu Xanh Lá có chấm nhấp nháy (Online)
-          end
+            Admin->>UI: Mở Dashboard
+            par Fetch Chính
+            UI->>ADM: Summary()
+            activate ADM
+            ADM->>Cache: GetOrCreateAsync("admin_summary_stats", TTL=5m)
+            alt Cache Miss
+            ADM->>DB: db.PoiVisitLogs.AsNoTracking().CountAsync()
+            DB-->>ADM: totalVisits
+            end
+            ADM-->>UI: return { totalVisits }
+            deactivate ADM
+            and Fetch Dự Phòng (Fallback)
+            UI->>ANY: GetTop(days=30)
+            activate ANY
+            ANY->>DB: db.PoiVisitLogs.AsNoTracking().GroupBy(PoiId).Select(Count)
+            DB-->>ANY: Top POI Data
+            ANY-->>UI: return JSON List
+            deactivate ANY
+            end
+
+            alt API summary lỗi hoặc đang tải
+            UI->>UI: value = Sum(analyticsTop.data.count)
+            else API summary thành công
+            UI->>UI: value = summary.data.totalVisits
+            end
+            UI-->>UI: Render thẻ màu Đỏ (Lượt nghe TTS)
+          </div>
         </div>
       </div>
-    </div>
 
+      <div class="card">
+        <h3>📊 20.1.4 Số Thiết Bị Cài Đặt (Total Installs)</h3>
+        <div class="dw">
+          <div class="dt">Sequence Diagram — Thống kê thiết bị cài đặt</div>
+          <div class="mermaid">
+            sequenceDiagram
+            autonumber
+            participant Admin as 👨‍💼 Quản Trị Viên
+            participant UI as 💻 Dashboard
+            participant ADM as 🌐 AdminController
+            participant DB as 🗄️ ApplicationDbContext
+            participant Cache as 🧠 IMemoryCache
+
+            Admin->>UI: Mở Dashboard
+            UI->>ADM: Summary()
+            activate ADM
+            ADM->>Cache: GetOrCreateAsync("admin_summary_stats", TTL=5m)
+            alt Cache Miss
+            ADM->>DB: db.AppHistoryLogs.AsNoTracking().Select(SessionId).Distinct().CountAsync()
+            ADM->>DB: db.PoiVisitLogs.AsNoTracking().Select(SessionId).Distinct().CountAsync()
+            DB-->>ADM: return Max(History, Visit)
+            end
+            ADM-->>UI: return { totalDevices }
+            deactivate ADM
+            UI->>UI: value = summary.data.totalDevices
+            UI-->>UI: Render thẻ màu Xanh Teal (Unique Installs)
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🟢 20.1.5 Thiết Bị Trực Tuyến (Active Users)</h3>
+        <div class="dw">
+          <div class="dt">Sequence Diagram — Realtime Tracking Polling</div>
+          <div class="mermaid">
+            sequenceDiagram
+            autonumber
+            participant Admin as 👨‍💼 Quản Trị Viên
+            participant UI as 💻 Dashboard
+            participant ADM as 🌐 AdminController
+            participant TRK as ⚙️ IConnectionTracker
+
+            Admin->>UI: Mở Dashboard
+            loop RefetchInterval: Mỗi 10 giây
+            UI->>ADM: Summary()
+            activate ADM
+            ADM->>TRK: GetOnlineCount() (RAM tracking)
+            TRK-->>ADM: onlineCount
+            ADM-->>UI: return { onlineCount }
+            deactivate ADM
+            UI->>UI: value = summary.data.onlineCount
+            UI-->>UI: Render thẻ màu Xanh Lá có chấm nhấp nháy (Online)
+            end
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📈 20.2 Dashboard — Biểu Đồ Top Địa Điểm Lắng Nghe</h3>
+    <div class="dw">
+      <div class="dt">Sequence Diagram — AnalyticsController Top POIs</div>
+      <div class="mermaid">
+        sequenceDiagram
+        autonumber
+        participant Admin as 👨‍💼 Quản Trị Viên
+        participant UI as 💻 Dashboard
+        participant API as 🌐 AnalyticsController
+        participant DB as 🗄️ ApplicationDbContext
+
+        Admin->>UI: Mở Dashboard
+        UI->>API: GetTop(days=30)
+        activate API
+        API->>DB: db.PoiVisitLogs.AsNoTracking().Where(VisitedAt >= since)
+        DB-->>API: List[PoiVisitLog]
+        API->>API: .GroupBy(PoiId).Select(Count, AvgDuration).Take(20)
+        API->>DB: db.Pois.AsNoTracking().ToDictionaryAsync(Id, Name)
+        DB-->>API: Dictionary[int, string]
+        API->>API: Map PoiName = names.TryGetValue()
+        API-->>UI: return Ok(result) -> JSON List
+        deactivate API
+        UI->>UI: Xử lý mảng dữ liệu (name, count, duration)
+        UI-->>Admin: Render biểu đồ cột (BarChart) bằng Recharts
       </div>
     </div>
+  </div>
 
-    <div class="card">
-      <h3>📈 20.2 Dashboard — Biểu Đồ Top Địa Điểm Lắng Nghe</h3>
+  <div class="card">
+    <h3>🔥 20.3 Bản Đồ Nhiệt (Heatmap) & Lịch Sử Di Chuyển</h3>
+    <div class="dw">
+      <div class="dt">Sequence Diagram — HeatmapPage</div>
+      <div class="mermaid">
+        sequenceDiagram
+        autonumber
+        participant Admin as 👨‍💼 Quản Trị Viên
+        participant UI as 💻 HeatmapPage
+        participant API as 🌐 AnalyticsController
+        participant DB as 🗄️ ApplicationDbContext
+        participant Cache as 🧠 IMemoryCache
+
+        Admin->>UI: Mở trang Bản đồ nhiệt
+        UI->>API: GetHeatmap(hours=24)
+        activate API
+        API->>Cache: GetOrCreateAsync(cacheKey) (30s expiry)
+        alt Cache Miss
+        API->>DB: db.MovementLogs.AsNoTracking().Where(RecordedAt >= since)
+        DB-->>API: Danh sách Tọa độ raw
+        API->>API: GroupBy(SessionId, Round(Lat,5), Round(Lon,5))
+        end
+        API-->>UI: return Array[{Latitude, Longitude}]
+        deactivate API
+        UI->>UI: Đổ dữ liệu vào Google Maps HeatmapLayer
+        UI-->>Admin: Render biểu đồ Nhiệt đỏ/vàng/xanh trên bản đồ
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🏪 20.4 Quản Lý Địa Điểm (PoiEditor CRUD)</h3>
+    <div class="dw">
+      <div class="dt">Sequence Diagram — PoiEditor (Create/Update POI)</div>
+      <div class="mermaid">
+        sequenceDiagram
+        autonumber
+        participant Admin as 👨‍💼 Quản Trị Viên
+        participant UI as 💻 PoiEditor
+        participant UPL as 🌐 UploadController
+        participant API as 🌐 PoiController
+        participant DB as 🗄️ ApplicationDbContext
+        participant Hub as 🔔 VinhKhanhHub
+
+        Admin->>UI: Điền thông tin (Tên, Tọa độ, Bán kính...)
+        opt Nếu có chọn Ảnh mới
+        UI->>UPL: Upload(file) [POST /api/upload]
+        activate UPL
+        UPL->>UPL: Save file to wwwroot/uploads
+        UPL-->>UI: return { url: "guid.jpg" }
+        deactivate UPL
+        end
+        Admin->>UI: Bấm "Lưu"
+        UI->>UI: setSubmitting(true)
+        UI->>API: Create/Update(poiDto)
+        activate API
+        API->>API: NormalizeQr(dto.QrCode)
+        API->>DB: db.SaveChangesAsync()
+        alt Create Mode
+        API->>DB: db.Pois.Add(entity)
+        API->>Hub: hub.Clients.All.SendAsync("PoiCreated", entity)
+        else Update Mode
+        API->>DB: db.Pois.Update(entity)
+        API->>Hub: hub.Clients.All.SendAsync("PoiUpdated", entity)
+        end
+        API-->>UI: return 200 OK (poi)
+        deactivate API
+        UI->>UI: queryClient.invalidateQueries(["pois"])
+        UI->>UI: toast.success("Lưu thành công!")
+        UI->>UI: navigate("/pois")
+      </div>
+    </div>
+    <div class="dw">
+      <div class="dt">Sequence Diagram — Ngưng hoạt động địa điểm (Deactivate)</div>
+      <div class="mermaid">
+        sequenceDiagram
+        autonumber
+        participant Admin as 👨‍💼 Quản Trị Viên
+        participant UI as 💻 PoiList
+        participant API as 🌐 PoiController
+        participant DB as 🗄️ ApplicationDbContext
+
+        Admin->>UI: Bấm "Xóa/Khóa" POI
+        UI->>UI: confirm("Bạn có chắc chắn?")
+        UI->>API: Deactivate(id) [DELETE]
+        activate API
+        API->>DB: db.Pois.FindAsync(id)
+        API->>DB: poi.IsActive = false
+        API->>DB: SaveChangesAsync()
+        API->>Hub: hub.Clients.All.SendAsync("PoiUpdated", poi)
+        API-->>UI: return 204 No Content
+        deactivate API
+        UI->>UI: queryClient.invalidateQueries(["pois"])
+        UI-->>Admin: Row mờ đi hoặc biến mất (UI Update)
+      </div>
+    </div>
+    <div class="dw">
+      <div class="dt">Sequence Diagram — Tự động dịch thuật hàng loạt (Bulk Translation)</div>
+      <div class="mermaid">
+        sequenceDiagram
+        autonumber
+        participant Admin as 👨‍💼 Quản Trị Viên
+        participant UI as 💻 PoiList
+        participant API as 🌐 PoiController
+        participant AI as 🧠 ResilientTranslationService
+        participant DB as 🗄️ ApplicationDbContext
+
+        Admin->>UI: Bấm "Dịch thuật hàng loạt" (Bulk Translate)
+        UI->>API: BulkTranslate(overwrite=false) [POST]
+        activate API
+        loop foreach poi in db.Pois
+        API->>AI: TranslateAsync(desc, "vi", targetLang)
+        AI-->>API: return translatedText
+        API->>DB: poi.Translations.Add(newTranslation)
+        end
+        API->>DB: SaveChangesAsync()
+        API-->>UI: return { totalNewTranslations: x }
+        deactivate API
+        UI-->>Admin: Hiển thị thông báo hoàn tất dịch thuật
+      </div>
+    </div>
+    <div class="dw">
+      <div class="dt">Sequence Diagram — Xuất mã QR cho quán ăn</div>
+      <div class="mermaid">
+        sequenceDiagram
+        autonumber
+        participant Admin as 👨‍💼 Quản Trị Viên
+        participant UI as 💻 PoiList
+        participant API as 🌐 PoiController
+        participant QR as ⚙️ QRCoder
+
+        Admin->>UI: Bấm icon "Mã QR"
+        UI->>API: GenerateQrCode(poiId) [GET]
+        activate API
+        API->>API: Lấy poi.QrCode từ DB
+        API->>QR: CreateQrCode(code, ECCLevel.Q)
+        QR-->>API: return raw image bytes
+        API-->>UI: return File(image/png)
+        deactivate API
+        UI-->>Admin: Mở ảnh QR trong tab mới hoặc Tải về
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🗺️ 20.5 Quản Lý Lộ Trình (TourEditor CRUD)</h3>
+    <div class="dw">
+      <div class="dt">Sequence Diagram — TourEditor (Manage Stops)</div>
+      <div class="mermaid">
+        sequenceDiagram
+        autonumber
+        participant Admin as 👨‍💼 Quản Trị Viên
+        participant UI as 💻 TourEditor
+        participant API as 🌐 TourController
+        participant DB as 🗄️ ApplicationDbContext
+        participant Hub as 🔔 VinhKhanhHub
+
+        Admin->>UI: Kéo thả thứ tự POI & Bấm "Lưu lộ trình"
+        UI->>UI: startTransition()
+        UI->>API: Update(id, tourDto)
+        activate API
+        API->>DB: db.Tours.Include(Stops).FirstOrDefaultAsync(id)
+        API->>DB: db.TourStops.RemoveRange(existingStops)
+        loop foreach stop in dto.Stops
+        API->>DB: tour.Stops.Add(new TourStop { Order, PoiId })
+        end
+        API->>DB: SaveChangesAsync()
+        API->>Hub: hub.Clients.All.SendAsync("TourUpdated", tour)
+        API-->>UI: return 200 OK
+        deactivate API
+        UI->>UI: toast.success("Cập nhật lộ trình thành công")
+        UI->>UI: Redirect to "/tours"
+      </div>
+    </div>
+    <div class="dw">
+      <div class="dt">Sequence Diagram — Xóa Lộ Trình</div>
+      <div class="mermaid">
+        sequenceDiagram
+        autonumber
+        participant Admin as 👨‍💼 Quản Trị Viên
+        participant UI as 💻 TourList
+        participant API as 🌐 TourController
+        participant DB as 🗄️ ApplicationDbContext
+
+        Admin->>UI: Bấm icon Thùng rác
+        UI->>UI: confirm("Bạn có chắc chắn?")
+        UI->>API: Delete(id) [DELETE]
+        activate API
+        API->>DB: db.Tours.FindAsync(id)
+        API->>DB: tour.IsActive = false
+        API->>DB: SaveChangesAsync()
+        API->>Hub: hub.Clients.All.SendAsync("TourUpdated", tour)
+        API-->>UI: return 204 No Content
+        deactivate API
+        UI->>UI: queryClient.invalidateQueries(["tours"])
+        UI-->>Admin: Hiển thị Success Toast & Update UI
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🎵 20.6 Quản Lý Âm Thanh (AudioPage Upload)</h3>
+    <div class="dw">
+      <div class="dt">Sequence Diagram — Audio Management (Link to POI)</div>
+      <div class="mermaid">
+        sequenceDiagram
+        autonumber
+        participant Admin as 👨‍💼 Quản Trị Viên
+        participant UI as 💻 AudioPage
+        participant AUD as 🌐 AudioController
+        participant POI as 🌐 PoiController
+        participant DB as 🗄️ ApplicationDbContext
+
+        Admin->>UI: Chọn File .mp3 & Bấm "Upload"
+        UI->>AUD: Upload(file)
+        activate AUD
+        AUD->>AUD: Save to wwwroot/audio/guid.mp3
+        AUD-->>UI: return { fileName: "guid.mp3" }
+        deactivate AUD
+        
+        Admin->>UI: Chọn Quán & Ngôn ngữ (en) -> Bấm "Gắn âm thanh"
+        UI->>POI: AddTranslation(poiId, { LangCode: 'en', AudioUrl: 'guid.mp3' })
+        activate POI
+        POI->>DB: db.PoiTranslations.Upsert(lang='en', audio='guid.mp3')
+        POI->>DB: poi.ContentVersion++
+        POI->>DB: SaveChangesAsync()
+        POI->>Hub: hub.Clients.All.SendAsync("PoiUpdated", poi)
+        POI-->>UI: return 200 OK
+        deactivate POI
+        UI-->>Admin: Show Success & Update Table
+      </div>
+    </div>
+    <div class="dw">
+      <div class="dt">Sequence Diagram — Tự động tạo âm thanh (TTS Generation & Cache)</div>
+      <div class="mermaid">
+        sequenceDiagram
+        autonumber
+        participant Admin as 👨‍💼 Quản Trị Viên
+        participant UI as 💻 AudioPage
+        participant API as 🌐 AudioController
+        participant AI as 🧠 ITtsService (VoiceRss/Azure)
+        participant DB as 🗄️ ApplicationDbContext
+
+        Admin->>UI: Nhập Text & Chọn Giọng nói -> Bấm "Tạo TTS"
+        UI->>API: Synthesize({ text, lang, voice }) [POST]
+        activate API
+        API->>API: Generate Hash(text) & Check File Cache
+        alt Cache Hit
+        API-->>UI: return File(cachePath)
+        else Cache Miss
+        API->>AI: SynthesizeAsync(text, lang, voice)
+        AI-->>API: return audioBytes
+        API->>API: Save audioBytes to wwwroot/audio/cache
+        API-->>UI: return File(audioBytes)
+        end
+        deactivate API
+        UI-->>Admin: Phát âm thanh thử nghiệm & Lưu vào hệ thống
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🔐 20.7 Quản Lý Người Dùng & Chủ Quán (UserManagement)</h3>
+    <div class="dw">
+      <div class="dt">Sequence Diagram — User & Owner Management</div>
+      <div class="mermaid">
+        sequenceDiagram
+        autonumber
+        participant Admin as 👨‍💼 Quản Trị Viên
+        participant UI as 💻 UserManagement
+        participant API as 🌐 AuthController
+        participant DB as 🗄️ ApplicationDbContext
+
+        Admin->>UI: Bấm "Phê duyệt" (Approve)
+        UI->>API: UpdateUserStatus(id, { isActive: true })
+        activate API
+        API->>API: AuthClaims.IsAdmin(User) check
+        API->>DB: db.AppUsers.FindAsync(id)
+        DB-->>API: user entity
+        opt Nếu user.Username == "admin"
+        API-->>UI: return 400 (Không thể khóa Admin chính)
+        end
+        API->>DB: user.IsActive = true
+        API->>DB: SaveChangesAsync()
+        API-->>UI: return 200 OK
+        deactivate API
+        UI->>UI: queryClient.invalidateQueries(["users"])
+        UI-->>Admin: Update Table Row UI (Status: Active)
+      </div>
+    </div>
+    <div class="dw">
+      <div class="dt">Sequence Diagram — Admin tạo mới tài khoản (Owner/Admin)</div>
+      <div class="mermaid">
+        sequenceDiagram
+        autonumber
+        participant Admin as 👨‍💼 Quản Trị Viên
+        participant UI as 💻 UserManagement
+        participant API as 🌐 AuthController
+        participant DB as 🗄️ ApplicationDbContext
+
+        Admin->>UI: Nhập Username, Password, Role
+        UI->>API: Register(dto) [POST /api/auth/register]
+        activate API
+        API->>API: AuthClaims.IsAdmin(User) check
+        API->>API: BCrypt.HashPassword(password)
+        API->>API: GenerateDisplayId(role) -> OW-00x / ADM-00x
+        API->>DB: db.AppUsers.Add(user)
+        API->>DB: SaveChangesAsync()
+        API-->>UI: return 200 OK (user)
+        deactivate API
+        UI->>UI: toast.success("Đã tạo tài khoản!")
+      </div>
+    </div>
+    <div class="dw">
+      <div class="dt">Sequence Diagram — Đặt lại mật khẩu cho Chủ Quán (Admin Reset)</div>
+      <div class="mermaid">
+        sequenceDiagram
+        autonumber
+        participant Admin as 👨‍💼 Quản Trị Viên
+        participant UI as 💻 UserManagement
+        participant API as 🌐 AuthController
+        participant DB as 🗄️ ApplicationDbContext
+
+        Admin->>UI: Nhập Mật khẩu mới cho Owner
+        UI->>API: ForgotPassword(dto) [POST /api/auth/forgot-password]
+        activate API
+        API->>DB: db.AppUsers.FirstOrDefaultAsync(Username)
+        alt Nếu user.Role == "Admin"
+        API-->>UI: return 400 (Admin không thể reset qua đây)
+        else Hợp lệ (Owner)
+        API->>API: BCrypt.HashPassword(new)
+        API->>DB: SaveChangesAsync()
+        API-->>UI: return 200 OK
+        end
+        deactivate API
+        UI-->>Admin: Hiển thị "Mật khẩu đã được đổi"
+      </div>
+    </div>
+  </div>
+
+    <div class="card" id="ch20-history">
+      <h3>📜 20.8 Lịch Sử Hoạt Động (History Logs)</h3>
       <div class="dw">
-        <div class="dt">Sequence Diagram — AnalyticsController Top POIs</div>
+        <div class="dt">Sequence Diagram — Truy vấn nhật ký hệ thống</div>
         <div class="mermaid">
           sequenceDiagram
           autonumber
           participant Admin as 👨‍💼 Quản Trị Viên
-          participant UI as 💻 Dashboard
-          participant API as 🌐 AnalyticsController
+          participant UI as 💻 HistoryPage
+          participant API as 🌐 HistoryController
           participant DB as 🗄️ ApplicationDbContext
 
-          UI->>API: GET /api/analytics/top?days=30
+          Admin->>UI: Chọn Filter (Loại sự kiện, Ngôn ngữ, Ngày)
+          UI->>API: GetHistory(page, size, eventType, lang, from, to)
           activate API
-          API->>DB: db.PoiVisitLogs.Where(VisitedAt >= since)
-          DB-->>API: List[PoiVisitLog]
-          API->>API: .GroupBy(PoiId).Select(Count, AvgDuration).Take(20)
-          API->>DB: db.Pois.ToDictionaryAsync(Id, Name)
-          DB-->>API: Dictionary[int, string]
-          API->>API: Map PoiName = names.TryGetValue()
-          API-->>UI: return Ok(result) -> JSON List
+          API->>DB: db.AppHistoryLogs.AsNoTracking().Where(...Filters...)
+          API->>DB: q.OrderByDescending(CreatedAt).Skip(skip).Take(size)
+          DB-->>API: List[HistoryLog] + totalCount
+          API-->>UI: return { total, page, size, items }
           deactivate API
-          UI->>UI: Xử lý mảng dữ liệu (name, count, duration)
-          UI-->>Admin: Render biểu đồ cột (BarChart) bằng Recharts
+          UI-->>Admin: Hiển thị bảng nhật ký (PagingTable)
+        </div>
+        <div class="logic-box">
+          <h4>🧠 Các loại sự kiện chính (EventType)</h4>
+          <ul>
+            <li><code>GPS_TRIGGER</code>: Tự động kích hoạt khi vào vùng Geofence.</li>
+            <li><code>QR_SCAN</code>: Quét mã QR tại bàn/quầy.</li>
+            <li><code>TTS_PLAY</code>: Bắt đầu phát thuyết minh tự động.</li>
+            <li><code>AI_CHAT</code>: Du khách đặt câu hỏi cho trợ lý ảo.</li>
+          </ul>
         </div>
       </div>
     </div>
 
-    <div class="card">
-      <h3>🔥 20.3 Bản Đồ Nhiệt (Heatmap) & Lịch Sử Di Chuyển</h3>
+    <div class="card" id="ch20-sessions">
+      <h3>👥 20.9 Phiên Hoạt Động (Device Sessions)</h3>
       <div class="dw">
-        <div class="dt">Sequence Diagram — HeatmapPage</div>
+        <div class="dt">Sequence Diagram — Quản lý phiên du khách thời gian thực</div>
         <div class="mermaid">
           sequenceDiagram
           autonumber
           participant Admin as 👨‍💼 Quản Trị Viên
-          participant UI as 💻 HeatmapPage
-          participant API as 🌐 AnalyticsController
+          participant UI as 💻 SessionsPage
+          participant API as 🌐 AdminController
           participant DB as 🗄️ ApplicationDbContext
-          participant Cache as 🧠 MemoryCache
 
-          Admin->>UI: Mở trang Bản đồ nhiệt
-          UI->>API: GET /api/analytics/heatmap?hours=24
+          Admin->>UI: Mở danh sách phiên
+          UI->>API: GetSessions(page, size, days)
           activate API
-          API->>Cache: Lấy cache (Thời gian tồn tại 30s để tránh spam query)
-          alt Cache Miss
-              API->>DB: MovementLogs.Where(RecordedAt >= since)
-              API->>DB: GroupBy(SessionId, Lat, Lon)
-              DB-->>API: Danh sách Tọa độ (Lat, Lon)
-              API->>Cache: Lưu Cache (30 giây)
+          API->>DB: db.DeviceSessions.AsNoTracking().OrderByDescending(StartedAt)
+          DB-->>API: List[DeviceSession]
+          API->>API: Calculate IsActive = (Now - LastHeartbeat) < 5m
+          API-->>UI: return Ok(items)
+          deactivate API
+          UI-->>Admin: Render bảng phiên với trạng thái Online/Offline
+        </div>
+      </div>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — Thống kê chất lượng phiên (Session Stats)</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 DashboardStats
+          participant API as 🌐 AdminController
+          participant DB as 🗄️ ApplicationDbContext
+
+          Admin->>UI: Xem thống kê nâng cao
+          UI->>API: GetSessionStats(days=30)
+          activate API
+          API->>DB: db.DeviceSessions.Where(StartedAt >= since)
+          DB-->>API: Array of Sessions
+          API->>API: GroupBy(Platform), GroupBy(Language)
+          API->>API: Calculate returningRate (IsReturning count)
+          API-->>UI: return JSON Stats Data
+          deactivate API
+          UI-->>Admin: Vẽ biểu đồ tròn (PieChart) & Stats Cards
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="ch20-download">
+      <h3>📲 20.10 Tải Ứng Dụng & Cấu Hình QR (App Distribution)</h3>
+      <div class="dw">
+        <div class="dt">Sequence Diagram — Tải bản APK chính thức</div>
+        <div class="mermaid">
+          sequenceDiagram
+          autonumber
+          participant Admin as 👨‍💼 Quản Trị Viên
+          participant UI as 💻 DownloadPage
+          participant API as 🌐 AppDownloadController
+          participant CFG as ⚙️ IConfiguration
+
+          Admin->>UI: Truy cập mục "Tải Ứng Dụng"
+          UI->>API: DownloadApk()
+          activate API
+          API->>CFG: Check "AppConfig:DynamicApkUrl"
+          alt Có Dynamic URL (S3/Drive)
+          API-->>UI: return Redirect(dynamicUrl)
+          else Không có cấu hình (Local file)
+          API->>API: 1. Check bin/Release/net10.0-android
+          API->>API: 2. Fallback to wwwroot/downloads/VinhKhanh_v1.0.apk
+          API-->>UI: return PhysicalFile(apkPath)
           end
-          API-->>UI: return Array[{Latitude, Longitude}]
           deactivate API
-          UI->>UI: Đổ dữ liệu vào Google Maps HeatmapLayer
-          UI-->>Admin: Render biểu đồ Nhiệt đỏ/vàng/xanh trên bản đồ
+          UI-->>Admin: Tải file APK về máy
         </div>
       </div>
-    </div>
-
-    <div class="card">
-      <h3>🏪 20.4 Quản Lý Địa Điểm (PoiEditor CRUD)</h3>
       <div class="dw">
-        <div class="dt">Sequence Diagram — PoiEditor</div>
+        <div class="dt">Sequence Diagram — Sinh mã QR Download cho du khách</div>
         <div class="mermaid">
           sequenceDiagram
           autonumber
           participant Admin as 👨‍💼 Quản Trị Viên
-          participant UI as 💻 PoiEditor
-          participant UPL as 🌐 UploadController
-          participant API as 🌐 PoiController
-          participant DB as 🗄️ ApplicationDbContext
+          participant UI as 💻 DownloadPage
+          participant API as 🌐 AppDownloadController
 
-          Admin->>UI: Điền thông tin (Tên, Tọa độ, Bán kính...)
-          opt Nếu có chọn Ảnh mới
-              UI->>UPL: POST /api/upload (MultipartFormData)
-              activate UPL
-              UPL-->>UI: return { url: "https://..." }
-              deactivate UPL
-          end
-          Admin->>UI: Bấm "Lưu"
-          UI->>API: POST/PUT /api/poi (Kèm imageUrl)
+          Admin->>UI: Xem mã QR tải App
+          UI->>API: GetQrCode()
           activate API
-          API->>DB: db.Pois.Add() hoặc Update()
-          DB-->>API: SaveChangesAsync()
-          API-->>UI: return 200 OK
+          API->>API: Encode URL: /api/app/download
+          API->>API: QRCoder.PngByteQRCode.GetGraphic(20)
+          API-->>UI: return File(image/png)
           deactivate API
-          UI->>UI: Điều hướng về danh sách /pois
+          UI-->>Admin: Hiển thị mã QR để Admin in/dán tại quầy
         </div>
       </div>
     </div>
 
-    <div class="card">
-      <h3>🗺️ 20.5 Quản Lý Lộ Trình (TourEditor CRUD)</h3>
+    <div class="card" id="ch20-security">
+      <h3>🔑 20.11 Bảo Mật & Đổi Mật Khẩu (Security)</h3>
       <div class="dw">
-        <div class="dt">Sequence Diagram — TourEditor</div>
+        <div class="dt">Sequence Diagram — Đổi mật khẩu tài khoản quản trị</div>
         <div class="mermaid">
           sequenceDiagram
           autonumber
           participant Admin as 👨‍💼 Quản Trị Viên
-          participant UI as 💻 TourEditor
-          participant API as 🌐 TourController
-          participant DB as 🗄️ ApplicationDbContext
-
-          Admin->>UI: Kéo thả thêm/bớt POI vào lộ trình
-          Admin->>UI: Bấm "Lưu lộ trình"
-          UI->>API: POST/PUT /api/tour
-          activate API
-          API->>DB: Lưu thông tin Tour
-          API->>DB: Xóa liên kết TourPois cũ & Thêm TourPois mới
-          DB-->>API: SaveChangesAsync()
-          API-->>UI: return 200 OK
-          deactivate API
-          UI->>UI: Thông báo thành công
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>🎵 20.6 Quản Lý Âm Thanh (AudioPage Upload)</h3>
-      <div class="dw">
-        <div class="dt">Sequence Diagram — AudioPage</div>
-        <div class="mermaid">
-          sequenceDiagram
-          autonumber
-          participant Admin as 👨‍💼 Quản Trị Viên
-          participant UI as 💻 AudioPage
-          participant AUD as 🌐 AudioController
-          participant POI as 🌐 PoiController
-          participant DB as 🗄️ ApplicationDbContext
-
-          Admin->>UI: Chọn File Audio (.mp3/.wav) & Bấm "Upload" tại NN (VD: 'en')
-          UI->>AUD: POST /api/audio/upload (MultipartFormData)
-          activate AUD
-          AUD-->>UI: return { url: "audio_file.mp3" }
-          deactivate AUD
-          
-          UI->>POI: PUT /api/poi/{id} (Cập nhật audioUrl vào bản dịch tiếng 'en')
-          activate POI
-          POI->>DB: Update PoiTranslations (languageCode = 'en')
-          DB-->>POI: SaveChangesAsync()
-          POI-->>UI: return Ok()
-          deactivate POI
-          UI-->>Admin: Hiển thị Audio Player & Nút xóa file
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>🔐 20.7 Quản Lý Người Dùng & Chủ Quán (UserManagement)</h3>
-      <div class="dw">
-        <div class="dt">Sequence Diagram — UserManagement</div>
-        <div class="mermaid">
-          sequenceDiagram
-          autonumber
-          participant Admin as 👨‍💼 Quản Trị Viên
-          participant UI as 💻 UserManagement
+          participant UI as 💻 ChangePasswordPage
           participant API as 🌐 AuthController
           participant DB as 🗄️ ApplicationDbContext
 
-          Admin->>UI: Bấm "Duyệt" (Approve) hoặc "Khóa" (Ban) tài khoản
-          UI->>API: PUT /api/auth/users/{id}/status (isApproved, isActive)
+          Admin->>UI: Nhập Mật khẩu cũ & Mật khẩu mới
+          UI->>API: ChangePassword(dto)
           activate API
-          API->>DB: Find(AppUser, id)
-          DB-->>API: user entity
-          API->>DB: Cập nhật isApproved / isActive
-          DB-->>API: SaveChangesAsync()
+          API->>API: Extract UserId from JWT Token
+          API->>DB: db.AppUsers.FindAsync(userId)
+          DB-->>API: user entity (HashedPassword)
+          API->>API: BCrypt.Verify(current, hashed)
+          alt Mật khẩu đúng
+          API->>API: BCrypt.HashPassword(newPassword)
+          API->>DB: SaveChangesAsync()
           API-->>UI: return 200 OK
+          else Sai mật khẩu
+          API-->>UI: return 400 Bad Request
+          end
           deactivate API
-          UI->>UI: queryClient.invalidateQueries(['users']) -> Tải lại lưới dữ liệu
-          UI-->>Admin: Hiển thị trạng thái mới
+          UI-->>Admin: Show toast thông báo kết quả
         </div>
       </div>
     </div>
+  </div>
   </div>
   <!-- ===== CH21 HƯỚNG DẪN KIỂM THỬ ===== -->
   <div class="sec" id="ch21">
@@ -8184,40 +8592,57 @@
 
     <div class="card">
       <h3>💻 21.1 Kiểm Thử Bằng Máy Ảo (Android Emulator)</h3>
-      <p>Máy ảo rất tiện lợi để test giao diện và các luồng đi cơ bản (Navigation, Data loading) mà không cần chuẩn bị cáp nối.</p>
+      <p>Máy ảo rất tiện lợi để test giao diện và các luồng đi cơ bản (Navigation, Data loading) mà không cần chuẩn bị
+        cáp nối.</p>
       <h4>Các Bước Thực Hiện</h4>
       <ul style="margin-top: 8px;">
-        <li><strong>Khởi động API Server:</strong> Mở terminal, chạy <code>dotnet run</code> ở thư mục <code>VinhKhanh.API</code> để server backend hoạt động ở port <code>5283</code>.</li>
-        <li><strong>Chọn Emulator:</strong> Trong thanh công cụ của Visual Studio ở góc trên cùng, đảm bảo mục thiết bị đang chọn là một Android Emulator (Ví dụ: <em>Pixel 5 - API 34</em>).</li>
-        <li><strong>Chạy Ứng Dụng:</strong> Nhấn nút mũi tên xanh (hoặc phím <code>F5</code>) để build và deploy app lên máy ảo.</li>
+        <li><strong>Khởi động API Server:</strong> Mở terminal, chạy <code>dotnet run</code> ở thư mục
+          <code>VinhKhanh.API</code> để server backend hoạt động ở port <code>5283</code>.
+        </li>
+        <li><strong>Chọn Emulator:</strong> Trong thanh công cụ của Visual Studio ở góc trên cùng, đảm bảo mục thiết bị
+          đang chọn là một Android Emulator (Ví dụ: <em>Pixel 5 - API 34</em>).</li>
+        <li><strong>Chạy Ứng Dụng:</strong> Nhấn nút mũi tên xanh (hoặc phím <code>F5</code>) để build và deploy app lên
+          máy ảo.</li>
       </ul>
       <h4 style="margin-top: 16px;">Lưu Ý & Khắc Phục Lỗi</h4>
       <ul style="margin-top: 8px;">
-        <li><strong>Lỗi mạng (Connection Timeout):</strong> Máy ảo Android tự hiểu <code>localhost</code> là chính nó. Để gọi API trên máy host, hệ thống đã được cấu hình tự động trỏ về <code>10.0.2.2:5283</code>. Không cần sửa code IP.</li>
-        <li><strong>Test GPS (Định vị):</strong> Nhấn vào biểu tượng <strong>(...)</strong> cạnh máy ảo -> Chọn mục <strong>Location</strong> -> Nhập tọa độ vĩ độ (Latitude) và kinh độ (Longitude) của một quán ăn -> Nhấn <strong>Set Location</strong>. Geofence sẽ kích hoạt.</li>
+        <li><strong>Lỗi mạng (Connection Timeout):</strong> Máy ảo Android tự hiểu <code>localhost</code> là chính nó.
+          Để gọi API trên máy host, hệ thống đã được cấu hình tự động trỏ về <code>10.0.2.2:5283</code>. Không cần sửa
+          code IP.</li>
+        <li><strong>Test GPS (Định vị):</strong> Nhấn vào biểu tượng <strong>(...)</strong> cạnh máy ảo -> Chọn mục
+          <strong>Location</strong> -> Nhập tọa độ vĩ độ (Latitude) và kinh độ (Longitude) của một quán ăn -> Nhấn
+          <strong>Set Location</strong>. Geofence sẽ kích hoạt.
+        </li>
       </ul>
     </div>
 
     <div class="card">
       <h3>📱 21.2 Kiểm Thử Bằng Máy Thật (Physical Phone)</h3>
-      <p>Kiểm thử bằng máy thật là bắt buộc khi bạn muốn test thực tế hiệu năng âm thanh, GPS ngoài trời, Scan QR bằng camera, hoặc ứng dụng chạy ngầm (Background Service).</p>
-      
+      <p>Kiểm thử bằng máy thật là bắt buộc khi bạn muốn test thực tế hiệu năng âm thanh, GPS ngoài trời, Scan QR bằng
+        camera, hoặc ứng dụng chạy ngầm (Background Service).</p>
+
       <h4 style="margin-top: 16px;">Giai Đoạn 1: Chuẩn Bị Thiết Bị</h4>
       <ul style="margin-top: 8px;">
         <li>Cắm cáp USB kết nối điện thoại Android vào máy tính.</li>
         <li>Bật <strong>Chế độ nhà phát triển</strong> (Nhấn 7 lần vào Build Number).</li>
-        <li>Bật tính năng <strong>Gỡ lỗi USB (USB Debugging)</strong> và Allow kết nối. <em>(Dùng lệnh <code>adb devices</code> để kiểm tra)</em>.</li>
+        <li>Bật tính năng <strong>Gỡ lỗi USB (USB Debugging)</strong> và Allow kết nối. <em>(Dùng lệnh
+            <code>adb devices</code> để kiểm tra)</em>.</li>
       </ul>
 
       <h4 style="margin-top: 16px;">Giai Đoạn 2: Đồng Bộ Mạng (Cực Kỳ Quan Trọng)</h4>
       <p>Điện thoại và máy tính <strong>bắt buộc phải kết nối chung một mạng Wi-Fi</strong>.</p>
       <ol style="margin-top: 8px; padding-left: 20px;">
-        <li style="margin-bottom: 8px;">Lấy địa chỉ IP Wi-Fi của máy tính (VD: <code>192.168.1.5</code> hoặc <code>172.16.0.152</code>).</li>
-        <li style="margin-bottom: 8px;">Sửa file <code>ApiClientService.cs</code> trong <code>VinhKhanh.App/Services/</code>:
-          <pre style="background:var(--bg-elevated);padding:10px;border-radius:4px;margin:8px 0;overflow-x:auto;"><code>return Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, "http://172.16.0.152:5283/");</code></pre>
+        <li style="margin-bottom: 8px;">Lấy địa chỉ IP Wi-Fi của máy tính (VD: <code>192.168.1.5</code> hoặc
+          <code>172.16.0.152</code>).
+        </li>
+        <li style="margin-bottom: 8px;">Sửa file <code>ApiClientService.cs</code> trong
+          <code>VinhKhanh.App/Services/</code>:
+          <pre
+            style="background:var(--bg-elevated);padding:10px;border-radius:4px;margin:8px 0;overflow-x:auto;"><code>return Microsoft.Maui.Storage.Preferences.Get(AppPreferences.ApiBaseUrl, "http://172.16.0.152:5283/");</code></pre>
         </li>
         <li><strong>Mở Tường Lửa (Firewall):</strong> Mở Port 5283 để thiết bị khác có thể truy cập:
-          <pre style="background:var(--bg-elevated);padding:10px;border-radius:4px;margin:8px 0;overflow-x:auto;"><code>netsh advfirewall firewall add rule name="Open Port 5283" dir=in action=allow protocol=TCP localport=5283</code></pre>
+          <pre
+            style="background:var(--bg-elevated);padding:10px;border-radius:4px;margin:8px 0;overflow-x:auto;"><code>netsh advfirewall firewall add rule name="Open Port 5283" dir=in action=allow protocol=TCP localport=5283</code></pre>
         </li>
       </ol>
 
@@ -8225,107 +8650,110 @@
       <ul style="margin-top: 8px;">
         <li>Đảm bảo Backend API Server (port <code>5283</code>) đang chạy.</li>
         <li>Trong Visual Studio, chọn thiết bị thật và bấm <strong>F5</strong>.</li>
-        <li><strong>Lỗi trắng màn hình/Không load POI:</strong> Do điện thoại không kết nối tới IP máy tính. Kiểm tra chung Wi-Fi và tắt thử Windows Defender Firewall.</li>
+        <li><strong>Lỗi trắng màn hình/Không load POI:</strong> Do điện thoại không kết nối tới IP máy tính. Kiểm tra
+          chung Wi-Fi và tắt thử Windows Defender Firewall.</li>
         <li><strong>Đổi Wi-Fi:</strong> Phải cập nhật lại IP mới trong <code>ApiClientService.cs</code>.</li>
         <li><strong>Lỗi IO Access:</strong> Tắt ứng dụng trên điện thoại, Clean Solution và F5 lại.</li>
       </ul>
     </div>
   </div>
 
-    <script>
-      mermaid.initialize({
-        startOnLoad: true,
-        theme: 'default',
-        themeVariables: {
-          primaryColor: '#f1f5f9',
-          primaryTextColor: '#0f172a',
-          primaryBorderColor: '#4f46e5',
-          lineColor: '#4f46e5',
-          secondaryColor: '#f8fafc',
-          tertiaryColor: '#ffffff',
-          background: '#ffffff',
-          mainBkg: '#ffffff',
-          nodeBorder: '#4f46e5',
-          clusterBkg: '#f8fafc',
-          titleColor: '#4f46e5',
-          edgeLabelBackground: '#f8fafc',
-          actorBkg: '#ffffff',
-          actorBorder: '#4f46e5',
-          actorTextColor: '#0f172a',
-          actorLineColor: '#4f46e5',
-          signalColor: '#64748b',
-          signalTextColor: '#0f172a',
-          labelBoxBkgColor: '#f8fafc',
-          labelBoxBorderColor: '#4f46e5',
-          labelTextColor: '#0f172a',
-          loopTextColor: '#0f172a',
-          noteBorderColor: '#4f46e5',
-          noteBkgColor: '#f8fafc',
-          noteTextColor: '#9333ea',
-          activationBorderColor: '#4f46e5',
-          activationBkgColor: '#e0e7ff',
-          sequenceNumberColor: '#0f172a',
-          fillType0: '#ffffff',
-          fillType1: '#f8fafc',
-          fillType2: '#eff6ff',
-          fillType3: '#ecfdf5',
-          fillType4: '#f5f3ff',
-          fillType5: '#fffbeb',
-          fillType6: '#ecfeff',
-          fillType7: '#fefce8'
-        },
-        flowchart: { htmlLabels: true, curve: 'basis', padding: 20 },
-        sequence: {
-          diagramMarginX: 20, diagramMarginY: 20,
-          actorMargin: 80, width: 150, height: 65,
-          boxMargin: 10, boxTextMargin: 5,
-          noteMargin: 10, messageMargin: 35,
-          mirrorActors: false, useMaxWidth: true
-        },
-        er: { diagramPadding: 20, layoutDirection: 'TB', minEntityWidth: 100, minEntityHeight: 75, entityPadding: 15, useMaxWidth: true },
-        classDiagram: { useMaxWidth: true },
-        stateDiagram: { useMaxWidth: true }
-      });
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      themeVariables: {
+        primaryColor: '#f1f5f9',
+        primaryTextColor: '#0f172a',
+        primaryBorderColor: '#4f46e5',
+        lineColor: '#4f46e5',
+        secondaryColor: '#f8fafc',
+        tertiaryColor: '#ffffff',
+        background: '#ffffff',
+        mainBkg: '#ffffff',
+        nodeBorder: '#4f46e5',
+        clusterBkg: '#f8fafc',
+        titleColor: '#4f46e5',
+        edgeLabelBackground: '#f8fafc',
+        actorBkg: '#ffffff',
+        actorBorder: '#4f46e5',
+        actorTextColor: '#0f172a',
+        actorLineColor: '#4f46e5',
+        signalColor: '#64748b',
+        signalTextColor: '#0f172a',
+        labelBoxBkgColor: '#f8fafc',
+        labelBoxBorderColor: '#4f46e5',
+        labelTextColor: '#0f172a',
+        loopTextColor: '#0f172a',
+        noteBorderColor: '#4f46e5',
+        noteBkgColor: '#f8fafc',
+        noteTextColor: '#9333ea',
+        activationBorderColor: '#4f46e5',
+        activationBkgColor: '#e0e7ff',
+        sequenceNumberColor: '#0f172a',
+        fillType0: '#ffffff',
+        fillType1: '#f8fafc',
+        fillType2: '#eff6ff',
+        fillType3: '#ecfdf5',
+        fillType4: '#f5f3ff',
+        fillType5: '#fffbeb',
+        fillType6: '#ecfeff',
+        fillType7: '#fefce8'
+      },
+      flowchart: { htmlLabels: true, curve: 'basis', padding: 20 },
+      sequence: {
+        diagramMarginX: 20, diagramMarginY: 20,
+        actorMargin: 80, width: 150, height: 65,
+        boxMargin: 10, boxTextMargin: 5,
+        noteMargin: 10, messageMargin: 35,
+        mirrorActors: false, useMaxWidth: true
+      },
+      er: { diagramPadding: 20, layoutDirection: 'TB', minEntityWidth: 100, minEntityHeight: 75, entityPadding: 15, useMaxWidth: true },
+      classDiagram: { useMaxWidth: true },
+      stateDiagram: { useMaxWidth: true }
+    });
 
-      // Smooth scroll
-      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-          e.preventDefault();
-          const target = document.querySelector(this.getAttribute('href'));
-          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
+    });
 
-      // Active nav highlight on scroll
-      const sections = document.querySelectorAll('.sec[id]');
-      const navLinks = document.querySelectorAll('.nl a');
-      window.addEventListener('scroll', () => {
-        let current = '';
-        sections.forEach(section => {
-          const sectionTop = section.offsetTop - 80;
-          if (window.scrollY >= sectionTop) current = section.getAttribute('id');
-        });
-        navLinks.forEach(link => {
-          link.style.color = '';
-          link.style.background = '';
-          if (link.getAttribute('href') === '#' + current) {
-            link.style.color = '#818cf8';
-            link.style.background = 'rgba(129,140,248,.1)';
-          }
-        });
+    // Active nav highlight on scroll
+    const sections = document.querySelectorAll('.sec[id]');
+    const navLinks = document.querySelectorAll('.nl a');
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 80;
+        if (window.scrollY >= sectionTop) current = section.getAttribute('id');
       });
-    </script>
+      navLinks.forEach(link => {
+        link.style.color = '';
+        link.style.background = '';
+        if (link.getAttribute('href') === '#' + current) {
+          link.style.color = '#818cf8';
+          link.style.background = 'rgba(129,140,248,.1)';
+        }
+      });
+    });
+  </script>
 
-    <!-- FOOTER -->
-    <footer>
-      <p>📄 PRD — Thuyết Minh Tự Động Đa Ngôn Ngữ · Phố Ẩm Thực Vĩnh Khánh</p>
-      <p style="margin-top:6px;color:#5c6bc0;">Version 6.0 Updated · .NET 10 · C# 14 · ASP.NET Core 10 · React 19 ·
-        .NET
-        MAUI 10</p>
-      <p style="margin-top:4px;font-size:.75rem;">35+ chức năng · 3 Actors · 7 Ngôn ngữ · 54+ API Endpoints · 10 DB
-        Tables · 14 Controllers · 19 Chương · 60+ Sơ đồ UML</p>
-      <p style="margin-top:4px;font-size:.72rem;opacity:.6;">Được tạo từ phân tích toàn bộ codebase · Cập nhật: AI Provider Chain (OpenRouter→DeepSeek→Groq→Gemini→Ollama) · DB Multi-engine (SQLite/PostgreSQL/Azure SQL) · ExitHysteresis=1.5 · DuplicateWindow=90s · RefreshCommand bugfix · IP Geolocation · Cập nhật: 2026</p>
-    </footer>
+  <!-- FOOTER -->
+  <footer>
+    <p>📄 PRD — Thuyết Minh Tự Động Đa Ngôn Ngữ · Phố Ẩm Thực Vĩnh Khánh</p>
+    <p style="margin-top:6px;color:#5c6bc0;">Version 6.0 Updated · .NET 10 · C# 14 · ASP.NET Core 10 · React 19 ·
+      .NET
+      MAUI 10</p>
+    <p style="margin-top:4px;font-size:.75rem;">35+ chức năng · 3 Actors · 7 Ngôn ngữ · 54+ API Endpoints · 10 DB
+      Tables · 14 Controllers · 19 Chương · 60+ Sơ đồ UML</p>
+    <p style="margin-top:4px;font-size:.72rem;opacity:.6;">Được tạo từ phân tích toàn bộ codebase · Cập nhật: AI
+      Provider Chain (OpenRouter→DeepSeek→Groq→Gemini→Ollama) · DB Multi-engine (SQLite/PostgreSQL/Azure SQL) ·
+      ExitHysteresis=1.5 · DuplicateWindow=90s · RefreshCommand bugfix · IP Geolocation · Cập nhật: 2026</p>
+  </footer>
 
 </body>
 
