@@ -8528,7 +8528,7 @@
           end
           end
 
-          STS->>API: POST /api/session/start (SessionStartDto)
+          STS->>API: PostSessionStartAsync(SessionStartDto)
           activate API
           API->>API: Start(SessionStartDto)
           API->>DB: db.DeviceSessions.Add(session)
