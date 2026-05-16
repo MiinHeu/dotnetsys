@@ -35,4 +35,7 @@ public class DeviceSession
 	public string? IpAddress { get; set; }
 	public string? Country { get; set; }
 	public string? City { get; set; }
+
+	/// <summary>0: Mạnh, 1: Yếu - Được xác định khi tải App.</summary>
+	public int? ConfigurationLevel { get; set; }
 }

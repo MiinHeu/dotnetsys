@@ -34,6 +34,7 @@ type SessionRow = {
   isActive: boolean
   country: string | null
   city: string | null
+  configurationLevel: number | null
 }
 
 type SessionStats = {
@@ -197,6 +198,7 @@ export function SessionsPage() {
               <tr className="border-b border-slate-100 text-slate-500">
                 <th className="p-4 font-semibold">Trạng thái</th>
                 <th className="p-4 font-semibold">Thiết bị</th>
+                <th className="p-4 font-semibold">Cấu hình</th>
                 <th className="p-4 font-semibold">Bắt đầu</th>
                 <th className="p-4 font-semibold">Quốc gia</th>
                 <th className="p-4 font-semibold">Thời lượng</th>
@@ -228,6 +230,19 @@ export function SessionsPage() {
                     <p className="text-xs text-slate-500">
                       {s.devicePlatform} {s.osVersion} • App v{s.appVersion}
                     </p>
+                  </td>
+                  <td className="p-4">
+                    {s.configurationLevel === 0 ? (
+                      <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                        Mạnh
+                      </span>
+                    ) : s.configurationLevel === 1 ? (
+                      <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                        Yếu
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 text-xs">N/A</span>
+                    )}
                   </td>
                   <td className="p-4 whitespace-nowrap text-slate-600">
                     {new Date(s.startedAt).toLocaleString()}

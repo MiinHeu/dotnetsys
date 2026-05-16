@@ -53,7 +53,8 @@ public sealed class SessionTrackingService : IDisposable
 			OsVersion: Microsoft.Maui.Devices.DeviceInfo.VersionString ?? "",
 			AppVersion: Microsoft.Maui.ApplicationModel.AppInfo.VersionString ?? "1.0.0",
 			Manufacturer: Microsoft.Maui.Devices.DeviceInfo.Manufacturer ?? "Unknown",
-			LanguageUsed: Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "vi")
+			LanguageUsed: Microsoft.Maui.Storage.Preferences.Get(AppPreferences.UiLanguage, "vi"),
+			ConfigurationLevel: CheckDeviceConfig()
 		);
 
 		try
@@ -150,5 +151,29 @@ public sealed class SessionTrackingService : IDisposable
 	{
 		WeakReferenceMessenger.Default.Unregister<LocationUpdatedMessage>(this);
 		_heartbeatTimer.Dispose();
+	}
+
+	/// <summary>
+	/// Kiểm tra cấu hình máy đơn giản.
+	/// 0: Mạnh (S20+, iPhone 12+, Emulator)
+	/// 1: Yếu (Các máy đời cũ)
+	/// </summary>
+	private int CheckDeviceConfig()
+	{
+		// 1. Kiểm tra số lượng nhân CPU (Hardware-based)
+		// Các dòng chip mạnh hiện nay thường có từ 8 nhân (Octa-core) trở lên
+		if (Environment.ProcessorCount >= 8) return 0;
+
+		// 2. Nếu dưới 8 nhân, kiểm tra xem có phải iPhone đời cao không 
+		// (Vì chip Apple 6 nhân vẫn cực kỳ mạnh)
+		var model = Microsoft.Maui.Devices.DeviceInfo.Model.ToLower();
+		var highEndModels = new[] { "iphone 13", "iphone 14", "iphone 15", "pixel 7", "pixel 8" };
+		if (highEndModels.Any(k => model.Contains(k))) return 0;
+
+		// 3. Nếu là máy ảo (Virtual Device) -> Luôn coi là Mạnh
+		if (Microsoft.Maui.Devices.DeviceInfo.DeviceType == Microsoft.Maui.Devices.DeviceType.Virtual) return 0;
+
+		// 4. Các trường hợp còn lại (vd: 4 nhân, chip cũ) -> Yếu
+		return 1;
 	}
 }

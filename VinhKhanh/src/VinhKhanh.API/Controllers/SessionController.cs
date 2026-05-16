@@ -40,7 +40,8 @@ public class SessionController(
 			StartedAt = DateTime.UtcNow,
 			LastHeartbeatAt = DateTime.UtcNow,
 			IsReturning = isReturning,
-			IpAddress = ip
+			IpAddress = ip,
+			ConfigurationLevel = dto.ConfigurationLevel
 		};
 
 		// Tự động lấy vị trí từ IP (Không làm treo request chính nếu lỗi)

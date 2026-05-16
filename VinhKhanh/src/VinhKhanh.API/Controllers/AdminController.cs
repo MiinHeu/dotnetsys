@@ -155,6 +155,7 @@ public class AdminController(ApplicationDbContext db, IConnectionTracker tracker
 				s.IsReturning,
 				s.Country,
 				s.City,
+				s.ConfigurationLevel,
 				IsActive = s.EndedAt == null && (DateTime.UtcNow - s.LastHeartbeatAt).TotalMinutes < 5
 			});
 

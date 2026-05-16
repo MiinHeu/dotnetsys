@@ -67,7 +67,8 @@ public record SessionStartDto(
 	string OsVersion,
 	string AppVersion,
 	string Manufacturer,
-	string LanguageUsed);
+	string LanguageUsed,
+	int? ConfigurationLevel = null);
 
 /// <summary>App gửi mỗi 60 giây — cập nhật trạng thái phiên.</summary>
 public record SessionHeartbeatDto(
