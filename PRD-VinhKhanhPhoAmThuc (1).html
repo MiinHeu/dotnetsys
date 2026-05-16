@@ -8512,8 +8512,22 @@
           activate App
           App->>STS: StartSessionAsync()
           activate STS
-          STS->>STS: CheckDeviceConfig()
-          Note right of STS: Kiểm tra Environment.ProcessorCount<br/>và DeviceInfo.Model
+          
+          rect rgb(240, 248, 255)
+          Note over STS: Giai đoạn: CheckDeviceConfig()
+          STS->>STS: Kiểm tra Environment.ProcessorCount
+          alt Nhân CPU >= 8
+              STS->>STS: Kết luận: Mạnh (0)
+          else Nhân CPU < 8
+              STS->>STS: Kiểm tra DeviceInfo.Model (Flagship?)
+              alt Thuộc danh sách iPhone 13+, S22+...
+                  STS->>STS: Kết luận: Mạnh (0)
+              else 
+                  STS->>STS: Kết luận: Yếu (1)
+              end
+          end
+          end
+
           STS->>API: POST /api/session/start (SessionStartDto)
           activate API
           API->>API: Start(SessionStartDto)
