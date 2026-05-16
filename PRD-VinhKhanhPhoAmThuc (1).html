@@ -8502,29 +8502,29 @@
         <div class="mermaid">
           sequenceDiagram
           autonumber
-          participant App as 📱 Ứng dụng (MAUI)
-          participant HW as ⚙️ DeviceInfo (CPU/Core)
+          actor KH as 👤 Du khách
+          participant App as 📱 App (MAUI)
+          participant STS as ⚙️ SessionTrackingService
           participant API as 🌐 SessionController
           participant DB as 🗄️ ApplicationDbContext
-          participant Admin as 👨‍💼 Quản Trị Viên
 
-          App->>HW: Kiểm tra Environment.ProcessorCount
-          alt Nhân CPU >= 8
-              App->>App: Đặt ConfigurationLevel = 0 (Mạnh)
-          else Nhân CPU < 8
-              App->>HW: Kiểm tra Device Model (Heuristic)
-              alt Model thuộc iPhone 13+, Pixel 7+, S22+...
-                  App->>App: Đặt ConfigurationLevel = 0 (Mạnh)
-              else Model khác
-                  App->>App: Đặt ConfigurationLevel = 1 (Yếu)
-              end
-          end
-          App->>API: PostSessionStart(ConfigurationLevel)
+          KH->>App: Mở ứng dụng (lần đầu hoặc resume)
+          activate App
+          App->>STS: StartSessionAsync()
+          activate STS
+          STS->>STS: CheckDeviceConfig()
+          Note right of STS: Kiểm tra Environment.ProcessorCount<br/>và DeviceInfo.Model
+          STS->>API: POST /api/session/start (SessionStartDto)
           activate API
-          API->>DB: Lưu ConfigurationLevel vào bảng DeviceSessions
-          API-->>App: 200 OK
+          API->>API: Start(SessionStartDto)
+          API->>DB: db.DeviceSessions.Add(session)
+          DB-->>API: SaveChangesAsync()
+          API-->>STS: return Ok(sessionInfo)
           deactivate API
-          Note over Admin, DB: Sau đó Admin có thể xem phân loại Mạnh/Yếu trên Dashboard
+          STS-->>App: Hoàn tất khởi tạo phiên
+          deactivate STS
+          deactivate App
+          Note over KH, DB: Thông số Mạnh/Yếu (0,1) được lưu vĩnh viễn vào DB cho phiên này
         </div>
       </div>
     </div>
